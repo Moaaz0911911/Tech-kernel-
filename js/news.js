@@ -132,7 +132,16 @@ export const SOURCES = [
   rss('Engadget', 'https://www.engadget.com/rss.xml', '⬛'),
 ];
 
-function normalizeUrl(url) {
+/** The kerNEl backend (when CONFIG.apiBase is set): one request returns every source, thumbnails and shared reactions. */
+const apiBase = () => String(CONFIG.apiBase || '').trim().replace(/\/+$/, '');
+export const API_SOURCE = {
+  id: 'kernel-api', name: 'kerNEl API', emoji: '🍿', every: 1,
+  url: () => `${apiBase()}/api/news?limit=200`,
+  parse: (d) => (Array.isArray(d.items) ? d.items : []),
+};
+const API_RETRY_MS = 5 * 60 * 1000; // after a backend failure, fetch sources directly for 5 minutes
+
+export function normalizeUrl(url) {
   try {
     const u = new URL(url);
     u.hash = '';
@@ -150,8 +159,8 @@ function finalize(raw, source) {
   return {
     ...raw,
     key: normalizeUrl(raw.url) || `t:${raw.title.toLowerCase().slice(0, 80)}`,
-    sourceId: source.id,
-    sourceEmoji: source.emoji,
+    sourceId: raw.sourceId || source.id,
+    sourceEmoji: raw.sourceEmoji || source.emoji,
     cat: cat.id,
     domain: domainOf(raw.url),
     time,
@@ -188,7 +197,20 @@ export class NewsFeed extends EventTarget {
   get size() { return this.items.size; }
   get(key) { return this.items.get(key); }
   all() { return [...this.items.values()]; }
-  sources() { return SOURCES.filter((s) => CONFIG.sources?.[s.flag] !== false); }
+  direct() { return SOURCES.filter((s) => CONFIG.sources?.[s.flag] !== false); }
+  usingApi() { return !!apiBase() && !(this.apiDownAt && Date.now() - this.apiDownAt < API_RETRY_MS); }
+  sources() { return this.usingApi() ? [API_SOURCE] : this.direct(); }
+
+  /** Rows for the "Source health" panel: the backend's own report when we use it. */
+  sourceRows() {
+    if (this.usingApi() && this.remoteSources?.length) {
+      return this.remoteSources.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, ok: r.ok, count: r.count, error: r.error, known: true }));
+    }
+    return this.direct().map((s) => {
+      const st = this.status[s.id];
+      return { id: s.id, name: s.name, emoji: s.emoji, ok: !!st?.ok, count: st?.count || 0, error: st?.error, known: !!st };
+    });
+  }
 
   async refresh(force = false) {
     if (this.loading) return;
@@ -201,7 +223,11 @@ export class NewsFeed extends EventTarget {
       return !st || now - st.at >= s.every * period - 2000 || (force && s.every <= 2);
     });
 
-    const results = await Promise.allSettled(due.map(async (s) => s.parse(await fetchJSON(s.url())).filter(Boolean)));
+    const results = await Promise.allSettled(due.map(async (s) => {
+      const data = await fetchJSON(s.url());
+      if (s === API_SOURCE) this.remoteSources = Array.isArray(data.sources) ? data.sources : [];
+      return s.parse(data).filter(Boolean);
+    }));
     const fresh = [];
     const firstOfSession = !this.sessionBaseline;
     results.forEach((r, i) => {
@@ -217,6 +243,7 @@ export class NewsFeed extends EventTarget {
             existing.comments = Math.max(existing.comments || 0, item.comments || 0);
             if (!existing.image && item.image) existing.image = item.image;
             if (!existing.summary && item.summary) existing.summary = item.summary;
+            if (item.reactions) existing.reactions = item.reactions;
           } else {
             item.firstSeen = Date.now();
             item.popped = this.sessionBaseline ? Date.now() : 0;
@@ -226,8 +253,14 @@ export class NewsFeed extends EventTarget {
         }
       } else {
         this.status[s.id] = { ok: false, count: 0, at: Date.now(), lastOk: prev.lastOk, error: String(r.reason?.message || r.reason || 'failed') };
+        if (s === API_SOURCE) this.apiDownAt = Date.now();
       }
     });
+    // Backend unreachable: fall back to fetching the sources directly, right away.
+    if (due.length === 1 && due[0] === API_SOURCE && results[0].status === 'rejected') {
+      this.loading = false;
+      return this.refresh(true);
+    }
 
     const anyOk = results.some((r) => r.status === 'fulfilled');
     if (anyOk) { this.sessionBaseline = true; this.lastSuccess = Date.now(); }

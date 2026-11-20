@@ -81,6 +81,10 @@ Sign in with Apple on the web is only available to members of the [Apple Develop
 
 ---
 
+## 2½. Optional backend: synced accounts, shared reactions, real thumbnails, codme AI
+
+The [`backend/`](backend/) folder is a free Cloudflare Worker that adds cross-device accounts, public reaction counts, real article thumbnails, a more reliable news feed, and an AI-powered codme. Setup steps are in [`backend/README.md`](backend/README.md). When it's running, put its URL in `apiBase` in the config. Without it, the site works exactly as described below.
+
 ## 3. How the news works
 
 | Source | How | How often |

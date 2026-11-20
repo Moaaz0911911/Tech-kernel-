@@ -355,6 +355,10 @@ a.stat:hover { color: var(--red); }
 .react:hover { filter: none; opacity: 1; transform: scale(1.35) rotate(-10deg); }
 .react.on { filter: none; opacity: 1; background: var(--butter); transform: scale(1.1); }
 .card-foot .icon-btn { width: 32px; height: 32px; font-size: .95rem; }
+.react { width: auto; min-width: 30px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
+.react-n { font: 700 .68rem var(--font); color: var(--text); }
+.react.on .react-n { color: #111; }
+.source-list .via-api { color: var(--mint); font-weight: 600; font-size: .8rem; }
 
 /* procedural "art" thumbnails for stories without images */
 .art {
@@ -601,6 +605,8 @@ a.stat:hover { color: var(--red); }
 .mr-body a:hover { text-decoration: underline; }
 .mr-meta { font-size: .72rem; color: var(--muted); margin-top: 2px; }
 .mr-save { border: 0; background: none; cursor: pointer; font-size: 1rem; padding: 2px; }
+.mr-n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--violet); color: #fff; font-size: .72rem; }
+.cite { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; margin: 0 1px; border-radius: 8px; background: var(--violet); color: #fff; font-size: .62rem; font-weight: 700; vertical-align: super; line-height: 1; }
 .mini-bars { margin: 8px 0; display: flex; flex-direction: column; gap: 4px; }
 .mb { display: grid; grid-template-columns: 96px 1fr 26px; gap: 6px; align-items: center; font-size: .78rem; }
 .mb i { height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--butter), var(--red)); width: var(--w); }
@@ -967,6 +973,11 @@ __m["config"] = (() => {
 const CONFIG = {
   // How often the news refreshes, in seconds.
   refreshSeconds: 30,
+
+  // Your kerNEl backend (Cloudflare Worker) — see backend/README.md.
+  // e.g. "https://kernel-api.YOUR-NAME.workers.dev". Leave empty to run without a backend.
+  // With it: synced accounts, shared reactions, real thumbnails, more reliable news and codme AI.
+  apiBase: '',
 
   auth: {
     google: {
@@ -1599,6 +1610,15 @@ const SOURCES = [
   rss('Engadget', 'https://www.engadget.com/rss.xml', '⬛'),
 ];
 
+/** The kerNEl backend (when CONFIG.apiBase is set): one request returns every source, thumbnails and shared reactions. */
+const apiBase = () => String(CONFIG.apiBase || '').trim().replace(/\/+$/, '');
+const API_SOURCE = {
+  id: 'kernel-api', name: 'kerNEl API', emoji: '🍿', every: 1,
+  url: () => `${apiBase()}/api/news?limit=200`,
+  parse: (d) => (Array.isArray(d.items) ? d.items : []),
+};
+const API_RETRY_MS = 5 * 60 * 1000; // after a backend failure, fetch sources directly for 5 minutes
+
 function normalizeUrl(url) {
   try {
     const u = new URL(url);
@@ -1617,8 +1637,8 @@ function finalize(raw, source) {
   return {
     ...raw,
     key: normalizeUrl(raw.url) || `t:${raw.title.toLowerCase().slice(0, 80)}`,
-    sourceId: source.id,
-    sourceEmoji: source.emoji,
+    sourceId: raw.sourceId || source.id,
+    sourceEmoji: raw.sourceEmoji || source.emoji,
     cat: cat.id,
     domain: domainOf(raw.url),
     time,
@@ -1655,7 +1675,20 @@ class NewsFeed extends EventTarget {
   get size() { return this.items.size; }
   get(key) { return this.items.get(key); }
   all() { return [...this.items.values()]; }
-  sources() { return SOURCES.filter((s) => CONFIG.sources?.[s.flag] !== false); }
+  direct() { return SOURCES.filter((s) => CONFIG.sources?.[s.flag] !== false); }
+  usingApi() { return !!apiBase() && !(this.apiDownAt && Date.now() - this.apiDownAt < API_RETRY_MS); }
+  sources() { return this.usingApi() ? [API_SOURCE] : this.direct(); }
+
+  /** Rows for the "Source health" panel: the backend's own report when we use it. */
+  sourceRows() {
+    if (this.usingApi() && this.remoteSources?.length) {
+      return this.remoteSources.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, ok: r.ok, count: r.count, error: r.error, known: true }));
+    }
+    return this.direct().map((s) => {
+      const st = this.status[s.id];
+      return { id: s.id, name: s.name, emoji: s.emoji, ok: !!st?.ok, count: st?.count || 0, error: st?.error, known: !!st };
+    });
+  }
 
   async refresh(force = false) {
     if (this.loading) return;
@@ -1668,7 +1701,11 @@ class NewsFeed extends EventTarget {
       return !st || now - st.at >= s.every * period - 2000 || (force && s.every <= 2);
     });
 
-    const results = await Promise.allSettled(due.map(async (s) => s.parse(await fetchJSON(s.url())).filter(Boolean)));
+    const results = await Promise.allSettled(due.map(async (s) => {
+      const data = await fetchJSON(s.url());
+      if (s === API_SOURCE) this.remoteSources = Array.isArray(data.sources) ? data.sources : [];
+      return s.parse(data).filter(Boolean);
+    }));
     const fresh = [];
     const firstOfSession = !this.sessionBaseline;
     results.forEach((r, i) => {
@@ -1684,6 +1721,7 @@ class NewsFeed extends EventTarget {
             existing.comments = Math.max(existing.comments || 0, item.comments || 0);
             if (!existing.image && item.image) existing.image = item.image;
             if (!existing.summary && item.summary) existing.summary = item.summary;
+            if (item.reactions) existing.reactions = item.reactions;
           } else {
             item.firstSeen = Date.now();
             item.popped = this.sessionBaseline ? Date.now() : 0;
@@ -1693,8 +1731,14 @@ class NewsFeed extends EventTarget {
         }
       } else {
         this.status[s.id] = { ok: false, count: 0, at: Date.now(), lastOk: prev.lastOk, error: String(r.reason?.message || r.reason || 'failed') };
+        if (s === API_SOURCE) this.apiDownAt = Date.now();
       }
     });
+    // Backend unreachable: fall back to fetching the sources directly, right away.
+    if (due.length === 1 && due[0] === API_SOURCE && results[0].status === 'rejected') {
+      this.loading = false;
+      return this.refresh(true);
+    }
 
     const anyOk = results.some((r) => r.status === 'fulfilled');
     if (anyOk) { this.sessionBaseline = true; this.lastSuccess = Date.now(); }
@@ -1802,7 +1846,7 @@ function trends(items, n = 14) {
 /** Stable pseudo-random value per key (used for tilts, art). */
 const keyNoise = (key, mod) => hash(key) % mod;
 
-return { CATEGORIES, DEFAULT_CAT, catById, classify, SOURCES, hotness, NewsFeed, tokenize, searchLocal, searchArchive, trends, keyNoise };
+return { CATEGORIES, DEFAULT_CAT, catById, classify, SOURCES, API_SOURCE, normalizeUrl, hotness, NewsFeed, tokenize, searchLocal, searchArchive, trends, keyNoise };
 })();
 
 // ===== auth.js =====
@@ -1892,7 +1936,7 @@ class Auth extends EventTarget {
         email: p.email || null,
         emailVerified: !!p.email_verified,
         picture: p.picture || null,
-      });
+      }, { idToken: resp.credential, nonce: this.googleNonce });
     } catch (e) {
       this.fail(e);
     }
@@ -1939,7 +1983,7 @@ class Auth extends EventTarget {
         emailVerified: p.email_verified === true || p.email_verified === 'true',
         privateEmail: p.is_private_email === true || p.is_private_email === 'true',
         picture: null,
-      });
+      }, { idToken: a.id_token, nonce, name: fullName || null, givenName: n?.firstName || null });
     } catch (e) {
       const code = e?.error || e?.message || '';
       if (/popup_closed_by_user|user_cancelled_authorize|user_trigger_new_signin_flow/.test(code)) {
@@ -1954,12 +1998,64 @@ class Auth extends EventTarget {
     }
   }
 
+  // ---------------- backend (optional) ----------------
+  get apiBase() { return String(CONFIG.apiBase || '').trim().replace(/\/+$/, ''); }
+
+  /** Call the kerNEl backend. Throws an Error with .status on failure. */
+  async api(path, { method = 'GET', body, auth = true } = {}) {
+    if (!this.apiBase) throw Object.assign(new Error('No backend configured'), { status: 0 });
+    const headers = {};
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (auth && this.user?.apiToken) headers.Authorization = `Bearer ${this.user.apiToken}`;
+    let res;
+    try {
+      res = await fetch(this.apiBase + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    } catch {
+      throw Object.assign(new Error('Can’t reach the kerNEl server right now'), { status: 0 });
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401 && auth && this.user?.apiToken && path !== '/api/auth/logout') this.sessionExpired();
+      throw Object.assign(new Error(data.error || `Server error ${res.status}`), { status: res.status });
+    }
+    return data;
+  }
+
+  sessionExpired() {
+    if (!this.user) return;
+    this.signOut({ quiet: true });
+    this.dispatchEvent(new CustomEvent('expired'));
+  }
+
+  /** Re-check a saved backend session on page load and pull the latest profile/data. */
+  async refreshFromServer() {
+    if (!this.user?.apiToken) return null;
+    const { user } = await this.api('/api/me');
+    store.set(`profile:${this.user.key}`, { ...this.getProfile(), ...user.profile });
+    this.dispatchEvent(new CustomEvent('profile', { detail: this.getProfile() }));
+    return user;
+  }
+
   // ---------------- session + profiles ----------------
-  complete(info) {
+  async complete(info, proof = {}) {
     if (!info.sub) return this.fail(new Error('No account id in the token.'));
     const key = `${info.provider}:${info.sub}`;
+    let server = null;
+    if (this.apiBase && proof.idToken) {
+      // The backend re-verifies the token's signature and returns a synced account.
+      try {
+        server = await this.api(`/api/auth/${info.provider}`, {
+          method: 'POST', auth: false,
+          body: { idToken: proof.idToken, nonce: proof.nonce, name: proof.name, givenName: proof.givenName },
+        });
+      } catch (e) {
+        if (e.status && e.status < 500) return this.fail(e);
+        this.dispatchEvent(new CustomEvent('offline', { detail: e })); // server down: sign in on this device only
+      }
+    }
     let profile = store.get(`profile:${key}`, null);
-    const isNew = !profile;
+    const isNew = server ? server.isNew : !profile;
+    if (server) profile = { ...(profile || {}), ...server.user.profile };
     if (!profile) {
       const fromEmail = (info.email || '').split('@')[0];
       profile = {
@@ -1971,9 +2067,9 @@ class Auth extends EventTarget {
     }
     if (info.name) profile.realName = info.name; // keep Apple's one-time name
     store.set(`profile:${key}`, profile);
-    this.user = { ...info, name: info.name || profile.realName || profile.nickname, key, since: Date.now() };
+    this.user = { ...info, name: info.name || server?.user.name || profile.realName || profile.nickname, key, since: Date.now(), apiToken: server?.token || null };
     store.set('session', this.user);
-    this.dispatchEvent(new CustomEvent('signin', { detail: { user: this.user, profile, isNew } }));
+    this.dispatchEvent(new CustomEvent('signin', { detail: { user: this.user, profile, isNew, serverData: server?.user.data || null } }));
   }
 
   fail(err) {
@@ -1981,12 +2077,13 @@ class Auth extends EventTarget {
     this.dispatchEvent(new CustomEvent('error', { detail: err }));
   }
 
-  signOut() {
+  signOut({ quiet = false } = {}) {
     const was = this.user;
+    if (was?.apiToken && !quiet) this.api('/api/auth/logout', { method: 'POST' }).catch(() => {});
     this.user = null;
     store.del('session');
     try { window.google?.accounts?.id?.disableAutoSelect(); } catch { /* not loaded */ }
-    this.dispatchEvent(new CustomEvent('signout', { detail: was }));
+    this.dispatchEvent(new CustomEvent('signout', { detail: { user: was, quiet } }));
   }
 
   profileKey() { return this.user ? this.user.key : 'guest'; }
@@ -1998,6 +2095,9 @@ class Auth extends EventTarget {
 
   saveProfile(p) {
     store.set(`profile:${this.profileKey()}`, p);
+    if (this.user?.apiToken) {
+      this.api('/api/me/profile', { method: 'PUT', body: { nickname: p.nickname, avatar: p.avatar, topics: p.topics } }).catch(() => {});
+    }
     this.dispatchEvent(new CustomEvent('profile', { detail: p }));
   }
 }
@@ -2088,6 +2188,8 @@ function initCodme(api) {
   let typingEl = null;
   let chain = Promise.resolve();
   let last = null; // { title, results, offset, q, time }
+  let aiHistory = []; // conversation sent to the AI (when the kerNEl server is on)
+  let aiOff = false;  // the server said AI isn't switched on: stop trying this session
   let unread = 0;
 
   const AVATAR = '<span class="msg-avatar" aria-hidden="true">🤖</span>';
@@ -2097,7 +2199,7 @@ function initCodme(api) {
     const c = catById(it.cat);
     const saved = api.isSaved(it.key);
     return `<article class="mini-result" data-key="${esc(it.key)}">
-      <span class="mr-emoji" aria-hidden="true">${c.emoji}</span>
+      <span class="mr-emoji" aria-hidden="true">${it._n ? `<b class="mr-n">${it._n}</b>` : c.emoji}</span>
       <div class="mr-body">
         <a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" data-open>${esc(it.title)}</a>
         <div class="mr-meta">${esc(it.source)} · ${esc(timeAgo(it.time))}${it.points ? ` · ▲ ${compact(it.points)}` : ''}${it.comments ? ` · 💬 ${compact(it.comments)}` : ''}</div>
@@ -2333,12 +2435,40 @@ function initCodme(api) {
       if (g) return explain(g, whatIs[1]);
     }
 
+    if (api.aiEnabled?.() && !aiOff && (await askAI(raw))) return;
+
     const time = parseTime(t);
     const kw = keywords(t);
     const cat = detectCategory(kw);
     const wantsHot = HOT_RE.test(t);
     if (!kw.length || cat) return hotOrLatest(wantsHot ? 'hot' : 'latest', cat, time);
     return search(kw, time, raw);
+  }
+
+  /** Ask the AI on the kerNEl server. Returns false so we can fall back to offline search. */
+  async function askAI(raw) {
+    aiHistory.push({ role: 'user', content: raw });
+    typing(true);
+    try {
+      const r = await api.ai(aiHistory.slice(-10));
+      typing(false);
+      aiHistory.push({ role: 'assistant', content: r.reply });
+      const cards = Array.isArray(r.stories) ? r.stories : [];
+      const cardNo = new Map(cards.map((s, i) => [s.key, i + 1]));
+      // turn [n] citations into little numbers that match the story cards below
+      const html = esc(r.reply)
+        .replace(/\[(\d{1,3})\]/g, (m, n) => (r.refs?.[n] && cardNo.has(r.refs[n]) ? `<sup class="cite">${cardNo.get(r.refs[n])}</sup>` : ''))
+        .replace(/\n/g, '<br>');
+      if (cards.length) last = { title: 'AI', results: cards, offset: cards.length };
+      await say(html, { cards: cards.map((c, i) => ({ ...c, _n: i + 1 })), chips: ['🔥 What’s hot?', '📋 Summarize today', '😂 Tell me a joke'] });
+      return true;
+    } catch (e) {
+      typing(false);
+      aiHistory.pop();
+      if (e.status === 503) aiOff = true;
+      if (e.status === 429) await say(`${esc(e.message)} Meanwhile, my offline brain found this: 👇`);
+      return false;
+    }
   }
 
   function send(text) {
@@ -2375,7 +2505,7 @@ function initCodme(api) {
 
   launcher.addEventListener('click', toggle);
   $('#codmeClose').addEventListener('click', close);
-  $('#codmeClear').addEventListener('click', () => { log.innerHTML = ''; last = null; greet(); });
+  $('#codmeClear').addEventListener('click', () => { log.innerHTML = ''; last = null; aiHistory = []; greet(); });
   form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value); input.value = ''; });
   chipsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.qchip');
@@ -2488,7 +2618,29 @@ let codme = null;
 // ====================================================================================
 const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
-const setData = (d) => store.set(`data:${auth.profileKey()}`, d);
+let syncTimer = 0;
+const setData = (d) => {
+  store.set(`data:${auth.profileKey()}`, d);
+  if (auth.user?.apiToken) { // keep the account in sync across devices (debounced)
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => auth.api('/api/me/data', { method: 'PUT', body: getData() }).catch(() => {}), 1500);
+  }
+};
+
+/** Combine this browser's data with the account's data on the server (nothing is lost). */
+function mergeData(local, server) {
+  if (!server) return local;
+  const keys = new Set();
+  const saved = [...(server.saved || []), ...(local.saved || [])].filter((x) => x?.key && !keys.has(x.key) && keys.add(x.key)).slice(0, 200);
+  return {
+    ...local,
+    xp: Math.max(local.xp || 0, server.xp || 0),
+    read: [...new Set([...(server.read || []), ...(local.read || [])])].slice(-600),
+    saved,
+    reactions: { ...(server.reactions || {}), ...(local.reactions || {}) },
+    konami: !!(local.konami || server.konami),
+  };
+}
 
 function rankFor(xp) {
   let i = 0;
@@ -2549,8 +2701,15 @@ function badgeList(it) {
 }
 const badgesHTML = (list) => (list.length ? `<div class="badges">${list.map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>` : '');
 
+function reactsHTML(it, mine) {
+  return `<span class="reacts" role="group" aria-label="Reactions">${REACTS.map((r) => {
+    const n = it.reactions?.[r.id] || 0;
+    return `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}${n ? ` · ${n}` : ''}" aria-pressed="${mine === r.id}">${r.emoji}${n ? `<small class="react-n">${compact(n)}</small>` : ''}</button>`;
+  }).join('')}</span>`;
+}
+
 function sig(it, d) {
-  return [it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
+  return [JSON.stringify(it.reactions || {}), it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
 }
 
 function cardHTML(it, variant, d) {
@@ -2576,7 +2735,7 @@ function cardHTML(it, variant, d) {
         ${it.commentsUrl ? `<a class="stat" href="${esc(safeUrl(it.commentsUrl))}" target="_blank" rel="noopener noreferrer" title="Comments">💬 ${compact(it.comments)}</a>` : ''}
         <span class="domain">${esc(it.domain)}</span>
         <span class="spacer"></span>
-        <span class="reacts" role="group" aria-label="Your reaction">${REACTS.map((r) => `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}" aria-pressed="${mine === r.id}">${r.emoji}</button>`).join('')}</span>
+        ${reactsHTML(it, mine)}
         <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? 'Remove from your bucket' : 'Save to your popcorn bucket'}">${saved ? '🔖' : '📑'}</button>
         <button type="button" class="icon-btn" data-emojify title="Emoji TL;DR">🪄</button>
         <button type="button" class="icon-btn" data-share title="Share">🔗</button>
@@ -2731,7 +2890,7 @@ function renderHero() {
           ${main.commentsUrl ? `<a class="stat" href="${esc(safeUrl(main.commentsUrl))}" target="_blank" rel="noopener noreferrer">💬 ${compact(main.comments)}</a>` : ''}
           <span class="domain">${esc(main.domain)}</span>
           <span class="spacer"></span>
-          <span class="reacts" role="group" aria-label="Your reaction">${REACTS.map((r) => `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}" aria-pressed="${mine === r.id}">${r.emoji}</button>`).join('')}</span>
+          ${reactsHTML(main, mine)}
           <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="Save">${saved ? '🔖' : '📑'}</button>
           <button type="button" class="icon-btn" data-share title="Share">🔗</button>
         </div>
@@ -2769,18 +2928,16 @@ function renderTrends() {
 
 function renderSources() {
   const box = $('#sourceList');
-  const srcs = feed.sources();
-  box.innerHTML = srcs.map((s) => {
-    const st = feed.status[s.id];
-    const [dot, mood] = !st ? ['⚪', 'warming up'] : st.ok ? ['🟢', `vibing · ${st.count}`] : ['🔴', 'napping'];
-    const tip = st?.error ? ` title="${esc(st.error)}"` : '';
-    return `<li${tip}><span>${s.emoji} ${esc(s.name)}</span><span class="src-mood">${dot} ${esc(mood)}</span></li>`;
-  }).join('');
+  box.innerHTML = feed.sourceRows().map((s) => {
+    const [dot, mood] = !s.known ? ['⚪', 'warming up'] : s.ok ? ['🟢', `vibing · ${s.count}`] : ['🔴', 'napping'];
+    const tip = s.error ? ` title="${esc(s.error)}"` : '';
+    return `<li${tip}><span>${esc(s.emoji)} ${esc(s.name)}</span><span class="src-mood">${dot} ${esc(mood)}</span></li>`;
+  }).join('') + (feed.usingApi() ? '<li class="via-api"><span>⚡ Served by the kerNEl server</span></li>' : '');
 }
 
 function sourceCounts() {
-  const srcs = feed.sources();
-  return { ok: srcs.filter((s) => feed.status[s.id]?.ok).length, total: srcs.length, every: REFRESH };
+  const rows = feed.sourceRows();
+  return { ok: rows.filter((s) => s.ok).length, total: rows.length, every: REFRESH };
 }
 
 function updateStatusLine() {
@@ -2928,20 +3085,47 @@ function toggleSave(key, btn) {
   if (state.cat === 'saved') renderFeed();
 }
 
+let reactHintShown = false;
 function react(key, btn) {
   const d = getData();
   const id = btn.dataset.react;
-  const wasNew = !d.reactions[key];
-  if (d.reactions[key] === id) delete d.reactions[key];
+  const before = d.reactions[key];
+  if (before === id) delete d.reactions[key];
   else {
     d.reactions[key] = id;
-    burstFrom(btn, { emojis: [btn.textContent], count: 10, spread: 90 });
+    burstFrom(btn, { emojis: [REACTS.find((r) => r.id === id).emoji], count: 10, spread: 90 });
     sfx.pop();
   }
   setData(d);
-  if (wasNew && d.reactions[key]) addXp(1);
+  if (!before && d.reactions[key]) addXp(1);
+  const it = findItem(key);
+  if (it && auth.user?.apiToken) {
+    // Shared counts: update instantly, then take the server's numbers.
+    const counts = { ...(it.reactions || {}) };
+    if (before) counts[before] = Math.max(0, (counts[before] || 1) - 1);
+    if (d.reactions[key]) counts[d.reactions[key]] = (counts[d.reactions[key]] || 0) + 1;
+    it.reactions = counts;
+    auth.api('/api/react', { method: 'POST', body: { key, emoji: d.reactions[key] || null } })
+      .then((r) => { it.reactions = r.reactions; refreshReactButtons(key); })
+      .catch(() => {});
+  } else if (feed.usingApi() && !auth.user && !reactHintShown) {
+    reactHintShown = true;
+    toast('Sign in to add your reaction to the public count!', { emoji: '🔥' });
+  }
   syncCards(key);
+  refreshReactButtons(key);
   renderProfileWidget();
+}
+
+function refreshReactButtons(key) {
+  const it = findItem(key);
+  if (!it) return;
+  const mine = getData().reactions[key];
+  $$('[data-key]').filter((el) => el.dataset.key === key).forEach((card) => {
+    const box = card.querySelector('.reacts');
+    if (box) box.outerHTML = reactsHTML(it, mine);
+    if (card.dataset.sig) card.dataset.sig = sig(it, getData());
+  });
 }
 
 function markRead(key, e) {
@@ -3195,6 +3379,8 @@ function boot() {
     isSaved: (key) => getData().saved.some((s) => s.key === key),
     remember: (items) => items.forEach((i) => { if (!feed.get(i.key)) extraItems.set(i.key, i); }),
     trends: () => trends(feed.all(), 8),
+    aiEnabled: () => !!auth.apiBase,
+    ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages } }),
   });
 
   // ---- global click delegation ----
@@ -3265,9 +3451,10 @@ function boot() {
   $('#profileDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
   auth.addEventListener('signin', (e) => {
-    const { profile, isNew } = e.detail;
+    const { profile, isNew, serverData } = e.detail;
     $('#authDialog').close();
     if (isNew) migrateGuest();
+    if (serverData) setData(mergeData(getData(), serverData));
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
     burst(window.innerWidth / 2, window.innerHeight / 3, { count: 30, emojis: ['🎉', '🍿', '✨', '🥳'] });
@@ -3281,12 +3468,20 @@ function boot() {
   });
   auth.addEventListener('error', (e) => toast(`Sign-in hiccup: ${e.detail?.message || 'unknown error'}`, { emoji: '😵', type: 'error', ms: 7000 }));
   auth.addEventListener('cancel', () => toast('Popup closed — no worries, the kernel stays unpopped.', { emoji: '🍎' }));
-  auth.addEventListener('signout', () => {
+  auth.addEventListener('signout', (e) => {
     if (state.cat === 'foryou') state.cat = 'all';
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
-    toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
+    if (!e.detail?.quiet) toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
   });
+  auth.addEventListener('expired', () => toast('Your session expired — please sign in again.', { emoji: '⏰', ms: 6000 }));
+  auth.addEventListener('offline', () => toast('Signed in on this device only — the kerNEl server is unreachable, so nothing will sync for now.', { emoji: '📡', ms: 7000 }));
+  // A saved server session: check it's still valid and pull this account's data from other devices.
+  if (auth.user?.apiToken) {
+    auth.refreshFromServer()
+      .then((u) => { if (u) { setData(mergeData(getData(), u.data)); renderProfileWidget(); renderFeed(); } })
+      .catch(() => {});
+  }
   auth.addEventListener('profile', () => { renderAuthSlot(); renderProfileWidget(); if (state.cat === 'foryou') renderFeed(); });
 
   $('#profileForm').addEventListener('submit', (e) => {

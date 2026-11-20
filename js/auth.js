@@ -83,7 +83,7 @@ class Auth extends EventTarget {
         email: p.email || null,
         emailVerified: !!p.email_verified,
         picture: p.picture || null,
-      });
+      }, { idToken: resp.credential, nonce: this.googleNonce });
     } catch (e) {
       this.fail(e);
     }
@@ -130,7 +130,7 @@ class Auth extends EventTarget {
         emailVerified: p.email_verified === true || p.email_verified === 'true',
         privateEmail: p.is_private_email === true || p.is_private_email === 'true',
         picture: null,
-      });
+      }, { idToken: a.id_token, nonce, name: fullName || null, givenName: n?.firstName || null });
     } catch (e) {
       const code = e?.error || e?.message || '';
       if (/popup_closed_by_user|user_cancelled_authorize|user_trigger_new_signin_flow/.test(code)) {
@@ -145,12 +145,64 @@ class Auth extends EventTarget {
     }
   }
 
+  // ---------------- backend (optional) ----------------
+  get apiBase() { return String(CONFIG.apiBase || '').trim().replace(/\/+$/, ''); }
+
+  /** Call the kerNEl backend. Throws an Error with .status on failure. */
+  async api(path, { method = 'GET', body, auth = true } = {}) {
+    if (!this.apiBase) throw Object.assign(new Error('No backend configured'), { status: 0 });
+    const headers = {};
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (auth && this.user?.apiToken) headers.Authorization = `Bearer ${this.user.apiToken}`;
+    let res;
+    try {
+      res = await fetch(this.apiBase + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    } catch {
+      throw Object.assign(new Error('Can’t reach the kerNEl server right now'), { status: 0 });
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401 && auth && this.user?.apiToken && path !== '/api/auth/logout') this.sessionExpired();
+      throw Object.assign(new Error(data.error || `Server error ${res.status}`), { status: res.status });
+    }
+    return data;
+  }
+
+  sessionExpired() {
+    if (!this.user) return;
+    this.signOut({ quiet: true });
+    this.dispatchEvent(new CustomEvent('expired'));
+  }
+
+  /** Re-check a saved backend session on page load and pull the latest profile/data. */
+  async refreshFromServer() {
+    if (!this.user?.apiToken) return null;
+    const { user } = await this.api('/api/me');
+    store.set(`profile:${this.user.key}`, { ...this.getProfile(), ...user.profile });
+    this.dispatchEvent(new CustomEvent('profile', { detail: this.getProfile() }));
+    return user;
+  }
+
   // ---------------- session + profiles ----------------
-  complete(info) {
+  async complete(info, proof = {}) {
     if (!info.sub) return this.fail(new Error('No account id in the token.'));
     const key = `${info.provider}:${info.sub}`;
+    let server = null;
+    if (this.apiBase && proof.idToken) {
+      // The backend re-verifies the token's signature and returns a synced account.
+      try {
+        server = await this.api(`/api/auth/${info.provider}`, {
+          method: 'POST', auth: false,
+          body: { idToken: proof.idToken, nonce: proof.nonce, name: proof.name, givenName: proof.givenName },
+        });
+      } catch (e) {
+        if (e.status && e.status < 500) return this.fail(e);
+        this.dispatchEvent(new CustomEvent('offline', { detail: e })); // server down: sign in on this device only
+      }
+    }
     let profile = store.get(`profile:${key}`, null);
-    const isNew = !profile;
+    const isNew = server ? server.isNew : !profile;
+    if (server) profile = { ...(profile || {}), ...server.user.profile };
     if (!profile) {
       const fromEmail = (info.email || '').split('@')[0];
       profile = {
@@ -162,9 +214,9 @@ class Auth extends EventTarget {
     }
     if (info.name) profile.realName = info.name; // keep Apple's one-time name
     store.set(`profile:${key}`, profile);
-    this.user = { ...info, name: info.name || profile.realName || profile.nickname, key, since: Date.now() };
+    this.user = { ...info, name: info.name || server?.user.name || profile.realName || profile.nickname, key, since: Date.now(), apiToken: server?.token || null };
     store.set('session', this.user);
-    this.dispatchEvent(new CustomEvent('signin', { detail: { user: this.user, profile, isNew } }));
+    this.dispatchEvent(new CustomEvent('signin', { detail: { user: this.user, profile, isNew, serverData: server?.user.data || null } }));
   }
 
   fail(err) {
@@ -172,12 +224,13 @@ class Auth extends EventTarget {
     this.dispatchEvent(new CustomEvent('error', { detail: err }));
   }
 
-  signOut() {
+  signOut({ quiet = false } = {}) {
     const was = this.user;
+    if (was?.apiToken && !quiet) this.api('/api/auth/logout', { method: 'POST' }).catch(() => {});
     this.user = null;
     store.del('session');
     try { window.google?.accounts?.id?.disableAutoSelect(); } catch { /* not loaded */ }
-    this.dispatchEvent(new CustomEvent('signout', { detail: was }));
+    this.dispatchEvent(new CustomEvent('signout', { detail: { user: was, quiet } }));
   }
 
   profileKey() { return this.user ? this.user.key : 'guest'; }
@@ -189,6 +242,9 @@ class Auth extends EventTarget {
 
   saveProfile(p) {
     store.set(`profile:${this.profileKey()}`, p);
+    if (this.user?.apiToken) {
+      this.api('/api/me/profile', { method: 'PUT', body: { nickname: p.nickname, avatar: p.avatar, topics: p.topics } }).catch(() => {});
+    }
     this.dispatchEvent(new CustomEvent('profile', { detail: p }));
   }
 }

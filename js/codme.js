@@ -77,6 +77,8 @@ export function initCodme(api) {
   let typingEl = null;
   let chain = Promise.resolve();
   let last = null; // { title, results, offset, q, time }
+  let aiHistory = []; // conversation sent to the AI (when the kerNEl server is on)
+  let aiOff = false;  // the server said AI isn't switched on: stop trying this session
   let unread = 0;
 
   const AVATAR = '<span class="msg-avatar" aria-hidden="true">🤖</span>';
@@ -86,7 +88,7 @@ export function initCodme(api) {
     const c = catById(it.cat);
     const saved = api.isSaved(it.key);
     return `<article class="mini-result" data-key="${esc(it.key)}">
-      <span class="mr-emoji" aria-hidden="true">${c.emoji}</span>
+      <span class="mr-emoji" aria-hidden="true">${it._n ? `<b class="mr-n">${it._n}</b>` : c.emoji}</span>
       <div class="mr-body">
         <a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" data-open>${esc(it.title)}</a>
         <div class="mr-meta">${esc(it.source)} · ${esc(timeAgo(it.time))}${it.points ? ` · ▲ ${compact(it.points)}` : ''}${it.comments ? ` · 💬 ${compact(it.comments)}` : ''}</div>
@@ -322,12 +324,40 @@ export function initCodme(api) {
       if (g) return explain(g, whatIs[1]);
     }
 
+    if (api.aiEnabled?.() && !aiOff && (await askAI(raw))) return;
+
     const time = parseTime(t);
     const kw = keywords(t);
     const cat = detectCategory(kw);
     const wantsHot = HOT_RE.test(t);
     if (!kw.length || cat) return hotOrLatest(wantsHot ? 'hot' : 'latest', cat, time);
     return search(kw, time, raw);
+  }
+
+  /** Ask the AI on the kerNEl server. Returns false so we can fall back to offline search. */
+  async function askAI(raw) {
+    aiHistory.push({ role: 'user', content: raw });
+    typing(true);
+    try {
+      const r = await api.ai(aiHistory.slice(-10));
+      typing(false);
+      aiHistory.push({ role: 'assistant', content: r.reply });
+      const cards = Array.isArray(r.stories) ? r.stories : [];
+      const cardNo = new Map(cards.map((s, i) => [s.key, i + 1]));
+      // turn [n] citations into little numbers that match the story cards below
+      const html = esc(r.reply)
+        .replace(/\[(\d{1,3})\]/g, (m, n) => (r.refs?.[n] && cardNo.has(r.refs[n]) ? `<sup class="cite">${cardNo.get(r.refs[n])}</sup>` : ''))
+        .replace(/\n/g, '<br>');
+      if (cards.length) last = { title: 'AI', results: cards, offset: cards.length };
+      await say(html, { cards: cards.map((c, i) => ({ ...c, _n: i + 1 })), chips: ['🔥 What’s hot?', '📋 Summarize today', '😂 Tell me a joke'] });
+      return true;
+    } catch (e) {
+      typing(false);
+      aiHistory.pop();
+      if (e.status === 503) aiOff = true;
+      if (e.status === 429) await say(`${esc(e.message)} Meanwhile, my offline brain found this: 👇`);
+      return false;
+    }
   }
 
   function send(text) {
@@ -364,7 +394,7 @@ export function initCodme(api) {
 
   launcher.addEventListener('click', toggle);
   $('#codmeClose').addEventListener('click', close);
-  $('#codmeClear').addEventListener('click', () => { log.innerHTML = ''; last = null; greet(); });
+  $('#codmeClear').addEventListener('click', () => { log.innerHTML = ''; last = null; aiHistory = []; greet(); });
   form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value); input.value = ''; });
   chipsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.qchip');

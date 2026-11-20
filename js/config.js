@@ -9,6 +9,11 @@ export const CONFIG = {
   // How often the news refreshes, in seconds.
   refreshSeconds: 30,
 
+  // Your kerNEl backend (Cloudflare Worker) — see backend/README.md.
+  // e.g. "https://kernel-api.YOUR-NAME.workers.dev". Leave empty to run without a backend.
+  // With it: synced accounts, shared reactions, real thumbnails, more reliable news and codme AI.
+  apiBase: '',
+
   auth: {
     google: {
       // Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web application)

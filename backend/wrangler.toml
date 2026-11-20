@@ -1,0 +1,25 @@
+name = "kernel-api"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# Refresh the news every 5 minutes.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kernel-db"
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"   # printed by: npx wrangler d1 create kernel-db
+
+[vars]
+# Websites allowed to call this API (comma-separated). localhost is always allowed for testing.
+ALLOWED_ORIGINS = "https://moaaz0911911.github.io"
+# Public IDs — the same values you put in the website's CONFIG.
+GOOGLE_CLIENT_ID = ""
+APPLE_CLIENT_ID = ""
+# codme AI limits (protects your Anthropic bill)
+CODME_PER_IP_HOUR = "20"
+CODME_PER_USER_DAY = "100"
+CODME_GLOBAL_DAY = "2000"
+
+# Secret (never put it here): npx wrangler secret put ANTHROPIC_API_KEY

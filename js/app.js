@@ -40,7 +40,29 @@ let codme = null;
 // ====================================================================================
 const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
-const setData = (d) => store.set(`data:${auth.profileKey()}`, d);
+let syncTimer = 0;
+const setData = (d) => {
+  store.set(`data:${auth.profileKey()}`, d);
+  if (auth.user?.apiToken) { // keep the account in sync across devices (debounced)
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => auth.api('/api/me/data', { method: 'PUT', body: getData() }).catch(() => {}), 1500);
+  }
+};
+
+/** Combine this browser's data with the account's data on the server (nothing is lost). */
+function mergeData(local, server) {
+  if (!server) return local;
+  const keys = new Set();
+  const saved = [...(server.saved || []), ...(local.saved || [])].filter((x) => x?.key && !keys.has(x.key) && keys.add(x.key)).slice(0, 200);
+  return {
+    ...local,
+    xp: Math.max(local.xp || 0, server.xp || 0),
+    read: [...new Set([...(server.read || []), ...(local.read || [])])].slice(-600),
+    saved,
+    reactions: { ...(server.reactions || {}), ...(local.reactions || {}) },
+    konami: !!(local.konami || server.konami),
+  };
+}
 
 function rankFor(xp) {
   let i = 0;
@@ -101,8 +123,15 @@ function badgeList(it) {
 }
 const badgesHTML = (list) => (list.length ? `<div class="badges">${list.map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>` : '');
 
+function reactsHTML(it, mine) {
+  return `<span class="reacts" role="group" aria-label="Reactions">${REACTS.map((r) => {
+    const n = it.reactions?.[r.id] || 0;
+    return `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}${n ? ` · ${n}` : ''}" aria-pressed="${mine === r.id}">${r.emoji}${n ? `<small class="react-n">${compact(n)}</small>` : ''}</button>`;
+  }).join('')}</span>`;
+}
+
 function sig(it, d) {
-  return [it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
+  return [JSON.stringify(it.reactions || {}), it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
 }
 
 function cardHTML(it, variant, d) {
@@ -128,7 +157,7 @@ function cardHTML(it, variant, d) {
         ${it.commentsUrl ? `<a class="stat" href="${esc(safeUrl(it.commentsUrl))}" target="_blank" rel="noopener noreferrer" title="Comments">💬 ${compact(it.comments)}</a>` : ''}
         <span class="domain">${esc(it.domain)}</span>
         <span class="spacer"></span>
-        <span class="reacts" role="group" aria-label="Your reaction">${REACTS.map((r) => `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}" aria-pressed="${mine === r.id}">${r.emoji}</button>`).join('')}</span>
+        ${reactsHTML(it, mine)}
         <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? 'Remove from your bucket' : 'Save to your popcorn bucket'}">${saved ? '🔖' : '📑'}</button>
         <button type="button" class="icon-btn" data-emojify title="Emoji TL;DR">🪄</button>
         <button type="button" class="icon-btn" data-share title="Share">🔗</button>
@@ -283,7 +312,7 @@ function renderHero() {
           ${main.commentsUrl ? `<a class="stat" href="${esc(safeUrl(main.commentsUrl))}" target="_blank" rel="noopener noreferrer">💬 ${compact(main.comments)}</a>` : ''}
           <span class="domain">${esc(main.domain)}</span>
           <span class="spacer"></span>
-          <span class="reacts" role="group" aria-label="Your reaction">${REACTS.map((r) => `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}" aria-pressed="${mine === r.id}">${r.emoji}</button>`).join('')}</span>
+          ${reactsHTML(main, mine)}
           <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="Save">${saved ? '🔖' : '📑'}</button>
           <button type="button" class="icon-btn" data-share title="Share">🔗</button>
         </div>
@@ -321,18 +350,16 @@ function renderTrends() {
 
 function renderSources() {
   const box = $('#sourceList');
-  const srcs = feed.sources();
-  box.innerHTML = srcs.map((s) => {
-    const st = feed.status[s.id];
-    const [dot, mood] = !st ? ['⚪', 'warming up'] : st.ok ? ['🟢', `vibing · ${st.count}`] : ['🔴', 'napping'];
-    const tip = st?.error ? ` title="${esc(st.error)}"` : '';
-    return `<li${tip}><span>${s.emoji} ${esc(s.name)}</span><span class="src-mood">${dot} ${esc(mood)}</span></li>`;
-  }).join('');
+  box.innerHTML = feed.sourceRows().map((s) => {
+    const [dot, mood] = !s.known ? ['⚪', 'warming up'] : s.ok ? ['🟢', `vibing · ${s.count}`] : ['🔴', 'napping'];
+    const tip = s.error ? ` title="${esc(s.error)}"` : '';
+    return `<li${tip}><span>${esc(s.emoji)} ${esc(s.name)}</span><span class="src-mood">${dot} ${esc(mood)}</span></li>`;
+  }).join('') + (feed.usingApi() ? '<li class="via-api"><span>⚡ Served by the kerNEl server</span></li>' : '');
 }
 
 function sourceCounts() {
-  const srcs = feed.sources();
-  return { ok: srcs.filter((s) => feed.status[s.id]?.ok).length, total: srcs.length, every: REFRESH };
+  const rows = feed.sourceRows();
+  return { ok: rows.filter((s) => s.ok).length, total: rows.length, every: REFRESH };
 }
 
 function updateStatusLine() {
@@ -480,20 +507,47 @@ function toggleSave(key, btn) {
   if (state.cat === 'saved') renderFeed();
 }
 
+let reactHintShown = false;
 function react(key, btn) {
   const d = getData();
   const id = btn.dataset.react;
-  const wasNew = !d.reactions[key];
-  if (d.reactions[key] === id) delete d.reactions[key];
+  const before = d.reactions[key];
+  if (before === id) delete d.reactions[key];
   else {
     d.reactions[key] = id;
-    burstFrom(btn, { emojis: [btn.textContent], count: 10, spread: 90 });
+    burstFrom(btn, { emojis: [REACTS.find((r) => r.id === id).emoji], count: 10, spread: 90 });
     sfx.pop();
   }
   setData(d);
-  if (wasNew && d.reactions[key]) addXp(1);
+  if (!before && d.reactions[key]) addXp(1);
+  const it = findItem(key);
+  if (it && auth.user?.apiToken) {
+    // Shared counts: update instantly, then take the server's numbers.
+    const counts = { ...(it.reactions || {}) };
+    if (before) counts[before] = Math.max(0, (counts[before] || 1) - 1);
+    if (d.reactions[key]) counts[d.reactions[key]] = (counts[d.reactions[key]] || 0) + 1;
+    it.reactions = counts;
+    auth.api('/api/react', { method: 'POST', body: { key, emoji: d.reactions[key] || null } })
+      .then((r) => { it.reactions = r.reactions; refreshReactButtons(key); })
+      .catch(() => {});
+  } else if (feed.usingApi() && !auth.user && !reactHintShown) {
+    reactHintShown = true;
+    toast('Sign in to add your reaction to the public count!', { emoji: '🔥' });
+  }
   syncCards(key);
+  refreshReactButtons(key);
   renderProfileWidget();
+}
+
+function refreshReactButtons(key) {
+  const it = findItem(key);
+  if (!it) return;
+  const mine = getData().reactions[key];
+  $$('[data-key]').filter((el) => el.dataset.key === key).forEach((card) => {
+    const box = card.querySelector('.reacts');
+    if (box) box.outerHTML = reactsHTML(it, mine);
+    if (card.dataset.sig) card.dataset.sig = sig(it, getData());
+  });
 }
 
 function markRead(key, e) {
@@ -747,6 +801,8 @@ function boot() {
     isSaved: (key) => getData().saved.some((s) => s.key === key),
     remember: (items) => items.forEach((i) => { if (!feed.get(i.key)) extraItems.set(i.key, i); }),
     trends: () => trends(feed.all(), 8),
+    aiEnabled: () => !!auth.apiBase,
+    ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages } }),
   });
 
   // ---- global click delegation ----
@@ -817,9 +873,10 @@ function boot() {
   $('#profileDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
   auth.addEventListener('signin', (e) => {
-    const { profile, isNew } = e.detail;
+    const { profile, isNew, serverData } = e.detail;
     $('#authDialog').close();
     if (isNew) migrateGuest();
+    if (serverData) setData(mergeData(getData(), serverData));
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
     burst(window.innerWidth / 2, window.innerHeight / 3, { count: 30, emojis: ['🎉', '🍿', '✨', '🥳'] });
@@ -833,12 +890,20 @@ function boot() {
   });
   auth.addEventListener('error', (e) => toast(`Sign-in hiccup: ${e.detail?.message || 'unknown error'}`, { emoji: '😵', type: 'error', ms: 7000 }));
   auth.addEventListener('cancel', () => toast('Popup closed — no worries, the kernel stays unpopped.', { emoji: '🍎' }));
-  auth.addEventListener('signout', () => {
+  auth.addEventListener('signout', (e) => {
     if (state.cat === 'foryou') state.cat = 'all';
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
-    toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
+    if (!e.detail?.quiet) toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
   });
+  auth.addEventListener('expired', () => toast('Your session expired — please sign in again.', { emoji: '⏰', ms: 6000 }));
+  auth.addEventListener('offline', () => toast('Signed in on this device only — the kerNEl server is unreachable, so nothing will sync for now.', { emoji: '📡', ms: 7000 }));
+  // A saved server session: check it's still valid and pull this account's data from other devices.
+  if (auth.user?.apiToken) {
+    auth.refreshFromServer()
+      .then((u) => { if (u) { setData(mergeData(getData(), u.data)); renderProfileWidget(); renderFeed(); } })
+      .catch(() => {});
+  }
   auth.addEventListener('profile', () => { renderAuthSlot(); renderProfileWidget(); if (state.cat === 'foryou') renderFeed(); });
 
   $('#profileForm').addEventListener('submit', (e) => {
