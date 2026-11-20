@@ -24,6 +24,10 @@ The news, codme and kids section work right away. Sign-in needs the one-time set
 
 > Running locally: `python3 -m http.server 8000`, then open <http://localhost:8000>. Opening `index.html` by double-clicking won't work, because browsers block modules and sign-in on `file://` pages.
 
+### Prefer a single file?
+
+[`dist/index.html`](dist/index.html) is the **whole site in one HTML file**, with every stylesheet and script inlined and the kids corner built in at `#kids`. You can double-click it, or upload just that file to a repository as `index.html`. In that version, sign-in IDs go in the `CONFIG` block near the top of its `<script>`. Rebuild it after editing the source files with `node tools/build-single-file.mjs`.
+
 ---
 
 ## 2. Turn on Google & Apple sign-in
