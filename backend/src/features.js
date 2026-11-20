@@ -2,7 +2,7 @@
 import { HttpError, json, readJson, rateLimit } from './util.js';
 import { requireUser, currentUser } from './auth.js';
 import { assertNotMuted } from './community.js';
-import { listComments, postComment, deleteComment, reportComment, follow, friends } from './social.js';
+import { listComments, postComment, deleteComment, reportComment, reactComment, follow, friends } from './social.js';
 import { getQuiz, answerQuiz, quizBoard, getBattle, voteBattle, getTournament, playTournament } from './play.js';
 import { explainStory, kidsNews, timeMachine } from './extras.js';
 
@@ -19,6 +19,11 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     await rateLimit(env, `comment:burst:${user.id}`, 5, 60_000);
     await rateLimit(env, `comment:hour:${user.id}`, 60, 3600_000);
     return json(await postComment(env, user, await readJson(request, 3_000), ctx));
+  }
+  if (path === '/api/comments/react' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `commentreact:${user.id}`, 300, 3600_000);
+    return json(await reactComment(env, user, await readJson(request, 1_000)));
   }
   if (path === '/api/comments/report' && m === 'POST') {
     const user = await requireUser(request, env);

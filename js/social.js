@@ -4,6 +4,9 @@ import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tServer } from './i18n.js';
 import { lookHTML } from './look.js';
+import { icon } from './icons.js';
+
+const COMMENT_REACTS = ['❤️', '😂', '🔥', '👍', '🤯', '😮'];
 
 export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }) {
   if (!auth.ready) { $('#friendsWidget')?.remove(); return null; }
@@ -11,7 +14,6 @@ export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }
   // ====================================================================================
   // 🗨️ story comments
   // ====================================================================================
-  const dlg = $('#commentsDialog');
   const list = $('#commentsList');
   const form = $('#commentForm');
   const input = $('#commentInput');
@@ -24,26 +26,36 @@ export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }
       <div class="cmt-head"><button type="button" data-user="${esc(c.user.username)}" dir="auto">${esc(c.user.nickname)}</button><time>${timeAgo(c.created)}</time>
         ${c.mine ? `<button type="button" class="cm-more" data-cmt="delete" aria-label="${t('Delete my comment')}">🗑️</button>` : auth.user ? `<button type="button" class="cm-more" data-cmt="report" aria-label="${t('Report comment')}">🚩</button>` : ''}</div>
       <div class="cmt-text" dir="auto">${formatText(c.text)}</div>
+      <div class="cmt-reacts">${reactsRow(c)}</div>
     </div></div>`;
+  function reactsRow(c) {
+    const chips = Object.entries(c.reactions || {}).filter(([, n]) => n > 0)
+      .map(([e, n]) => `<button type="button" class="cmt-react${c.myReaction === e ? ' on' : ''}" data-creact="${e}" aria-pressed="${c.myReaction === e}">${e}<small>${n}</small></button>`).join('');
+    const add = auth.user ? `<button type="button" class="cmt-add" data-cmt="pick" aria-label="${t('Add a reaction')}">${icon('react')}</button><span class="cmt-picker glass" hidden>${COMMENT_REACTS.map((e) => `<button type="button" data-creact="${e}">${e}</button>`).join('')}</span>` : '';
+    return chips + add;
+  }
+  const byId = new Map();
 
   async function load() {
     try {
       const r = await auth.api(`/api/comments?key=${encodeURIComponent(story.key)}`);
+      byId.clear();
+      r.items.forEach((c) => byId.set(c.id, c));
+      $('#readerCount').textContent = r.items.length ? `· ${r.items.length}` : '';
       list.innerHTML = r.items.length ? r.items.map(commentHTML).join('') : `<div class="chat-empty"><span>🗨️</span><p>${t('No comments yet. Drop the first hot take!')}</p></div>`;
-      list.scrollTop = list.scrollHeight;
       onCount?.(story.key, r.items.length);
     } catch (e) { list.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
   }
 
-  function open(item) {
+  /** Show a story's comments in the reader. */
+  function open(item, { focus = false } = {}) {
     story = item;
-    $('#commentsStory').textContent = item.title;
     form.hidden = !auth.user;
     $('#commentGuest').hidden = !!auth.user;
+    $('#readerCount').textContent = '';
     list.innerHTML = '<div class="chat-empty"><span class="spin">🍿</span></div>';
-    if (!dlg.open) dlg.showModal();
     load();
-    if (auth.user) setTimeout(() => input.focus(), 100);
+    if (auth.user && focus) setTimeout(() => input.focus({ preventScroll: true }), 350);
   }
 
   form.addEventListener('submit', async (e) => {
@@ -68,6 +80,20 @@ export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }
     const row = el?.closest('[data-cid]');
     if (!row) return;
     const id = Number(row.dataset.cid);
+    if (el.closest('[data-cmt="pick"]')) { const p = row.querySelector('.cmt-picker'); p.hidden = !p.hidden; return; }
+    const rb = el.closest('[data-creact]');
+    if (rb) {
+      if (!auth.user) { openAuth('signin'); return; }
+      const c = byId.get(id);
+      const emoji = rb.dataset.creact === c?.myReaction ? null : rb.dataset.creact;
+      try {
+        const r = await auth.api('/api/comments/react', { method: 'POST', body: { id, emoji } });
+        Object.assign(c, { reactions: r.reactions, myReaction: r.myReaction });
+        row.querySelector('.cmt-reacts').innerHTML = reactsRow(c);
+        if (emoji) { burstFrom(rb, { emojis: [emoji], count: 6, spread: 40 }); sfx.pop(); }
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     if (el.closest('[data-cmt="delete"]')) {
       if (!confirm(t('Delete this comment?'))) return;
       try { await auth.api(`/api/comments/${id}`, { method: 'DELETE' }); load(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
@@ -76,8 +102,6 @@ export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }
       try { const r = await auth.api('/api/comments/report', { method: 'POST', body: { id } }); toast(r.hidden ? t('Thanks — that comment is now hidden.') : t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' }); load(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
     }
   });
-  dlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) dlg.close(); });
-  dlg.addEventListener('close', () => { if (location.hash.startsWith('#story=')) history.replaceState(null, '', location.pathname + location.search); });
 
   // ====================================================================================
   // 👯 friends

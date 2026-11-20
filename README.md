@@ -8,19 +8,38 @@ English · **العربي المصري** (Egyptian Arabic, right-to-left) · **D
 
 - kerNEl picks your language automatically the first time, based on your browser.
 - codme understands questions in all four languages ("عايز اخبار عن ابل النهارده", "Neueste KI News", "Ano ang API?").
-- Headlines stay in their original language (English). For the article itself, 🧠 → **🌐 Read the article in my language** opens a translated copy.
+- Headlines stay in their original language (English). For the article itself, open a story and tap **Read the article in my language** for a translated copy.
 - Push notifications arrive in each person's own language.
 - Translations live in [`js/i18n-main.js`](js/i18n-main.js) (news site) and [`js/i18n-kids.js`](js/i18n-kids.js) (kids corner). Each row reads `[English, Arabic, German, Tagalog]`, so fixing a word means editing one line. `node tools/i18n-check.mjs main` (or `kids`) lists anything still missing.
+
+## The look
+
+kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass bars blur and bend whatever scrolls underneath them, a soft shine follows your finger or mouse, and things move with springy, bouncy animations.
+
+- **Tab bar at the bottom**: a rounded glass bar with 📰 News · 🎮 Play · 💬 Chat · 🧸 Kids · 👤 Me. The highlight stretches like a drop of liquid when you switch tabs, and the bar shrinks to icons while you scroll. codme sits in its own glass bubble next to it. kerNEl remembers the last tab you used.
+  - **Play**: Daily Quiz, Popcorn Battle, Real or Fake?, the weekly tournament, Hot Take of the Day and the Time Machine.
+  - **Me**: your profile, friends, achievements, the leaderboard and settings (theme, sound, chaos mode, notifications, language, account).
+- **Light and dark mode**: white and black. It follows your device until you pick one.
+- **The reader**: tapping a headline opens the story inside kerNEl in a clean sheet (on phones it slides up from the bottom):
+  - the picture, the headline and the publisher's own description;
+  - a quick summary (**TL;DR** or **Explain like I'm 10**) that can be read aloud;
+  - your reaction (🔥 😂 🤯 🥱);
+  - the comments.
+
+  **Continue reading** opens the original article.
+- **Reactions**: tap ☺ on any story for the iMessage-style reaction bubble. Comments get reactions too (❤️ 😂 🔥 👍 🤯 😮), and everyone sees the counts.
+- The glass "lens" effect (the bending) needs Chrome, Edge or another Chromium browser. Safari and Firefox get frosted glass.
+- **kerNEl Kids keeps its bright colours** on purpose, because it's for kids.
 
 ## What's on the news site
 
 - 🔴 **Live news that refreshes every 30 seconds** from Hacker News, DEV, The Verge, TechCrunch, Ars Technica, Engadget and Wired, with real thumbnails.
 - 🤖 **codme**, the news-sniffing robot: finds any story ("SpaceX in 2023"), explains tech words, summarises the day, tells jokes, takes voice input.
-- 🧠 **Explain like I'm 10 / ⚡ TL;DR** on every story. With an AI key on the server it's written by Claude in your language; without one, codme's quick explainer uses the headline, the publisher's summary and the glossary.
+- 🧠 **Explain like I'm 10 / ⚡ TL;DR** on every story, right in the reader. With an AI key on the server it's written by Claude in your language; without one, codme's quick explainer uses the headline, the publisher's summary and the glossary.
 - 🧠 **Daily Kernel Quiz**: 5 questions made from today's headlines (fill the missing word, which section, who published it, which got more upvotes, spot codme's fake). One go per day, with a daily board.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
-- 🗨️ **Story comments** with @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
+- 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
 - 👯 **Friends**: follow people from their profile card, see their streak flames and a feed of their rank-ups, achievements, quiz scores and trophies. They get a notification when you follow them.
 - 🎩 **Hats and frames** for your avatar, unlocked with XP (and a Champion look for trophy winners). They show in chat, comments, the leaderboard and on profile cards, next to a 🔥 streak flame.
 - 🎁 **kerNEl Wrapped**: a shareable picture of your stats, your "news vibe" and favourite section.
@@ -125,15 +144,18 @@ Accounts are tied to the server, not the address, so everyone keeps their progre
 index.html        main news site
 kids.html         kerNEl Kids
 404.html          "this kernel never popped"
-css/main.css      main styles (dark/light, chaos mode, responsive)
+css/main.css      main styles (black/white Liquid Glass, dark/light, chaos mode, phones, right-to-left)
 css/kids.css      kids styles (+ print styles for the certificate)
 js/config.js      ← your settings: refresh time, server address (apiBase), sources
 js/app.js         main page: rendering, refresh loop, saving, XP, dialogs
+js/tabs.js        the glass tab bar (News · Play · Chat · Kids · Me) and the Liquid Glass shine
+js/reader.js      the in-app reader: description, summary, reactions, comments
+js/icons.js       the line icons
 js/i18n.js        languages: picking one, t() lookups, right-to-left, translated dates
 js/i18n-main.js   ← translations for the news site [English, Arabic, German, Tagalog]
 js/i18n-kids.js   ← translations for kerNEl Kids
 js/play.js        Daily Quiz, Popcorn Battle, weekly tournament
-js/social.js      story comments, friends + activity feed
+js/social.js      story comments (+ reactions on comments), friends + activity feed
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
 js/look.js        avatars with hats, frames and streak flames
 js/cosmetics.js   the hats and frames (shared with the server)

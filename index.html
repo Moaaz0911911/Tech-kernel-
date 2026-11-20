@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>kerNEl — Tech news, freshly popped</title>
   <meta name="description" content="kerNEl: live tech news that refreshes every 30 seconds, with codme the news-sniffing robot, a kids' tech corner and a lot of popcorn.">
-  <meta name="theme-color" content="#ff2d3d">
+  <meta name="theme-color" content="#000000">
   <meta property="og:title" content="kerNEl — Tech news, freshly popped">
   <meta property="og:description" content="Live tech news every 30 seconds, an AI-ish news robot called codme, and a kids' tech corner.">
   <meta property="og:type" content="website">
@@ -18,131 +18,158 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
   <a class="skip-link" href="#feedSection">Skip to the news</a>
 
+  <!-- the "lens" that bends what's behind the glass (used where the browser supports it) -->
+  <svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="lg-lens" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.011" numOctaves="2" seed="11" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="2.4" result="soft"/>
+      <feDisplacementMap in="SourceGraphic" in2="soft" scale="46" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
   <!-- ===== Breaking ticker ===== -->
   <div class="ticker" role="region" aria-label="Latest headlines">
     <span class="ticker-label"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
-    <div class="ticker-track" id="tickerTrack"><div class="ticker-run"><span>🍿 Heating up the newsroom…</span></div></div>
+    <div class="ticker-track" id="tickerTrack"><div class="ticker-run"><span>Heating up the newsroom…</span></div></div>
   </div>
 
   <!-- ===== Header ===== -->
-  <header class="site-header">
+  <header class="site-header glass-bar">
     <div class="header-inner">
       <a class="logo" href="./" data-action="home" aria-label="kerNEl home">
-        <svg class="logo-bucket" viewBox="0 0 64 64" aria-hidden="true">
-          <g class="logo-pops" fill="#fff6d6" stroke="#1a1209" stroke-width="2.5">
-            <circle cx="21" cy="24" r="9"/><circle cx="33" cy="16" r="10"/><circle cx="44" cy="24" r="9"/><circle cx="31" cy="27" r="8"/>
-          </g>
-          <path d="M12 28h40l-5 30H17z" fill="#fff" stroke="#1a1209" stroke-width="2.5" stroke-linejoin="round"/>
-          <path d="M23 28.5l2.2 29M32 28.5v29M41 28.5l-2.2 29" stroke="#ff2d3d" stroke-width="4.5"/>
-        </svg>
         <span class="logo-text" data-no-i18n>ker<span class="logo-ne">NE</span>l</span>
       </a>
-
-      <nav class="cat-nav" id="catNav" aria-label="News categories"></nav>
-
+      <label class="search">
+        <span class="sr-only">Search the news</span>
+        <span class="search-icon" data-icon="search"></span>
+        <input id="search" type="search" placeholder="Search kernels…  ( / )" autocomplete="off" enterkeyhint="search">
+        <button type="button" class="search-clear" id="searchClear" data-action="clear-search" aria-label="Clear search" data-icon="close" hidden></button>
+      </label>
       <div class="header-actions">
-        <label class="search">
-          <span class="sr-only">Search the news</span>
-          <span class="search-icon" aria-hidden="true">🔎</span>
-          <input id="search" type="search" placeholder="Search kernels…  ( / )" autocomplete="off" enterkeyhint="search">
-          <button type="button" class="search-clear" id="searchClear" data-action="clear-search" aria-label="Clear search" hidden>✕</button>
-        </label>
         <button type="button" class="popper" id="popper" data-action="refresh" aria-label="Refresh news now">
           <svg viewBox="0 0 44 44" aria-hidden="true">
             <circle cx="22" cy="22" r="18" class="ring-bg"/>
             <circle cx="22" cy="22" r="18" class="ring" id="popperRing"/>
           </svg>
-          <span class="popper-icon" aria-hidden="true"><span class="k-unpopped">🌽</span><span class="k-popped">🍿</span></span>
+          <span class="popper-icon" data-icon="refresh"></span>
           <span class="popper-count" id="countdown" data-no-i18n>30s</span>
         </button>
-        <button type="button" class="icon-btn hdr-btn" id="themeBtn" data-action="theme" aria-label="Toggle light or dark mode">🌙</button>
-        <button type="button" class="icon-btn hdr-btn hide-sm" id="soundBtn" data-action="sound" aria-label="Toggle sound effects" aria-pressed="false">🔇</button>
-        <button type="button" class="icon-btn hdr-btn hide-sm" id="chaosBtn" data-action="chaos" aria-label="Chaos mode" aria-pressed="false" title="Chaos mode (you’ve been warned)">🌀</button>
+        <button type="button" class="icon-btn hdr-btn hide-sm" id="themeBtn" data-action="theme" aria-label="Toggle light or dark mode" data-icon="moon"></button>
+        <button type="button" class="icon-btn hdr-btn hide-sm" id="soundBtn" data-action="sound" aria-label="Toggle sound effects" aria-pressed="false" data-icon="soundOff"></button>
+        <button type="button" class="icon-btn hdr-btn hide-sm" id="chaosBtn" data-action="chaos" aria-label="Chaos mode" aria-pressed="false" title="Chaos mode (you’ve been warned)" data-icon="sparkle"></button>
+        <div class="lang-wrap hide-sm">
+          <button type="button" class="icon-btn hdr-btn" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Language" title="Language" data-icon="globe"></button>
+          <div class="lang-menu menu glass" id="langMenu" role="menu" hidden></div>
+        </div>
         <div class="bell-wrap">
-          <button type="button" class="icon-btn hdr-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" hidden>🔔<span class="bell-count" hidden></span></button>
-          <div class="bell-panel" id="bellPanel" hidden>
-            <div class="bell-head"><b>🔔 Notifications</b><span><button type="button" class="linkish" data-bell="read">Mark all read</button> <button type="button" class="icon-btn" data-bell="settings" aria-label="Notification settings" title="Settings">⚙️</button></span></div>
-            <button type="button" class="bell-cta" id="bellCta" hidden>📲 Turn on push notifications for this device</button>
+          <button type="button" class="icon-btn hdr-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" data-icon="bell" hidden><span class="bell-count" hidden></span></button>
+          <div class="bell-panel glass" id="bellPanel" hidden>
+            <div class="bell-head"><b>Notifications</b><span><button type="button" class="linkish" data-bell="read">Mark all read</button> <button type="button" class="icon-btn" data-bell="settings" aria-label="Notification settings" title="Settings" data-icon="gear"></button></span></div>
+            <button type="button" class="bell-cta" id="bellCta" hidden>Turn on push notifications for this device</button>
             <div class="bell-list" id="bellList"></div>
           </div>
-        </div>
-        <div class="lang-wrap">
-          <button type="button" class="icon-btn hdr-btn" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Language" title="Language">🌐</button>
-          <div class="lang-menu menu" id="langMenu" role="menu" hidden></div>
         </div>
         <div class="auth-slot" id="authSlot"></div>
       </div>
     </div>
+    <nav class="cat-nav" id="catNav" aria-label="News categories"></nav>
   </header>
 
-  <main id="main">
-    <!-- ===== Hero ===== -->
-    <section class="hero" id="hero" aria-label="Top stories">
-      <div class="hero-main skeleton-block"><div class="shimmer"></div></div>
-      <div class="hero-side">
-        <h2 class="side-title">Also popping <span aria-hidden="true">🍿</span></h2>
-        <div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div>
-      </div>
-    </section>
-
-    <div class="layout">
-      <!-- ===== Feed ===== -->
-      <section class="feed-section" id="feedSection" aria-labelledby="feedTitle">
-        <div class="feed-head">
-          <h2 id="feedTitle">Fresh out the microwave 🍿</h2>
-          <span class="feed-count" id="feedCount"></span>
-          <div class="feed-tools">
-            <button type="button" class="btn btn-ghost btn-sm" data-action="briefing" title="Listen to today’s top stories">🎧 Briefing</button>
-            <button type="button" class="btn btn-ghost btn-sm" data-action="swipe" title="One story at a time, swipe like a pro">📱 Swipe mode</button>
-          </div>
-          <div class="sort-tabs" id="sortTabs" role="group" aria-label="Sort stories">
-            <button type="button" data-sort="newest" aria-pressed="true">🆕 Newest</button>
-            <button type="button" data-sort="hot" aria-pressed="false">🔥 Hottest</button>
-            <button type="button" data-sort="chaos" aria-pressed="false">🎲 Chaos</button>
-          </div>
+  <main id="main" data-view="news">
+    <!-- ===================== NEWS ===================== -->
+    <div class="view" data-pane="news">
+      <section class="hero" id="hero" aria-label="Top stories">
+        <div class="hero-main skeleton-block"><div class="shimmer"></div></div>
+        <div class="hero-side">
+          <h2 class="side-title">Also popping</h2>
+          <div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div><div class="skeleton-mini shimmer"></div>
         </div>
-        <p class="feed-status" id="feedStatus" aria-live="polite">🍿 Microwaving fresh headlines…</p>
-        <div class="feed" id="feed" aria-busy="true">
-          <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
-          <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
-          <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
-          <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
-        </div>
-        <div class="feed-empty" id="feedEmpty" hidden></div>
-        <button type="button" class="btn btn-big" id="moreBtn" data-action="more" hidden>🍿 Pop more kernels</button>
       </section>
 
-      <!-- ===== Sidebar ===== -->
-      <aside class="sidebar" aria-label="Extras">
-        <a class="widget kids-promo" href="kids.html">
-          <span class="kp-emoji" aria-hidden="true">🧸</span>
-          <span data-i18n><b>kerNEl Kids</b><br>Binary bulbs, robot coding, pixel art & more — learn how tech works with Poppy! 🍿</span>
-          <span class="kp-go" aria-hidden="true">→</span>
-        </a>
+      <div class="layout">
+        <section class="feed-section" id="feedSection" aria-labelledby="feedTitle">
+          <div class="feed-head">
+            <div class="feed-title-row">
+              <h2 id="feedTitle">Fresh out the microwave 🍿</h2>
+              <span class="feed-count" id="feedCount"></span>
+            </div>
+            <div class="feed-controls">
+              <div class="sort-tabs seg" id="sortTabs" role="group" aria-label="Sort stories">
+                <button type="button" data-sort="newest" aria-pressed="true">Newest</button>
+                <button type="button" data-sort="hot" aria-pressed="false">Hottest</button>
+                <button type="button" data-sort="chaos" aria-pressed="false">Chaos</button>
+              </div>
+              <div class="feed-tools">
+                <button type="button" class="pill-btn" data-action="briefing" title="Listen to today’s top stories" data-icon="headphones"><span>Briefing</span></button>
+                <button type="button" class="pill-btn" data-action="swipe" title="One story at a time, swipe like a pro" data-icon="swipe"><span>Swipe mode</span></button>
+              </div>
+            </div>
+          </div>
+          <p class="feed-status" id="feedStatus" aria-live="polite">🍿 Microwaving fresh headlines…</p>
+          <div class="feed" id="feed" aria-busy="true">
+            <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
+            <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
+            <div class="card card-row skeleton"><div class="card-thumb shimmer"></div><div class="card-body"><div class="sk-line shimmer"></div><div class="sk-line w70 shimmer"></div><div class="sk-line w40 shimmer"></div></div></div>
+          </div>
+          <div class="feed-empty" id="feedEmpty" hidden></div>
+          <button type="button" class="btn btn-ghost btn-block" id="moreBtn" data-action="more" hidden>Pop more kernels</button>
+        </section>
 
+        <aside class="sidebar" aria-label="Extras">
+          <section class="widget" aria-labelledby="trendTitle">
+            <h3 id="trendTitle" class="widget-title">📈 Hype-o-meter</h3>
+            <p class="muted small">Most-mentioned words in today’s headlines. Tap one to search.</p>
+            <div class="trend-list" id="trendList"></div>
+          </section>
+          <section class="widget widget-codme">
+            <h3 class="widget-title">🤖 Meet codme</h3>
+            <p data-i18n>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
+            <button type="button" class="btn btn-primary btn-block" data-action="codme">Chat with codme</button>
+          </section>
+          <section class="widget widget-joke" aria-labelledby="jokeTitle">
+            <h3 id="jokeTitle" class="widget-title">😂 Byte-sized joke</h3>
+            <p id="jokeText" class="joke"></p>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="joke">Another one!</button>
+          </section>
+          <section class="widget" aria-labelledby="factTitle">
+            <h3 id="factTitle" class="widget-title">💡 Did you know?</h3>
+            <p id="factText"></p>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="fact">New fact</button>
+          </section>
+          <section class="widget" aria-labelledby="srcTitle">
+            <h3 id="srcTitle" class="widget-title">📡 Source health</h3>
+            <ul class="source-list" id="sourceList"></ul>
+            <p class="muted small" data-i18n>News refreshes every <span id="refreshEvery">30</span> seconds while this tab is open.</p>
+          </section>
+          <section class="widget widget-scroll" aria-labelledby="scrollTitle">
+            <h3 id="scrollTitle" class="widget-title">📏 Doomscroll meter</h3>
+            <p><span id="scrollEmoji" class="scroll-emoji">🐜</span> <span id="scrollText">Start scrolling…</span></p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ===================== PLAY ===================== -->
+    <div class="view view-grid" data-pane="play" hidden>
+      <header class="view-head">
+        <h1 class="view-title">Play</h1>
+        <p class="view-sub">Daily games made from today’s news. New ones every day.</p>
+      </header>
+      <div class="grid">
         <section class="widget widget-quiz" id="quizWidget" aria-labelledby="quizTitle" hidden>
           <h3 id="quizTitle" class="widget-title">🧠 Daily Kernel Quiz</h3>
           <div id="quizSide"></div>
         </section>
-
         <section class="widget widget-battle" id="battleWidget" aria-labelledby="battleTitle" hidden>
           <h3 id="battleTitle" class="widget-title">🍿 Popcorn Battle</h3>
           <div id="battleBody"></div>
         </section>
-
-        <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
-          <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
-          <p class="poll-q" id="pollQ"></p>
-          <div class="poll-body" id="pollBody"></div>
-          <p class="muted small" id="pollFoot"></p>
-        </section>
-
         <section class="widget widget-game" aria-labelledby="gameTitle">
           <h3 id="gameTitle" class="widget-title">🕵️ Real or Fake?</h3>
           <p>Five headlines. Some are real stories from today… some were invented by codme. Can you spot the fakes?</p>
@@ -152,70 +179,57 @@
             <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
           </div>
         </section>
-
-        <section class="widget widget-friends" id="friendsWidget" aria-labelledby="friendsTitle" hidden>
-          <h3 id="friendsTitle" class="widget-title">👯 Friends</h3>
-          <div id="friendsBody"></div>
+        <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
+          <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
+          <p class="poll-q" id="pollQ"></p>
+          <div class="poll-body" id="pollBody"></div>
+          <p class="muted small" id="pollFoot"></p>
         </section>
-
-        <section class="widget" aria-labelledby="pwTitle">
-          <h3 id="pwTitle" class="widget-title">🏷️ Your name tag</h3>
-          <div id="profileWidget"></div>
-        </section>
-
-        <section class="widget" aria-labelledby="trendTitle">
-          <h3 id="trendTitle" class="widget-title">📈 Hype-o-meter</h3>
-          <p class="muted small">Most-mentioned words in today’s headlines. Tap one to search.</p>
-          <div class="trend-list" id="trendList"></div>
-        </section>
-
-        <section class="widget" aria-labelledby="badgeTitle">
-          <h3 id="badgeTitle" class="widget-title">🏅 Achievements</h3>
-          <div class="ach-grid" id="achList"></div>
-        </section>
-
-        <section class="widget widget-board" aria-labelledby="boardTitle" id="boardWidget" hidden>
-          <h3 id="boardTitle" class="widget-title">🏆 Top Kernels</h3>
-          <ol class="board" id="boardList"></ol>
-          <p class="muted small" id="boardMe"></p>
-        </section>
-
         <section class="widget widget-tm" id="tmWidget" aria-labelledby="tmTitle" hidden>
           <h3 id="tmTitle" class="widget-title">📼 Tech Time Machine</h3>
           <p class="muted small" id="tmSub">The biggest tech story on this day, every year.</p>
           <div class="tm-years" id="tmYears"></div>
           <div id="tmStory"></div>
         </section>
+      </div>
+    </div>
 
-        <section class="widget widget-codme">
-          <h3 class="widget-title">🤖 Meet codme</h3>
-          <p data-i18n>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
-          <button type="button" class="btn btn-primary btn-block" data-action="codme">Chat with codme</button>
+    <!-- ===================== ME ===================== -->
+    <div class="view view-grid" data-pane="me" hidden>
+      <header class="view-head">
+        <h1 class="view-title">You</h1>
+        <p class="view-sub">Your name tag, friends, achievements and settings.</p>
+      </header>
+      <div class="grid">
+        <section class="widget" aria-labelledby="pwTitle">
+          <h3 id="pwTitle" class="widget-title">🏷️ Your name tag</h3>
+          <div id="profileWidget"></div>
         </section>
-
-        <section class="widget widget-joke" aria-labelledby="jokeTitle">
-          <h3 id="jokeTitle" class="widget-title">😂 Byte-sized joke</h3>
-          <p id="jokeText" class="joke"></p>
-          <button type="button" class="btn btn-ghost btn-sm" data-action="joke">Another one!</button>
+        <section class="widget widget-friends" id="friendsWidget" aria-labelledby="friendsTitle" hidden>
+          <h3 id="friendsTitle" class="widget-title">👯 Friends</h3>
+          <div id="friendsBody"></div>
         </section>
-
-        <section class="widget" aria-labelledby="factTitle">
-          <h3 id="factTitle" class="widget-title">💡 Did you know?</h3>
-          <p id="factText"></p>
-          <button type="button" class="btn btn-ghost btn-sm" data-action="fact">New fact</button>
+        <section class="widget" aria-labelledby="badgeTitle">
+          <h3 id="badgeTitle" class="widget-title">🏅 Achievements</h3>
+          <div class="ach-grid" id="achList"></div>
         </section>
-
-        <section class="widget" aria-labelledby="srcTitle">
-          <h3 id="srcTitle" class="widget-title">📡 Source health</h3>
-          <ul class="source-list" id="sourceList"></ul>
-          <p class="muted small" data-i18n>News refreshes every <span id="refreshEvery">30</span> seconds while this tab is open.</p>
+        <section class="widget widget-board" aria-labelledby="boardTitle" id="boardWidget" hidden>
+          <h3 id="boardTitle" class="widget-title">🏆 Top Kernels</h3>
+          <ol class="board" id="boardList"></ol>
+          <p class="muted small" id="boardMe"></p>
         </section>
-
-        <section class="widget widget-scroll" aria-labelledby="scrollTitle">
-          <h3 id="scrollTitle" class="widget-title">📏 Doomscroll meter</h3>
-          <p><span id="scrollEmoji" class="scroll-emoji">🐜</span> <span id="scrollText">Start scrolling…</span></p>
+        <section class="widget widget-settings" aria-labelledby="setTitle">
+          <h3 id="setTitle" class="widget-title">⚙️ Settings</h3>
+          <div class="settings-list">
+            <button type="button" class="set-row" data-action="theme" data-icon="moon"><span>Appearance</span><small id="setTheme"></small></button>
+            <button type="button" class="set-row" data-action="sound" data-icon="soundOn"><span>Sound effects</span><small id="setSound"></small></button>
+            <button type="button" class="set-row" data-action="chaos" data-icon="sparkle"><span>Chaos mode</span><small id="setChaos"></small></button>
+            <button type="button" class="set-row" data-action="notify" data-icon="bell"><span>Notifications</span></button>
+            <button type="button" class="set-row" data-action="account" data-icon="me"><span>Account &amp; security</span></button>
+          </div>
+          <p class="settings-langs" id="meLangs"></p>
         </section>
-      </aside>
+      </div>
     </div>
   </main>
 
@@ -235,6 +249,31 @@
       <p class="tiny">Shortcuts: <kbd>/</kbd> search · <kbd>r</kbd> refresh · <kbd>c</kbd> codme · <kbd>t</kbd> chat · psst, try the Konami code 🎮 · © <span id="year"></span> kerNEl</p>
     </div>
   </footer>
+
+  <!-- ===== Bottom tab bar (Liquid Glass) ===== -->
+  <div class="dock" id="dock">
+    <nav class="tabbar glass lg" id="tabbar" aria-label="Sections">
+      <span class="tab-blob" aria-hidden="true"></span>
+      <button type="button" class="tab" data-tab="news" aria-current="page" data-icon="news"><span class="tab-label">News</span></button>
+      <button type="button" class="tab" data-tab="play" data-icon="play"><span class="tab-label">Play</span></button>
+      <button type="button" class="tab nav-chat" data-tab="chat" data-icon="chat"><span class="tab-label">Chat</span><span class="chat-dot" hidden></span></button>
+      <a class="tab nav-kids" href="kids.html" data-icon="kids"><span class="tab-label">Kids</span></a>
+      <button type="button" class="tab" data-tab="me" data-icon="me"><span class="tab-label">Me</span></button>
+    </nav>
+    <button type="button" class="codme-launcher glass lg" id="codmeLauncher" aria-controls="codmePanel" aria-expanded="false" aria-label="Chat with codme, the news robot">
+      <svg class="codme-face" viewBox="0 0 64 64" aria-hidden="true">
+        <line x1="32" y1="5" x2="32" y2="13" class="antenna-stick"/>
+        <circle class="antenna" cx="32" cy="5" r="4"/>
+        <rect x="2" y="27" width="7" height="13" rx="3" class="ear"/>
+        <rect x="55" y="27" width="7" height="13" rx="3" class="ear"/>
+        <rect x="8" y="13" width="48" height="42" rx="15" class="head"/>
+        <g class="eye"><circle cx="23" cy="31" r="8.5" fill="#fff"/><circle class="pupil" cx="23" cy="31" r="3.8" fill="#000"/></g>
+        <g class="eye"><circle cx="41" cy="31" r="8.5" fill="#fff"/><circle class="pupil" cx="41" cy="31" r="3.8" fill="#000"/></g>
+        <path d="M24 46 q8 6 16 0" class="mouth"/>
+      </svg>
+      <span class="codme-badge" id="codmeBadge" hidden>1</span>
+    </button>
+  </div>
 
   <!-- ===== Sign in / Sign up ===== -->
   <dialog id="authDialog" class="modal" aria-labelledby="authTitle">
@@ -422,19 +461,53 @@
     </div>
   </dialog>
 
-  <!-- ===== Story comments ===== -->
-  <dialog id="commentsDialog" class="modal comments-modal" aria-labelledby="commentsTitle">
-    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
-    <div class="modal-body">
-      <h2 id="commentsTitle">🗨️ Comments</h2>
-      <p class="cmt-story" id="commentsStory" dir="auto"></p>
-      <div class="cmt-list" id="commentsList" aria-live="polite"></div>
-      <form class="cmt-form" id="commentForm" hidden>
-        <label class="sr-only" for="commentInput">Your comment</label>
-        <textarea id="commentInput" maxlength="400" rows="2" placeholder="Add your hot take… (be kind)"></textarea>
-        <button type="submit" class="btn btn-primary">Post</button>
-      </form>
-      <p class="muted small" id="commentGuest" hidden data-i18n><button type="button" class="linkish" data-action="signin">Sign in</button> to join the conversation.</p>
+  <!-- ===== Reader: read a story, react and comment ===== -->
+  <dialog id="readerDialog" class="sheet reader" aria-labelledby="readerTitle">
+    <div class="reader-bar glass">
+      <button type="button" class="icon-btn" data-reader="close" aria-label="Close" data-icon="close"></button>
+      <span class="reader-src" id="readerSrc"></span>
+      <span class="spacer"></span>
+      <div class="reader-tools" id="readerTools"></div>
+    </div>
+    <div class="reader-scroll" id="readerScroll">
+      <article class="reader-body">
+        <figure class="reader-media" id="readerMedia"></figure>
+        <p class="reader-kicker" id="readerKicker"></p>
+        <h1 class="reader-title" id="readerTitle"></h1>
+        <p class="reader-dek" id="readerDek" dir="auto"></p>
+        <section class="reader-summary" aria-labelledby="readerSumTitle">
+          <div class="reader-summary-head">
+            <h2 id="readerSumTitle">Quick summary</h2>
+            <div class="seg" role="tablist" aria-label="Explanation style">
+              <button type="button" role="tab" data-rmode="tldr" aria-selected="true">TL;DR</button>
+              <button type="button" role="tab" data-rmode="eli10" aria-selected="false">Explain like I’m 10</button>
+            </div>
+          </div>
+          <div class="reader-summary-text" id="readerSummary" aria-live="polite"></div>
+          <div class="reader-summary-foot">
+            <small class="muted" id="readerSummaryNote"></small>
+            <button type="button" class="pill-btn" id="readerSpeak" data-icon="speaker"><span>Listen</span></button>
+          </div>
+        </section>
+        <div class="reader-cta">
+          <a class="btn btn-primary btn-big" id="readerOpen" target="_blank" rel="noopener noreferrer"></a>
+          <a class="pill-btn" id="readerTranslate" target="_blank" rel="noopener noreferrer" data-icon="translate" hidden><span>Read the article in my language</span></a>
+        </div>
+        <section class="reader-react" aria-labelledby="readerReactTitle">
+          <h2 id="readerReactTitle">Your reaction</h2>
+          <div class="reader-reacts" id="readerReacts"></div>
+        </section>
+        <section class="reader-comments" aria-labelledby="readerCommentsTitle">
+          <h2 id="readerCommentsTitle">Comments <span class="muted" id="readerCount"></span></h2>
+          <form class="cmt-form" id="commentForm" hidden>
+            <label class="sr-only" for="commentInput">Your comment</label>
+            <textarea id="commentInput" maxlength="400" rows="2" placeholder="Add your hot take… (be kind)"></textarea>
+            <button type="submit" class="btn btn-primary">Post</button>
+          </form>
+          <p class="muted small" id="commentGuest" hidden data-i18n><button type="button" class="linkish" data-action="signin">Sign in</button> to join the conversation.</p>
+          <div class="cmt-list" id="commentsList" aria-live="polite"></div>
+        </section>
+      </article>
     </div>
   </dialog>
 
@@ -529,19 +602,6 @@
 
   <!-- ===== codme chat robot ===== -->
   <div class="codme-teaser" id="codmeTeaser" hidden data-i18n>Psst… I can find <b>any</b> tech news. Try me! 👀</div>
-  <button type="button" class="codme-launcher" id="codmeLauncher" aria-controls="codmePanel" aria-expanded="false" aria-label="Chat with codme, the news robot">
-    <svg class="codme-face" viewBox="0 0 64 64" aria-hidden="true">
-      <line x1="32" y1="5" x2="32" y2="13" class="antenna-stick"/>
-      <circle class="antenna" cx="32" cy="5" r="4"/>
-      <rect x="2" y="27" width="7" height="13" rx="3" class="ear"/>
-      <rect x="55" y="27" width="7" height="13" rx="3" class="ear"/>
-      <rect x="8" y="13" width="48" height="42" rx="15" class="head"/>
-      <g class="eye"><circle cx="23" cy="31" r="8.5" fill="#fff"/><circle class="pupil" cx="23" cy="31" r="3.8" fill="#14121c"/></g>
-      <g class="eye"><circle cx="41" cy="31" r="8.5" fill="#fff"/><circle class="pupil" cx="41" cy="31" r="3.8" fill="#14121c"/></g>
-      <path d="M24 46 q8 6 16 0" class="mouth"/>
-    </svg>
-    <span class="codme-badge" id="codmeBadge" hidden>1</span>
-  </button>
 
   <section class="codme-panel" id="codmePanel" role="dialog" aria-label="codme chat" hidden>
     <header class="codme-head">

@@ -98,6 +98,19 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
     ].filter(Boolean).join('\n\n');
   }
 
+  /** An explanation of a story: Claude on the server when it's switched on, otherwise codme's quick explainer. */
+  async function summarize(item, mode = 'tldr') {
+    try {
+      if (!auth.ready) throw new Error('offline');
+      const r = await auth.api('/api/explain', { method: 'POST', body: { key: item.key, mode, lang } });
+      bump('explains');
+      return { text: r.text, ai: true };
+    } catch (e) {
+      if (e.status === 429) toast(tServer(e.message), { emoji: '⏳' });
+      return { text: offline(item, mode), ai: false };
+    }
+  }
+
   async function explain(item, mode = xMode) {
     xItem = item;
     xMode = mode;
@@ -111,20 +124,12 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
     const box = $('#explainText');
     box.innerHTML = `<span class="spin">🧠</span> ${t('codme is thinking…')}`;
     if (!xDlg.open) xDlg.showModal();
-    let ai = false;
-    try {
-      if (!auth.ready) throw new Error('offline');
-      const r = await auth.api('/api/explain', { method: 'POST', body: { key: item.key, mode, lang } });
-      xText = r.text;
-      ai = true;
-    } catch (e) {
-      xText = offline(item, mode);
-      if (e.status === 429) toast(tServer(e.message), { emoji: '⏳' });
-    }
+    const r = await summarize(item, mode);
+    xText = r.text;
+    const { ai } = r;
     if (xItem !== item || xMode !== mode) return; // the reader moved on
     box.innerHTML = `<span class="x-label">${ai ? t('🤖 codme AI') : t('🍿 codme’s quick explainer')}</span>\n${esc(xText)}`;
     $('#explainFine').textContent = ai ? t('AI explanations can make mistakes — the article itself is the real deal.') : t('Made from the headline and the publisher’s summary. Open the article for the full story.');
-    bump('explains');
   }
   $$('#explainDialog [data-xmode]').forEach((b) => b.addEventListener('click', () => xItem && explain(xItem, b.dataset.xmode)));
   $('#explainSpeak').addEventListener('click', () => {
@@ -330,24 +335,27 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
     const ctx = canvas.getContext('2d');
     const W = 1080;
     const H = 1350;
-    const font = lang === 'ar' ? '"Lalezar", "Baloo Bhaijaan 2", sans-serif' : '"Bungee", Impact, sans-serif';
-    const body = lang === 'ar' ? '"Baloo Bhaijaan 2", "Rubik", sans-serif' : '"Rubik", system-ui, sans-serif';
-    try { await Promise.all([document.fonts.load(`80px ${font}`), document.fonts.load(`700 40px ${body}`)]); } catch { /* use fallback fonts */ }
+    const family = lang === 'ar' ? '"IBM Plex Sans Arabic", "Inter", system-ui, sans-serif' : '"Inter", -apple-system, system-ui, sans-serif';
+    const font = `800 ${family}`.replace('800 ', '');
+    const body = family;
+    try { await Promise.all([document.fonts.load(`800 80px ${family}`), document.fonts.load(`600 40px ${family}`)]); } catch { /* use fallback fonts */ }
     const g = ctx.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, '#ff2d3d'); g.addColorStop(.55, '#8b5cf6'); g.addColorStop(1, '#111216');
+    g.addColorStop(0, '#1c1c1e'); g.addColorStop(.6, '#0b0b0c'); g.addColorStop(1, '#000000');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = .12;
+    ctx.globalAlpha = .06;
+    ctx.filter = 'grayscale(1)';
     ctx.font = '120px serif';
     for (let i = 0; i < 18; i++) ctx.fillText(['🍿', '🌽', '🧈', '✨'][i % 4], (hash(`w${i}`) % W), (hash(`h${i}`) % H));
+    ctx.filter = 'none';
     ctx.globalAlpha = 1;
     ctx.direction = isRTL ? 'rtl' : 'ltr';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#fff';
-    ctx.font = `64px ${font}`;
+    ctx.font = `800 64px ${font}`;
     ctx.fillText(t('My kerNEl Wrapped'), W / 2, 130);
-    ctx.font = `700 34px ${body}`;
-    ctx.fillStyle = '#ffd23f';
+    ctx.font = `500 34px ${body}`;
+    ctx.fillStyle = '#a1a1a6';
     ctx.fillText(new Date().toLocaleDateString(langInfo.html === 'ar-EG' ? 'ar-EG-u-nu-latn' : langInfo.html, { month: 'long', year: 'numeric' }), W / 2, 180);
     // avatar + hat
     ctx.font = '190px serif';
@@ -355,18 +363,19 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
     const hat = { cap: '🧢', bow: '🎀', tophat: '🎩', grad: '🎓', helmet: '⛑️', crown: '👑', ufo: '🛸', trophy: '🏆' }[p.hat];
     if (hat) { ctx.font = '110px serif'; ctx.fillText(hat, W / 2 + 10, 300); }
     ctx.fillStyle = '#fff';
-    ctx.font = `60px ${font}`;
+    ctx.font = `800 60px ${font}`;
     ctx.fillText(p.nickname || 'Kernel', W / 2, 525);
-    ctx.font = `700 40px ${body}`;
+    ctx.font = `500 38px ${body}`;
+    ctx.fillStyle = '#d1d1d6';
     ctx.fillText(`${r.emoji} ${t(r.title)} · ${d.xp} XP`, W / 2, 580);
     // the vibe
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillStyle = 'rgba(255,255,255,.08)';
     roundRect(ctx, 90, 615, W - 180, 150, 36); ctx.fill();
-    ctx.fillStyle = '#ffd23f';
-    ctx.font = `700 32px ${body}`;
+    ctx.fillStyle = '#a1a1a6';
+    ctx.font = `600 30px ${body}`;
     ctx.fillText(t('My news vibe'), W / 2, 668);
     ctx.fillStyle = '#fff';
-    ctx.font = `56px ${font}`;
+    ctx.font = `800 54px ${font}`;
     ctx.fillText(`${vibeEmoji} ${t(vibe)}`, W / 2, 738);
     // stats grid
     const stats = [
@@ -376,23 +385,23 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
     stats.forEach(([e, n, label], i) => {
       const x = 90 + (i % 3) * 310;
       const y = 800 + Math.floor(i / 3) * 210;
-      ctx.fillStyle = 'rgba(255,255,255,.14)';
+      ctx.fillStyle = 'rgba(255,255,255,.07)';
       roundRect(ctx, x, y, 280, 180, 30); ctx.fill();
       ctx.fillStyle = '#fff';
       ctx.font = '52px serif';
       ctx.fillText(e, x + 140, y + 62);
-      ctx.font = `60px ${font}`;
+      ctx.font = `800 58px ${font}`;
       ctx.fillText(compact(n), x + 140, y + 128);
-      ctx.font = `700 26px ${body}`;
-      ctx.fillStyle = '#ffe9a8';
+      ctx.font = `500 26px ${body}`;
+      ctx.fillStyle = '#a1a1a6';
       ctx.fillText(label, x + 140, y + 165);
     });
     const topLabel = CATEGORIES.find((c) => c.id === topCat);
     ctx.fillStyle = '#fff';
-    ctx.font = `700 34px ${body}`;
+    ctx.font = `600 32px ${body}`;
     ctx.fillText(t('Favourite section: {cat}', { cat: `${topLabel?.emoji || ''} ${t(topLabel?.label || 'AI')}` }), W / 2, 1265);
-    ctx.font = `42px "Bungee", Impact, sans-serif`;
-    ctx.fillStyle = '#ffd23f';
+    ctx.font = `800 40px "Inter", system-ui, sans-serif`;
+    ctx.fillStyle = '#ffffff';
     ctx.direction = 'ltr';
     ctx.fillText('kerNEl 🍿', W / 2, 1320);
   }
@@ -431,5 +440,5 @@ export function initExtras({ getItems, getVisible, findItem, getData, profile, r
 
   if (canSpeak) speechSynthesis.getVoices(); // voices load lazily in some browsers
   loadTimeMachine();
-  return { explain, briefing, openSwipe, closeSwipe, openWrapped, burst };
+  return { explain, summarize, speakText: (text) => speak(text.split('\n').filter(Boolean).map((line) => [line, /^[\x00-\x7f“”‘’—–…•·]*$/.test(line) ? 'en-US' : myVoice])), briefing, openSwipe, closeSwipe, openWrapped, burst };
 }

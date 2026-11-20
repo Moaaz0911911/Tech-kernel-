@@ -50,7 +50,7 @@ async function outbound(request) {
   if (['techcrunch.com', 'feeds.arstechnica.com', 'www.engadget.com'].includes(url.hostname)) return new Response('down', { status: 503 });
   if (url.hostname === 'example-news.com') { // article pages: provide og:image
     calls.pages++;
-    return new Response(`<html><head><meta property="og:image" content="/img/${url.pathname.slice(1)}.png"><title>x</title></head><body>…</body></html>`, { headers: { 'content-type': 'text/html' } });
+    return new Response(`<html><head><meta property="og:image" content="/img/${url.pathname.slice(1)}.png"><meta name="description" content="A story about &lt;b&gt;example&lt;/b&gt; things."><title>x</title></head><body>…</body></html>`, { headers: { 'content-type': 'text/html' } });
   }
   if (url.hostname === 'www.googleapis.com' || url.hostname === 'appleid.apple.com') return J({ keys: [jwk] });
   if (url.hostname === 'api.anthropic.com') {
@@ -118,6 +118,7 @@ try {
   r = await api('/api/news');
   const withThumb = r.data.items.filter((s) => s.image && s.image.includes('example-news.com/img/'));
   ok('cron found real og:image thumbnails', withThumb.length > 0, `${withThumb.length} thumbnails, e.g. ${withThumb[0]?.image}`);
+  ok('…and the publisher’s description for the reader', r.data.items.some((s) => s.summary === 'A story about example things.'));
   ok('other websites get no CORS', (await api('/api/news', { origin: 'https://evil.example' })).cors === null);
 
   console.log('accounts');
@@ -427,6 +428,14 @@ try {
   ok('anyone can read comments', r.data.items.length === 1 && r.data.items[0].user.hat === '🎩' && r.data.items[0].mine === false);
   ok('news shows comment counts', (await api('/api/news')).data.items.find((s) => s.key === storyKey).commentCount === 1);
   const cid = r.data.items[0].id;
+  r = await api('/api/comments/react', { method: 'POST', token: reporters[0], body: { id: cid, emoji: '🔥' } });
+  ok('react to a comment', r.status === 200 && r.data.reactions['🔥'] === 1 && r.data.myReaction === '🔥');
+  await api('/api/comments/react', { method: 'POST', token: reporters[1], body: { id: cid, emoji: '❤️' } });
+  r = await api(`/api/comments?key=${encodeURIComponent(storyKey)}`, { token: reporters[0] });
+  ok('comment reactions show up for everyone (and yours is marked)', r.data.items[0].reactions['🔥'] === 1 && r.data.items[0].reactions['❤️'] === 1 && r.data.items[0].myReaction === '🔥');
+  ok('only real reactions', (await api('/api/comments/react', { method: 'POST', token: reporters[0], body: { id: cid, emoji: '💩' } })).status === 400);
+  r = await api('/api/comments/react', { method: 'POST', token: reporters[0], body: { id: cid, emoji: null } });
+  ok('take a reaction back', r.data.reactions['🔥'] === undefined && r.data.myReaction === null);
   ok('only the author can delete', (await api(`/api/comments/${cid}`, { method: 'DELETE', token: keiToken })).status === 403);
   ok('muted people can’t comment', (await api('/api/comments', { method: 'POST', token: keiToken, body: { key: storyKey, text: 'hello' }, ip: '9.5.5.3' })).status === 403);
   const c2 = (await api('/api/comments', { method: 'POST', token, body: { key: storyKey, text: 'spam spam spam' }, ip: '9.5.5.2' })).data.comment.id;

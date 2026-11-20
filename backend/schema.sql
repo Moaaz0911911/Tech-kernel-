@@ -245,3 +245,9 @@ CREATE TABLE IF NOT EXISTS trophies (
   score    INTEGER,
   PRIMARY KEY (user_id, week)
 );
+CREATE TABLE IF NOT EXISTS comment_reacts (
+  comment_id INTEGER NOT NULL,
+  user_id    TEXT NOT NULL,
+  emoji      TEXT NOT NULL,
+  PRIMARY KEY (comment_id, user_id)
+);

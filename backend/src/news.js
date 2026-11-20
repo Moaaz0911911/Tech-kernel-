@@ -131,6 +131,7 @@ export async function findThumbnails(env, max = 12) {
   const { results } = await env.DB.prepare('SELECT key, url FROM stories WHERE image IS NULL AND image_checked = 0 ORDER BY time DESC LIMIT ?').bind(max).all();
   await Promise.allSettled(results.map(async (row) => {
     let image = null;
+    let description = null;
     try {
       if (!/news\.ycombinator\.com/.test(row.url)) {
         const res = await fetchWithTimeout(row.url, 6000, { headers: { Accept: 'text/html' } });
@@ -139,10 +140,13 @@ export async function findThumbnails(env, max = 12) {
           image = metaContent(html, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
           if (image) image = new URL(decodeEntities(image), row.url).href;
           if (image && !isHttpUrl(image)) image = null;
+          // the publisher's own short description, so the in-app reader has something to show
+          description = metaContent(html, ['og:description', 'twitter:description', 'description']);
+          if (description) description = stripTags(decodeEntities(description)).slice(0, 400) || null;
         }
       }
     } catch { /* unreachable site: leave it without a picture */ }
-    await env.DB.prepare('UPDATE stories SET image = COALESCE(image, ?), image_checked = 1 WHERE key = ?').bind(image, row.key).run();
+    await env.DB.prepare("UPDATE stories SET image = COALESCE(image, ?), summary = CASE WHEN summary IS NULL OR summary = '' THEN COALESCE(?, summary) ELSE summary END, image_checked = 1 WHERE key = ?").bind(image, description, row.key).run();
   }));
   return results.length;
 }
@@ -164,9 +168,10 @@ async function readHead(res, limit) {
 function metaContent(html, names) {
   for (const n of names) {
     const esc = n.replace(/[.:]/g, '\\$&');
-    const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${esc}["'][^>]+content=["']([^"']+)["']`, 'i'))
-      || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${esc}["']`, 'i'));
-    if (m) return m[1];
+    // content="…" may contain the other kind of quote (like an apostrophe), so match the same quote at both ends
+    const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${esc}["'][^>]+content=(["'])(.*?)\\1`, 'is'))
+      || html.match(new RegExp(`<meta[^>]+content=(["'])(.*?)\\1[^>]+(?:property|name)=["']${esc}["']`, 'is'));
+    if (m && m[2].trim()) return m[2];
   }
   return null;
 }

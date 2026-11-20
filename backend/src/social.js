@@ -43,10 +43,28 @@ const personRow = (r) => {
 };
 
 // ---------------- story comments ----------------
-function toComment(r, me) {
+export const COMMENT_REACTS = ['❤️', '😂', '🔥', '👍', '🤯', '😮'];
+
+/** Reaction counts (and the viewer's own reaction) for a list of comments. */
+async function commentReactions(env, ids, me) {
+  const counts = {};
+  const mine = {};
+  if (!ids.length) return { counts, mine };
+  const marks = ids.map(() => '?').join(',');
+  const { results } = await env.DB.prepare(`SELECT comment_id, emoji, COUNT(*) AS n FROM comment_reacts WHERE comment_id IN (${marks}) GROUP BY comment_id, emoji`).bind(...ids).all();
+  for (const r of results) (counts[r.comment_id] ||= {})[r.emoji] = r.n;
+  if (me) {
+    const { results: own } = await env.DB.prepare(`SELECT comment_id, emoji FROM comment_reacts WHERE user_id = ? AND comment_id IN (${marks})`).bind(me.id, ...ids).all();
+    for (const r of own) mine[r.comment_id] = r.emoji;
+  }
+  return { counts, mine };
+}
+
+function toComment(r, me, reacts = { counts: {}, mine: {} }) {
   const l = look(r.u_profile || '{}');
   return {
     id: r.id, key: r.story_key, text: r.hidden ? '' : r.text, hidden: !!r.hidden, created: r.created, mine: !!me && r.user_id === me.id,
+    reactions: reacts.counts[r.id] || {}, myReaction: reacts.mine[r.id] || null,
     user: { username: r.username, nickname: r.nickname || r.username, avatar: l.avatar || r.avatar, hat: l.hat, frame: l.frame, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
   };
 }
@@ -56,7 +74,8 @@ export async function listComments(env, user, key) {
   if (!k) throw new HttpError(400, 'Missing story');
   const { results } = await env.DB.prepare(`SELECT c.*, u.profile AS u_profile, u.streak AS u_streak, u.last_day AS u_last FROM comments c LEFT JOIN users u ON u.id = c.user_id
     WHERE c.story_key = ? AND c.hidden = 0 ORDER BY c.id DESC LIMIT 100`).bind(k).all();
-  return { key: k, items: results.reverse().map((r) => toComment(r, user)), count: results.length };
+  const reacts = await commentReactions(env, results.map((r) => r.id), user);
+  return { key: k, items: results.reverse().map((r) => toComment(r, user, reacts)), count: results.length };
 }
 
 export async function postComment(env, user, body, ctx) {
@@ -83,6 +102,18 @@ async function notifyCommentMentions(env, author, text, story) {
     await notify(env, u.id, { kind: 'mentions', title: tr(langOfProfile(u.profile), 'commentMention', { who: author.username }), body: `${story.title.slice(0, 80)} — ${text.slice(0, 120)}`, url: `./#story=${encodeURIComponent(story.key)}`, tag: 'comment', icon: '🗨️' }, budget);
   }
   return results.length;
+}
+
+export async function reactComment(env, user, body) {
+  const id = Number(body.id);
+  const emoji = body.emoji == null ? null : String(body.emoji);
+  if (emoji && !COMMENT_REACTS.includes(emoji)) throw new HttpError(400, 'Unknown reaction');
+  const c = await env.DB.prepare('SELECT id FROM comments WHERE id = ? AND hidden = 0').bind(id).first();
+  if (!c) throw new HttpError(404, 'Comment not found');
+  if (emoji) await env.DB.prepare('INSERT OR REPLACE INTO comment_reacts (comment_id, user_id, emoji) VALUES (?, ?, ?)').bind(id, user.id, emoji).run();
+  else await env.DB.prepare('DELETE FROM comment_reacts WHERE comment_id = ? AND user_id = ?').bind(id, user.id).run();
+  const r = await commentReactions(env, [id], user);
+  return { id, reactions: r.counts[id] || {}, myReaction: r.mine[id] || null };
 }
 
 export async function deleteComment(env, user, id) {

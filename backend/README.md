@@ -5,7 +5,7 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | Feature | What it does |
 |---|---|
 | 📰 **News collector** | Every 5 minutes it fetches Hacker News, DEV, The Verge, TechCrunch, Ars Technica, Engadget and Wired (RSS parsed on the server, no third-party RSS service), sorts them into categories with the same rules as the website, and stores them. |
-| 🖼️ **Real thumbnails** | Visits new articles and grabs their `og:image`, so cards show real pictures instead of emoji art. |
+| 🖼️ **Real thumbnails + descriptions** | Visits new articles and grabs their `og:image` and the publisher's own short description (`og:description`), so cards show real pictures and the reader shows what the story is about. |
 | 🔐 **Accounts** | Username + password (no email). Passwords hashed with salted PBKDF2-SHA256; one-time recovery codes for forgotten passwords; 30-day sessions stored as hashes; rate-limited logins and sign-ups. |
 | 🔄 **Sync** | Name tag, XP, saved stories, reactions, achievements, settings and the kids' stars follow you to every device. |
 | 🏆 **Leaderboard & streaks** | Top 20 by XP (opt-out), daily check-in streaks with bonus XP. |
@@ -88,6 +88,7 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET` / `POST /api/tournament` | optional / Bearer | This week's 8 headlines, board, last week's winners · `{ answers: { id: "real"\|"fake" } }` |
 | `GET /api/comments?key=` · `POST /api/comments` | – / Bearer | A story's comments · `{ key, text }` |
 | `POST /api/comments/report` · `DELETE /api/comments/:id` | Bearer | `{ id }` · delete your own |
+| `POST /api/comments/react` | Bearer | `{ id, emoji }` (❤️ 😂 🔥 👍 🤯 😮, or `null` to take it back) → `{ reactions, myReaction }`. Comments come back with `reactions` and your `myReaction`. |
 | `POST /api/follow` | Bearer | `{ username, follow: true\|false }` |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
@@ -112,7 +113,7 @@ npm run dev       # local dev server at http://localhost:8787
 ```
 src/index.js   routes, CORS, cron handler
 src/db.js      storage: SQLite Durable Object (or D1 if bound)
-src/news.js    collector, RSS/Atom parser, thumbnails, story queries (reuses ../js/news.js for categories)
+src/news.js    collector, RSS/Atom parser, thumbnails + publisher descriptions, story queries (reuses ../js/news.js for categories)
 src/auth.js    accounts: password hashing, recovery codes, sessions, streaks, cleaning what browsers send
 src/codme.js   Claude-powered codme replies grounded in kerNEl's stories
 src/community.js  chat rooms, @codme in chat, moderation, daily poll, profile cards

@@ -129,7 +129,7 @@ export function timeAgoI18n(ts) {
 export const fmtDate = (ts, opts = { day: 'numeric', month: 'short' }) => new Date(ts).toLocaleDateString(lang === 'ar' ? 'ar-EG-u-nu-latn' : langInfo.html, opts);
 
 /** Arabic needs fonts with Arabic letters: load them only for Arabic readers. */
-export function loadLangFonts(families = 'Lalezar&family=Baloo+Bhaijaan+2:wght@400;600;800') {
+export function loadLangFonts(families = 'IBM+Plex+Sans+Arabic:wght@400;500;600;700') {
   if (lang !== 'ar' || document.getElementById('arFonts')) return;
   const link = document.createElement('link');
   link.id = 'arFonts';

@@ -15,6 +15,9 @@ import { HATS, FRAMES, unlocked } from './cosmetics.js';
 import { initPlay } from './play.js';
 import { initSocial } from './social.js';
 import { initExtras } from './extras.js';
+import { icon, setIcon } from './icons.js';
+import { initTabs, initGlass } from './tabs.js';
+import { initReader } from './reader.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
 const PAGE = 24;
@@ -49,6 +52,8 @@ let game = null;
 let play = null;
 let social = null;
 let extras = null;
+let reader = null;
+let tabs = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
@@ -288,13 +293,34 @@ function badgeList(it) {
   if ((it.comments || 0) >= 150) b.push(['spicy', t('🌶️ SPICY')]);
   return b.slice(0, 2);
 }
-const badgesHTML = (list) => (list.length ? `<div class="badges">${list.map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>` : '');
+const plain = (s) => String(s).replace(/^[\p{Extended_Pictographic}\u{1F100}-\u{1F1FF}\uFE0F\u200d]+\s*/u, ''); // badge text without its emoji
+const badgesHTML = (list) => (list.length ? `<div class="badges">${list.map(([k, x]) => `<span class="badge badge-${k}">${esc(plain(x))}</span>`).join('')}</div>` : '');
 
-function reactsHTML(it, mine) {
-  return `<span class="reacts" role="group" aria-label="${t('Reactions')}">${REACTS.map((r) => {
+function reactsHTML(it, mine, cls = '') {
+  return `<span class="reacts ${cls}" data-cls="${cls}" role="group" aria-label="${t('Reactions')}"${cls.includes('tapback') ? ' hidden' : ''}>${REACTS.map((r) => {
     const n = it.reactions?.[r.id] || 0;
     return `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${esc(t(r.label))}${n ? ` · ${n}` : ''}" aria-pressed="${mine === r.id}">${r.emoji}${n ? `<small class="react-n">${compact(n)}</small>` : ''}</button>`;
   }).join('')}</span>`;
+}
+
+/** The little reaction button on a card: your reaction (or a smiley) + how many people reacted. Tap it for the tapback bubble. */
+function reactTriggerHTML(it, mine) {
+  const total = Object.values(it.reactions || {}).reduce((a, b) => a + b, 0);
+  const emo = REACTS.find((r) => r.id === mine)?.emoji;
+  return `${emo ? `<span class="emo">${emo}</span>` : icon('react')}${total ? `<small>${compact(total)}</small>` : ''}`;
+}
+function reactWrapHTML(it, mine) {
+  return `<span class="react-wrap"><button type="button" class="icon-btn react-trigger${mine ? ' on' : ''}" data-reactmenu aria-haspopup="true" aria-label="${t('Reactions')}" title="${t('Reactions')}">${reactTriggerHTML(it, mine)}</button>${reactsHTML(it, mine, 'tapback glass')}</span>`;
+}
+function cardActionsHTML(it, d, { mini = false } = {}) {
+  const saved = d.saved.some((s) => s.key === it.key);
+  const mine = d.reactions[it.key];
+  return `${reactWrapHTML(it, mine)}
+    ${auth.ready ? `<button type="button" class="icon-btn cmt" data-comments title="${t('kerNEl comments')}">${icon('comment')}${it.commentCount ? `<small>${compact(it.commentCount)}</small>` : ''}</button>` : ''}
+    <span class="spacer"></span>
+    ${mini ? '' : `<button type="button" class="icon-btn" data-explain title="${t('Explain like I’m 10 / TL;DR')}">${icon('brain')}</button>`}
+    <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${icon('bookmark')}</button>
+    ${mini ? '' : `<button type="button" class="icon-btn" data-share title="${t('Share')}">${icon('share')}</button>`}`;
 }
 
 function sig(it, d) {
@@ -313,24 +339,13 @@ function cardHTML(it, variant, d) {
     <a class="card-thumb" href="${url}" target="_blank" rel="noopener noreferrer" data-open tabindex="-1" aria-hidden="true">${thumbHTML(it, c)}${badgesHTML(badgeList(it))}</a>
     <div class="card-body">
       <div class="card-meta">
-        <button type="button" class="chip chip-cat" data-cat="${c.id}" title="${esc(t('More {cat} news', { cat: t(c.label) }))}">${c.emoji} ${esc(t(c.label))}</button>
-        <span class="src">${esc(it.sourceEmoji || '')} ${esc(it.source)}</span>
+        <button type="button" class="chip chip-cat" data-cat="${c.id}" title="${esc(t('More {cat} news', { cat: t(c.label) }))}">${esc(t(c.label))}</button>
+        <span class="src">${esc(it.source)}</span>
         <time datetime="${isoTime}" data-time="${it.time}">${timeAgo(it.time)}</time>
       </div>
       <h3 class="card-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open dir="ltr" lang="en">${esc(it.title)}</a></h3>
       ${it.summary && variant !== 'mini' ? `<p class="card-summary" dir="auto">${esc(it.summary)}</p>` : ''}
-      <div class="card-foot">
-        ${it.points ? `<span class="stat" title="${t('Upvotes / reactions')}">▲ ${compact(it.points)}</span>` : ''}
-        ${it.commentsUrl ? `<a class="stat" href="${esc(safeUrl(it.commentsUrl))}" target="_blank" rel="noopener noreferrer" title="${t('Comments on the original site')}">💬 ${compact(it.comments)}</a>` : ''}
-        <span class="domain">${esc(it.domain)}</span>
-        <span class="spacer"></span>
-        ${reactsHTML(it, mine)}
-        ${auth.ready ? `<button type="button" class="icon-btn cmt" data-comments title="${t('kerNEl comments')}">🗨️${it.commentCount ? `<small>${compact(it.commentCount)}</small>` : ''}</button>` : ''}
-        <button type="button" class="icon-btn" data-explain title="${t('Explain like I’m 10 / TL;DR')}">🧠</button>
-        <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${saved ? '🔖' : '📑'}</button>
-        <button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">💬</button>
-        <button type="button" class="icon-btn" data-share title="${t('Share')}">🔗</button>
-      </div>
+      <div class="card-foot">${cardActionsHTML(it, d, { mini: variant === 'mini' })}</div>
     </div>
   </article>`;
 }
@@ -469,28 +484,18 @@ function renderHero() {
     <article class="card hero-main" data-key="${esc(main.key)}" style="--cat-h:${c.hue}">
       <a class="hero-media card-thumb" href="${url}" target="_blank" rel="noopener noreferrer" data-open tabindex="-1" aria-hidden="true">${thumbHTML(main, c)}</a>
       <div class="hero-overlay">
-        <div class="hero-stickers"><span class="sticker">${t('🏆 TOP KERNEL')}</span>${badgeList(main).map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>
+        <div class="hero-stickers"><span class="sticker">${esc(plain(t('🏆 TOP KERNEL')))}</span>${badgeList(main).map(([k, x]) => `<span class="badge badge-${k}">${esc(plain(x))}</span>`).join('')}</div>
         <div class="card-meta">
-          <button type="button" class="chip chip-cat" data-cat="${c.id}">${c.emoji} ${esc(t(c.label))}</button>
-          <span class="src">${esc(main.sourceEmoji || '')} ${esc(main.source)}</span>
+          <button type="button" class="chip chip-cat" data-cat="${c.id}">${esc(t(c.label))}</button>
+          <span class="src">${esc(main.source)}</span>
           <time datetime="${new Date(main.time).toISOString()}" data-time="${main.time}">${timeAgo(main.time)}</time>
         </div>
         <h2 class="hero-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open dir="ltr" lang="en">${esc(main.title)}</a></h2>
-        <div class="card-foot">
-          ${main.points ? `<span class="stat">▲ ${compact(main.points)}</span>` : ''}
-          ${main.commentsUrl ? `<a class="stat" href="${esc(safeUrl(main.commentsUrl))}" target="_blank" rel="noopener noreferrer">💬 ${compact(main.comments)}</a>` : ''}
-          <span class="domain">${esc(main.domain)}</span>
-          <span class="spacer"></span>
-          ${reactsHTML(main, mine)}
-          ${auth.ready ? `<button type="button" class="icon-btn cmt" data-comments title="${t('kerNEl comments')}">🗨️${main.commentCount ? `<small>${compact(main.commentCount)}</small>` : ''}</button>` : ''}
-          <button type="button" class="icon-btn" data-explain title="${t('Explain like I’m 10 / TL;DR')}">🧠</button>
-          <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${t('Save')}">${saved ? '🔖' : '📑'}</button>
-          <button type="button" class="icon-btn" data-share title="${t('Share')}">🔗</button>
-        </div>
+        <div class="card-foot">${cardActionsHTML(main, d)}</div>
       </div>
     </article>
     <div class="hero-side">
-      <h2 class="side-title">${t('Also popping')} <span aria-hidden="true">🍿</span></h2>
+      <h2 class="side-title">${t('Also popping')}</h2>
       ${side.map((it) => cardHTML(it, 'mini', d)).join('')}
     </div>`;
 }
@@ -594,15 +599,13 @@ function renderAuthSlot() {
 
 function renderNav() {
   const nav = $('#catNav');
-  const tabs = [
+  const list = [
     { id: 'all', label: 'All', emoji: '⚡' },
     ...(auth.user ? [{ id: 'foryou', label: 'For You', emoji: '⭐' }] : []),
     ...CATEGORIES,
     { id: 'saved', label: 'Saved', emoji: '🔖' },
   ];
-  nav.innerHTML = tabs.map((x) => `<button type="button" class="nav-btn" data-cat="${x.id}" aria-pressed="${state.cat === x.id}"><span aria-hidden="true">${x.emoji}</span> ${esc(t(x.label))}</button>`).join('')
-    + (auth.ready ? `<button type="button" class="nav-btn nav-chat" data-action="chat"><span aria-hidden="true">💬</span> ${t('Chat')}<span class="chat-dot" hidden></span></button>` : '')
-    + `<a class="nav-btn nav-kids" href="kids.html"><span aria-hidden="true">🧸</span> ${t('Kids')}</a>`;
+  nav.innerHTML = list.map((x) => `<button type="button" class="nav-btn" data-cat="${x.id}" aria-pressed="${state.cat === x.id}">${esc(t(x.label))}</button>`).join('');
 }
 
 function renderAll() {
@@ -643,7 +646,7 @@ function syncCards(key) {
     card.querySelectorAll('[data-save]').forEach((b) => {
       b.classList.toggle('on', saved);
       b.setAttribute('aria-pressed', String(saved));
-      b.textContent = saved ? '🔖' : '📑';
+      if (b.classList.contains('mr-save')) b.textContent = saved ? '🔖' : '📑';
       b.title = saved ? t('Remove from your bucket') : t('Save to your popcorn bucket');
     });
     card.querySelectorAll('[data-react]').forEach((b) => {
@@ -718,8 +721,8 @@ function refreshReactButtons(key) {
   if (!it) return;
   const mine = getData().reactions[key];
   $$('[data-key]').filter((el) => el.dataset.key === key).forEach((card) => {
-    const box = card.querySelector('.reacts');
-    if (box) box.outerHTML = reactsHTML(it, mine);
+    card.querySelectorAll('.reacts').forEach((box) => { box.outerHTML = reactsHTML(it, mine, box.dataset.cls || ''); });
+    card.querySelectorAll('.react-trigger').forEach((b) => { b.innerHTML = reactTriggerHTML(it, mine); b.classList.toggle('on', !!mine); });
     if (card.dataset.sig) card.dataset.sig = sig(it, getData());
   });
 }
@@ -881,13 +884,19 @@ function migrateGuest() {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const btn = $('#themeBtn');
-  btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+  setIcon(btn, theme === 'dark' ? 'moon' : 'sun');
   btn.title = theme === 'dark' ? t('Switch to light mode') : t('Switch to dark mode');
+  const st = $('#setTheme');
+  if (st) st.textContent = theme === 'dark' ? t('Dark') : t('Light');
+  setIcon(st?.closest('.set-row'), theme === 'dark' ? 'moon' : 'sun');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#f5f5f7');
 }
 function paintSoundBtn() {
   const b = $('#soundBtn');
-  b.textContent = sfx.enabled ? '🔊' : '🔇';
+  setIcon(b, sfx.enabled ? 'soundOn' : 'soundOff');
   b.setAttribute('aria-pressed', String(sfx.enabled));
+  const ss = $('#setSound');
+  if (ss) ss.textContent = sfx.enabled ? t('On') : t('Off');
   b.title = sfx.enabled ? t('Sound effects on') : t('Sound effects off');
 }
 
@@ -904,11 +913,11 @@ function handleAction(action, el) {
       break;
     }
     case 'edit-profile': closeMenus(); openProfile(false); break;
-    case 'show-saved': closeMenus(); setCat('saved'); break;
-    case 'show-foryou': closeMenus(); if (!auth.getProfile().topics?.length) openProfile(false); setCat('foryou'); break;
+    case 'show-saved': closeMenus(); tabs?.show('news'); setCat('saved'); break;
+    case 'show-foryou': closeMenus(); tabs?.show('news'); if (!auth.getProfile().topics?.length) openProfile(false); setCat('foryou'); break;
     case 'signout': closeMenus(); auth.signOut(); break;
-    case 'account': closeMenus(); openAccount(); break;
-    case 'show-board': closeMenus(); $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }); loadLeaderboard(); break;
+    case 'account': closeMenus(); if (auth.user) openAccount(); else openAuth('signin'); break;
+    case 'show-board': closeMenus(); tabs?.show('me'); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); loadLeaderboard(); break;
     case 'refresh': refreshNow(true); break;
     case 'more': state.limit += PAGE; renderFeed(); break;
     case 'joke': $('#jokeText').textContent = pick(JOKES); sfx.boing(); burstFrom(el, { emojis: ['😂', '🤣', '😆'], count: 8 }); break;
@@ -922,7 +931,9 @@ function handleAction(action, el) {
     case 'briefing': extras?.briefing(); break;
     case 'swipe': extras?.openSwipe(); break;
     case 'wrapped': closeMenus(); extras?.openWrapped(); break;
-    case 'show-friends': closeMenus(); $('#friendsWidget').hidden = false; $('#friendsWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }); social?.loadFriends(); break;
+    case 'show-friends': closeMenus(); tabs?.show('me'); $('#friendsWidget').hidden = false; setTimeout(() => $('#friendsWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); social?.loadFriends(); break;
+    case 'me': closeMenus(); tabs?.show('me'); break;
+    case 'play': tabs?.show('play'); break;
     case 'ask-codme': codme?.open(state.query ? `news about ${state.query}` : undefined); break;
     case 'clear-search': setQuery(''); $('#search').focus(); break;
     case 'theme': {
@@ -936,12 +947,14 @@ function handleAction(action, el) {
     case 'sound': sfx.toggle(); paintSoundBtn(); if (auth.user) setData(getData()); break;
     case 'chaos': {
       const on = document.documentElement.classList.toggle('chaos');
-      el.setAttribute('aria-pressed', String(on));
+      $$('[data-action="chaos"]').forEach((b) => b.id === 'chaosBtn' && b.setAttribute('aria-pressed', String(on)));
+      if ($('#setChaos')) $('#setChaos').textContent = on ? t('On') : t('Off');
       if (on) { rain(['🌀', '🍿', '🤪', '💥'], 40); sfx.boing(); toast(t('CHAOS MODE: everything is wobbly now. You asked for this. 🌀'), { emoji: '🤪' }); checkAchievements({ chaos: true }); }
       else toast(t('Order restored. Boring, but readable. 😌'), { emoji: '🧘' });
       break;
     }
     case 'home': {
+      tabs?.show('news');
       state.cat = 'all'; state.query = ''; state.limit = PAGE; $('#search').value = '';
       renderNav(); renderFeed();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -952,6 +965,8 @@ function handleAction(action, el) {
     default: break;
   }
 }
+
+function closeTapbacks() { $$('.tapback').forEach((tb) => { tb.hidden = true; }); }
 
 function closeMenus() {
   $$('.user-menu .menu').forEach((m) => { m.hidden = true; });
@@ -1013,7 +1028,9 @@ function adoptLang(profile) {
 
 function paintLangs() {
   $('#langMenu').innerHTML = langMenuHTML();
-  $('#footerLangs').innerHTML = `<span aria-hidden="true">🌐</span> ${LANGS.map((l) => `<button type="button" data-lang="${l.id}" aria-pressed="${l.id === lang}" lang="${l.html}">${l.flag} ${l.name}</button>`).join('')}`;
+  const pills = LANGS.map((l) => `<button type="button" data-lang="${l.id}" aria-pressed="${l.id === lang}" lang="${l.html}">${l.flag} ${l.name}</button>`).join('');
+  $('#footerLangs').innerHTML = `${icon('globe')} ${pills}`;
+  if ($('#meLangs')) $('#meLangs').innerHTML = pills;
 }
 
 function switchLang(id) {
@@ -1035,7 +1052,7 @@ function openDeepLink() {
   const h = decodeURIComponent(location.hash.slice(1));
   if (h.startsWith('story=')) {
     const it = findItem(h.slice(6));
-    if (it) social?.openComments(it);
+    if (it) reader?.open(it, { focus: 'comments' });
     else if (feed.size) toast(t('That story has left the feed — it was more than a few days old.'), { emoji: '🕰️' });
   } else if (h.startsWith('user=')) community?.showProfile(h.slice(5));
 }
@@ -1043,6 +1060,7 @@ function openDeepLink() {
 function boot() {
   translatePage();
   loadLangFonts();
+  initGlass();
   paintLangs();
   // theme: saved choice, else follow the system
   applyTheme(store.get('theme', null) || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
@@ -1094,6 +1112,11 @@ function boot() {
     rankInfo: (i) => ({ emoji: RANKS[i]?.[2] || '🍿', title: RANKS[i]?.[1] || '' }),
     badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
   });
+  tabs = initTabs({
+    chatEnabled: !!community,
+    onChat: () => (community ? community.toggle() : openAuth('signin')),
+    onView: (view) => { if (view === 'me') { loadLeaderboard(); social?.loadFriends(); } if (view === 'play') play?.refresh(); },
+  });
   extras = initExtras({
     getItems: () => feed.all(),
     getVisible,
@@ -1105,6 +1128,15 @@ function boot() {
     onReact: (key, id) => { if (getData().reactions[key] !== id) react(key, Object.assign(document.createElement('button'), { dataset: { react: id } })); },
     onRead: (key, e) => markRead(key, e),
     bump,
+  });
+  reader = initReader({
+    getData,
+    reactsHTML,
+    summarize: (it, mode) => extras.summarize(it, mode),
+    speakText: (text) => extras.speakText(text),
+    showComments: (it, opts) => (social ? social.openComments(it, opts) : ($('.reader-comments').hidden = true)),
+    onOpen: (it) => markRead(it.key),
+    chatEnabled: !!community,
   });
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
@@ -1141,18 +1173,38 @@ function boot() {
       renderFeed();
     }
     const tickerLink = el.closest('[data-read-key]');
-    if (tickerLink && tickerLink.dataset.readKey) markRead(tickerLink.dataset.readKey, e);
+    if (tickerLink && tickerLink.dataset.readKey) {
+      const it = findItem(tickerLink.dataset.readKey);
+      if (it && reader && !(e.metaKey || e.ctrlKey)) { e.preventDefault(); reader.open(it); }
+      markRead(tickerLink.dataset.readKey, e);
+    }
+    if (!el.closest('.react-wrap')) closeTapbacks();
     const card = el.closest('[data-key]');
     if (card) {
       const key = card.dataset.key;
       let b;
-      if ((b = el.closest('[data-save]'))) toggleSave(key, b);
-      else if ((b = el.closest('[data-react]'))) react(key, b);
-      else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) extras?.explain(it); }
-      else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) social?.openComments(it); }
+      if ((b = el.closest('[data-reactmenu]'))) {
+        const tb = b.parentElement.querySelector('.tapback');
+        const show = tb.hidden;
+        closeTapbacks();
+        tb.hidden = !show;
+        if (show) sfx.blip();
+      } else if ((b = el.closest('[data-save]'))) toggleSave(key, b);
+      else if ((b = el.closest('[data-react]'))) { react(key, b); setTimeout(closeTapbacks, 260); }
+      else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
+      else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-chatshare]')) { const it = findItem(key); if (it && community) community.share(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' }); }
-      else if (el.closest('[data-open]')) markRead(key, e);
+      else if (el.closest('[data-chatshare]')) {
+        const it = findItem(key);
+        reader?.close();
+        if (it && community) community.share(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });
+      } else if (el.closest('[data-open]')) {
+        // a plain click opens the story in kerNEl's reader; ⌘/Ctrl-click still opens the original site
+        const it = findItem(key);
+        const plain = !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) && e.button === 0;
+        if (it && reader && plain && !el.closest('#readerDialog')) { e.preventDefault(); reader.open(it); }
+        markRead(key, e);
+      }
     }
   });
   document.addEventListener('auxclick', (e) => {
@@ -1355,7 +1407,7 @@ function boot() {
 
   // ---- keyboard shortcuts ----
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMenus();
+    if (e.key === 'Escape') { closeMenus(); closeTapbacks(); }
     const typing = e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]');
     if (typing || e.metaKey || e.ctrlKey || e.altKey || document.querySelector('dialog[open]')) return;
     if (e.key === '/') { e.preventDefault(); search.focus(); }

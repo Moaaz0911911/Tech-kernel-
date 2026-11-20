@@ -122,6 +122,7 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM comments WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM comment_reports WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM comment_reacts WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM follows WHERE follower_id = ? OR followee_id = ?').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM activity WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM quiz_scores WHERE user_id = ?').bind(user.id),
@@ -288,6 +289,7 @@ export default {
         env.DB.prepare('DELETE FROM alerted_stories WHERE at < ?').bind(Date.now() - 3 * 864e5),
         env.DB.prepare('DELETE FROM activity WHERE created < ?').bind(Date.now() - 30 * 864e5),
         env.DB.prepare('DELETE FROM comment_reports WHERE comment_id NOT IN (SELECT id FROM comments)'),
+        env.DB.prepare('DELETE FROM comment_reacts WHERE comment_id NOT IN (SELECT id FROM comments WHERE hidden = 0)'),
         // old games and caches: explanations go with their story; quizzes, battles and picks after a while
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'x:%' AND substr(k, 3) NOT IN (SELECT key FROM stories)"),
         env.DB.prepare("DELETE FROM kv WHERE (k LIKE 'quiz:%' OR k LIKE 'battle:%') AND substr(k, instr(k, ':') + 1) < ?").bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
