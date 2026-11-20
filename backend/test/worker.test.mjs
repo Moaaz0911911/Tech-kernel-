@@ -66,7 +66,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({
     scriptPath: `${here}.build/index.js`,
     compatibilityDate: '2026-11-01',
     d1Databases: { DB: 'test-db' },
-    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', GOOGLE_CLIENT_ID: GOOGLE_ID, APPLE_CLIENT_ID: APPLE_ID, ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3' },
+    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3' },
     outboundService: outbound,
   }],
 }));
@@ -100,41 +100,105 @@ try {
   ok('cron found real og:image thumbnails', withThumb.length > 0, `${withThumb.length} thumbnails, e.g. ${withThumb[0]?.image}`);
   ok('other websites get no CORS', (await api('/api/news', { origin: 'https://evil.example' })).cors === null);
 
-  console.log('sign-in');
-  const good = { iss: 'https://accounts.google.com', aud: GOOGLE_ID, sub: '1111', email: 'ada@example.com', name: 'Ada Lovelace', given_name: 'Ada', picture: 'https://lh3.googleusercontent.com/a/x', exp: now() + 3600, iat: now() };
-  r = await api('/api/auth/google', { method: 'POST', body: { idToken: makeToken({ ...good, aud: 'someone-else' }) } });
-  ok('rejects token for another app', r.status === 401, r.data.error);
-  const { privateKey: otherKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-  r = await api('/api/auth/google', { method: 'POST', body: { idToken: makeToken(good, { key: otherKey }) } });
-  ok('rejects forged signature', r.status === 401, r.data.error);
-  r = await api('/api/auth/google', { method: 'POST', body: { idToken: makeToken({ ...good, exp: now() - 3600 }) } });
-  ok('rejects expired token', r.status === 401, r.data.error);
-  r = await api('/api/auth/google', { method: 'POST', body: { idToken: makeToken(good) } });
-  ok('valid Google token signs up', r.status === 200 && r.data.isNew && /^[a-f0-9]{64}$/.test(r.data.token), `nickname ${r.data.user.profile.nickname}`);
-  const token = r.data.token;
-  r = await api('/api/auth/google', { method: 'POST', body: { idToken: makeToken(good) } });
-  ok('second sign-in is a returning user', r.status === 200 && !r.data.isNew);
-  const stored = await db.prepare('SELECT token_hash FROM sessions LIMIT 1').first();
-  ok('only a hash of the session token is stored', stored.token_hash.length === 64 && stored.token_hash !== token);
-  r = await api('/api/auth/apple', { method: 'POST', body: { idToken: makeToken({ iss: 'https://appleid.apple.com', aud: APPLE_ID, sub: 'apple-42', email: 'x@privaterelay.appleid.com', exp: now() + 600 }), name: 'Tim Apple', givenName: 'Tim' } });
-  ok('valid Apple token signs up (keeps one-time name)', r.status === 200 && r.data.user.name === 'Tim Apple' && r.data.user.profile.nickname === 'Tim');
-  const appleToken = r.data.token;
+  console.log('accounts');
+  r = await api('/api/auth/available?username=Azzy');
+  ok('username check: free name', r.data.available === true);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'ab', password: 'popcorn-rocks-42' }, ip: '1.1.1.1' });
+  ok('rejects too-short username', r.status === 400, r.data.error);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'codme', password: 'popcorn-rocks-42' }, ip: '1.1.1.2' });
+  ok('rejects reserved username', r.status === 400, r.data.error);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Azzy', password: 'password' }, ip: '1.1.1.3' });
+  ok('rejects weak/common password', r.status === 400, r.data.error);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Azzy', password: 'my-azzy-pass-1' }, ip: '1.1.1.4' });
+  ok('rejects password containing the username', r.status === 400, r.data.error);
+  let t0 = Date.now();
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Azzy', password: 'Popcorn-Rocks-42!' }, ip: '5.5.5.5' });
+  ok('sign-up works', r.status === 200 && r.data.isNew && /^[a-f0-9]{64}$/.test(r.data.token), `recovery code ${r.data.recoveryCode} · ${Date.now() - t0} ms`);
+  let token = r.data.token;
+  const recoveryCode = r.data.recoveryCode;
+  ok('recovery code is 20 unambiguous characters', /^([2-9A-HJ-NP-Z]{5}-){3}[2-9A-HJ-NP-Z]{5}$/.test(recoveryCode));
+  const row = await db.prepare("SELECT pass_hash, recovery_hash FROM users WHERE username_lc = 'azzy'").first();
+  ok('password stored only as a salted PBKDF2 hash', row.pass_hash.startsWith('pbkdf2-sha256$20000$') && !row.pass_hash.includes('Popcorn'));
+  ok('recovery code stored only as a hash', row.recovery_hash.length === 64 && !row.recovery_hash.includes(recoveryCode));
+  ok('username check: taken (any capitalisation)', (await api('/api/auth/available?username=aZZy')).data.available === false);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'AZZY', password: 'Another-Pass-77' }, ip: '5.5.5.6' });
+  ok('duplicate username refused', r.status === 409, r.data.error);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Keiiii', password: 'Kei-Loves-Tech-9', leaderboard: true }, ip: '6.6.6.6' });
+  const keiToken = r.data.token;
+  ok('second user signs up', r.status === 200);
+
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'azzy', password: 'wrong-password' } });
+  ok('wrong password refused', r.status === 401, r.data.error);
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'nobody_here', password: 'whatever-123' } });
+  ok('unknown user gives the same message', r.status === 401 && r.data.error === 'Wrong username or password');
+  t0 = Date.now();
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'AZZY', password: 'Popcorn-Rocks-42!' } });
+  ok('login works (username not case-sensitive)', r.status === 200 && !r.data.isNew && r.data.user.username === 'Azzy', `${Date.now() - t0} ms`);
+  const token2 = r.data.token; // "second device"
+  for (let i = 0; i < 10; i++) await api('/api/auth/login', { method: 'POST', body: { username: 'keiiii', password: 'guess-' + i }, ip: `7.7.7.${i}` });
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'keiiii', password: 'Kei-Loves-Tech-9' }, ip: '7.7.8.1' });
+  ok('password guessing is rate-limited per username', r.status === 429, r.data.error);
 
   console.log('account sync');
   r = await api('/api/me', { token });
-  ok('/api/me returns the account', r.status === 200 && r.data.user.email === 'ada@example.com');
+  ok('/api/me returns the account', r.status === 200 && r.data.user.username === 'Azzy');
   ok('/api/me without a token is refused', (await api('/api/me')).status === 401);
-  r = await api('/api/me/profile', { method: 'PUT', token, body: { nickname: '<b>Popcorn</b>Pilot', avatar: '🦖', topics: ['ai', 'space', 'nonsense'] } });
+  r = await api('/api/me/profile', { method: 'PUT', token, body: { nickname: '<b>Popcorn</b>Pilot', avatar: '🦖', topics: ['ai', 'space', 'nonsense'], leaderboard: true } });
   ok('profile saved and cleaned', r.data.profile.nickname === 'bPopcorn/bPilot' && r.data.profile.avatar === '🦖' && r.data.profile.topics.join() === 'ai,space');
   const story = (await api('/api/news')).data.items[0];
-  await api('/api/me/data', { method: 'PUT', token, body: { xp: 42, read: [story.key], saved: [story], reactions: { [story.key]: 'fire', x: 'bogus' } } });
-  r = await api('/api/me', { token });
-  ok('XP, saved and read sync across devices', r.data.user.data.xp === 42 && r.data.user.data.saved[0].key === story.key && r.data.user.data.read.length === 1 && !r.data.user.data.reactions.x);
+  await api('/api/me/data', { method: 'PUT', token, body: { xp: 42, read: [story.key], saved: [story], reactions: { [story.key]: 'fire', x: 'bogus' }, badges: { first_pop: 1 }, settings: { theme: 'light', sound: true } } });
+  await api('/api/me/data', { method: 'PATCH', token: token2, body: { kids: { stars: { binary: 3, robot: 1, nope: 3 }, robotLevel: 1, name: 'Azzy' } } });
+  await api('/api/me/data', { method: 'PATCH', token, body: { kids: { stars: { binary: 1, robot: 2 } }, badges: { bookworm: 2 } } });
+  r = await api('/api/me', { token: token2 });
+  const d = r.data.user.data;
+  ok('XP, saved, read, settings sync across devices', d.xp === 42 && d.saved[0].key === story.key && d.read.length === 1 && d.settings.theme === 'light' && !d.reactions.x);
+  ok('kids stars merge (never go down) across devices', d.kids.stars.binary === 3 && d.kids.stars.robot === 2 && !('nope' in d.kids.stars) && d.kids.robotLevel === 1);
+  ok('achievements only get added', d.badges.first_pop && d.badges.bookworm);
+  await api('/api/me/data', { method: 'PATCH', token, body: { xp: 999999 } });
+  ok('XP jumps are capped (+500 per save)', (await api('/api/me', { token })).data.user.data.xp === 542);
+
+  console.log('streaks & leaderboard');
+  r = await api('/api/me/checkin', { method: 'POST', token });
+  ok('first check-in starts a streak', r.data.streak === 1 && r.data.bonusXp === 5);
+  r = await api('/api/me/checkin', { method: 'POST', token });
+  ok('same-day check-in gives nothing extra', r.data.already && r.data.bonusXp === 0);
+  await db.prepare("UPDATE users SET last_day = ?, streak = 4 WHERE username_lc = 'azzy'").bind(new Date(Date.now() - 864e5).toISOString().slice(0, 10)).run();
+  r = await api('/api/me/checkin', { method: 'POST', token });
+  ok('next-day check-in grows the streak', r.data.streak === 5 && r.data.bonusXp === 25 && r.data.bestStreak === 5);
+  await api('/api/me/data', { method: 'PATCH', token: keiToken, body: { xp: 120 } });
+  r = await api('/api/leaderboard', { token: keiToken });
+  ok('leaderboard ranks by XP', r.data.top.map((x) => `${x.place}.${x.username}:${x.xp}`).join(' ') === '1.Azzy:542 2.Keiiii:120' && r.data.me.place === 2, r.data.top.map((x) => `${x.avatar}${x.nickname} ${x.rankEmoji}`).join(', '));
+  await api('/api/me/profile', { method: 'PUT', token: keiToken, body: { leaderboard: false } });
+  r = await api('/api/leaderboard');
+  ok('opting out hides you from the leaderboard', r.data.top.length === 1 && r.data.top[0].username === 'Azzy');
+
+  console.log('passwords');
+  r = await api('/api/me/password', { method: 'POST', token, body: { currentPassword: 'nope-nope-1', newPassword: 'Brand-New-Pass-5' } });
+  ok('change password needs the current one', r.status === 401);
+  r = await api('/api/me/password', { method: 'POST', token, body: { currentPassword: 'Popcorn-Rocks-42!', newPassword: 'Brand-New-Pass-5' } });
+  ok('change password works', r.status === 200);
+  ok('…this device stays signed in', (await api('/api/me', { token })).status === 200);
+  ok('…other devices are signed out', (await api('/api/me', { token: token2 })).status === 401);
+  ok('old password no longer works', (await api('/api/auth/login', { method: 'POST', body: { username: 'azzy', password: 'Popcorn-Rocks-42!' }, ip: '8.8.8.1' })).status === 401);
+  r = await api('/api/auth/recover', { method: 'POST', body: { username: 'azzy', recoveryCode: 'AAAAA-BBBBB-CCCCC-DDDDD', newPassword: 'Forgot-It-Again-3' }, ip: '8.8.8.2' });
+  ok('wrong recovery code refused', r.status === 401, r.data.error);
+  r = await api('/api/auth/recover', { method: 'POST', body: { username: 'AZZY', recoveryCode: recoveryCode.toLowerCase().replace(/-/g, ' '), newPassword: 'Forgot-It-Again-3' }, ip: '8.8.8.3' });
+  ok('forgot password: recovery code resets it', r.status === 200 && r.data.recoveryCode && r.data.recoveryCode !== recoveryCode);
+  ok('…and signs out every old session', (await api('/api/me', { token })).status === 401);
+  token = r.data.token;
+  r = await api('/api/auth/recover', { method: 'POST', body: { username: 'azzy', recoveryCode, newPassword: 'Sneaky-Reuse-44' }, ip: '8.8.8.4' });
+  ok('a used recovery code cannot be reused', r.status === 401);
+  ok('new password logs in', (await api('/api/auth/login', { method: 'POST', body: { username: 'azzy', password: 'Forgot-It-Again-3' }, ip: '8.8.8.5' })).status === 200);
+  ok('progress survived the password reset', (await api('/api/me', { token })).data.user.data.xp === 542);
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Spammer1', password: 'Spam-Spam-Spam-1' }, ip: '5.5.5.5' });
+  await api('/api/auth/register', { method: 'POST', body: { username: 'Spammer2', password: 'Spam-Spam-Spam-1' }, ip: '5.5.5.5' });
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Spammer3', password: 'Spam-Spam-Spam-1' }, ip: '5.5.5.5' });
+  ok('sign-ups are rate-limited per visitor', r.status === 429, r.data.error);
 
   console.log('shared reactions');
   ok('guests cannot add shared reactions', (await api('/api/react', { method: 'POST', body: { key: story.key, emoji: 'fire' } })).status === 401);
   await api('/api/react', { method: 'POST', token, body: { key: story.key, emoji: 'fire' } });
-  r = await api('/api/react', { method: 'POST', token: appleToken, body: { key: story.key, emoji: 'fire' } });
+  r = await api('/api/react', { method: 'POST', token: keiToken, body: { key: story.key, emoji: 'fire' } });
   ok('two people react → shared count', r.data.reactions.fire === 2);
   r = await api('/api/react', { method: 'POST', token, body: { key: story.key, emoji: 'lol' } });
   ok('changing your reaction moves your vote', r.data.reactions.fire === 1 && r.data.reactions.lol === 1);
@@ -156,7 +220,8 @@ try {
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });
   ok('signed-out token stops working', (await api('/api/me', { token })).status === 401);
-  ok('account deletion works', (await api('/api/me', { method: 'DELETE', token: appleToken })).status === 200 && (await api('/api/me', { token: appleToken })).status === 401);
+  ok('account deletion works', (await api('/api/me', { method: 'DELETE', token: keiToken })).status === 200 && (await api('/api/me', { token: keiToken })).status === 401);
+  ok('…and frees the username', (await api('/api/auth/available?username=keiiii')).data.available === true);
   console.log('\nALL BACKEND TESTS PASSED');
 } finally {
   await mf.dispose();

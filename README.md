@@ -4,7 +4,8 @@
 
 - 🔴 **Live news that refreshes every 30 seconds.** Hacker News, DEV Community, The Verge, TechCrunch, Ars Technica and Engadget, merged and de-duplicated. A popcorn-kernel countdown in the header "pops" on every refresh, and new stories get a 🍿 *JUST POPPED* sticker.
 - 🤖 **codme**, a chat robot with googly eyes that follow your cursor. It finds specific news ("OpenAI this week", "SpaceX in 2023", "what's hot in gaming?"), explains tech words ("what is an API?"), summarises the day, tells jokes, and accepts voice input in Chrome and Edge. It searches the live feed **and** the full Hacker News archive.
-- 🔐 **Sign in / sign up with Google or Apple** using the official Google Identity Services and Sign in with Apple JS libraries. New users get an onboarding "name tag" (nickname, avatar, favourite topics), which powers a ⭐ *For You* feed.
+- 🔐 **Accounts with a username and password**, no email or Google/Apple needed. Everything is saved to the account and follows you to every device: XP and rank, saved stories, reactions, achievements, daily streak, theme and sound settings, and the kids' stars. Forgot your password? The **recovery code** you got at sign-up resets it.
+- 🏆 **Leaderboard, 🔥 daily streaks and 🏅 12 achievements** (you can hide yourself from the leaderboard).
 - 🧸 **kerNEl Kids**: nine mini-games that teach kids how tech works, with stars, badges and a printable certificate:
   inside a computer · binary light bulbs · program-the-robot maze · pixel painter · how internet packets travel · password monster · online-safety superhero quiz · tech word flip cards · big tech quiz. It also has a 🔊 "Read to me" option.
 - 🎉 **Funny extras:** category filters, hot/newest/🎲 chaos sorting, emoji reactions, *Emoji TL;DR* 🪄, saved "popcorn bucket", XP and ranks (Unpopped Kernel → Popcorn Overlord), Hype-o-meter trending words, a source-health panel, a doomscroll meter ("you've scrolled 3.2 giraffes"), 🌀 chaos mode, dark/light themes, sound effects, keyboard shortcuts (`/` search, `r` refresh, `c` codme) and a Konami-code easter egg.
@@ -26,64 +27,32 @@ The news, codme and kids section work right away. Sign-in needs the one-time set
 
 ### Prefer a single file?
 
-[`dist/index.html`](dist/index.html) is the **whole site in one HTML file**, with every stylesheet and script inlined and the kids corner built in at `#kids`. You can double-click it, or upload just that file to a repository as `index.html`. In that version, sign-in IDs go in the `CONFIG` block near the top of its `<script>`. Rebuild it after editing the source files with `node tools/build-single-file.mjs`.
+[`dist/index.html`](dist/index.html) is the **whole site in one HTML file**, with every stylesheet and script inlined and the kids corner built in at `#kids`. You can double-click it, or upload just that file to a repository as `index.html`. In that version, the server address (`apiBase`) goes in the `CONFIG` block near the top of its `<script>`. Rebuild it after editing the source files with `node tools/build-single-file.mjs`.
 
 ---
 
-## 2. Turn on Google & Apple sign-in
+## 2. Accounts and the kerNEl server
 
-The site uses the official libraries, but **Google and Apple only allow sign-in from apps you have registered with them**. Registering gives you a public ID (not a secret) that you paste into [`js/config.js`](js/config.js). Until you do that, the buttons show a friendly "setup needed" note.
+Accounts (username + password), synced progress, the leaderboard, streaks, shared reactions, real thumbnails and AI codme all run on the small free server in [`backend/`](backend/), a Cloudflare Worker. Set it up once with the steps in [`backend/README.md`](backend/README.md) (about 10 minutes), then put its address in the config:
 
-### Google (free, about 5 minutes)
+```js
+apiBase: 'https://kernel-api.YOUR-NAME.workers.dev',
+```
 
-1. Go to <https://console.cloud.google.com/> and create a project, for example "kerNEl".
-2. Open **Google Auth Platform** (called *APIs & Services → OAuth consent screen* in older consoles):
-   - **Branding:** app name `kerNEl`, your support email.
-   - **Audience:** *External*. Click **Publish app** so anyone can sign in, not just test users. The basic scopes kerNEl uses (name, email, photo) don't need Google's review.
-3. Go to **Clients → Create client** (or *Credentials → Create credentials → OAuth client ID*):
-   - **Application type:** *Web application*
-   - **Authorized JavaScript origins:** `https://moaaz0911911.github.io`
-     (for local testing, also add `http://localhost` and `http://localhost:8000`)
-   - You do **not** need a redirect URI.
-4. Copy the **Client ID**. It looks like `1234567890-abc123.apps.googleusercontent.com`.
-5. Paste it into `js/config.js`:
-   ```js
-   google: { clientId: '1234567890-abc123.apps.googleusercontent.com' },
-   ```
-6. Commit and push. Google can take a few minutes to recognise a new origin.
+That's `js/config.js` for the multi-file site, or the `CONFIG` block in the single-file `index.html`. Until `apiBase` is set, the site still shows the news and kids corner; the sign-in window explains that accounts aren't switched on yet, and progress is kept in the visitor's browser.
 
-### Apple (needs a paid Apple Developer Program membership)
+**How accounts work**
+- **Sign up:** pick a username (checked live), a password with a strength meter, and choose whether to appear on the leaderboard. No email.
+- **Recovery code:** right after sign-up you get a one-time code like `K7QX2-9MZPA-…` to copy or download. It's the only way to reset a forgotten password, so the "Continue" button stays locked until you tick "I saved it".
+- **Your progress follows you:** sign in on another phone or laptop and everything is there. Anything you did as a guest before signing up is carried into the new account.
+- **Account & security** (in your avatar menu): change password (other devices get signed out), make a new recovery code, or delete the account and all its data.
 
-Sign in with Apple on the web is only available to members of the [Apple Developer Program](https://developer.apple.com/programs/) ($99/year).
-
-1. At <https://developer.apple.com/account/resources/identifiers/list>, click **➕ → App IDs → App**. Give it a description and a bundle ID such as `com.yourname.kernel`, tick **Sign In with Apple**, then **Register**.
-2. Click **➕ → Services IDs**, description `kerNEl Web`, identifier `com.yourname.kernel.web`, then **Register**.
-3. Open that Services ID, tick **Sign In with Apple**, then click **Configure**:
-   - **Primary App ID:** the App ID from step 1
-   - **Domains and Subdomains:** `moaaz0911911.github.io`
-   - **Return URLs:** `https://moaaz0911911.github.io/Tech-kernel-/` (the trailing slash matters)
-   - Click **Save → Continue → Save**.
-4. Paste the Services ID into `js/config.js`:
-   ```js
-   apple: { clientId: 'com.yourname.kernel.web', redirectURI: '' },
-   ```
-   Leave `redirectURI` empty and the site uses its own address automatically. If you set it, it must **exactly** match the Return URL from step 3.
-5. Commit and push, then test on the live `https://` site. Apple doesn't accept `localhost`.
-
-> If Apple's portal asks you to *verify* the domain with a file, that file has to be served from `https://moaaz0911911.github.io/.well-known/…`. That means it goes in a separate repository named `moaaz0911911.github.io`, or you can use a custom domain for this site.
-
-### How sign-in works (and what it doesn't do)
-
-- **Google:** Google renders its own official button. After you pick an account, Google hands the page a signed **ID token** (a JWT).
-- **Apple:** a popup opens on apple.com. After you approve, Apple hands the page a signed ID token too. Apple only sends your name the **first** time, so kerNEl saves it then. Users can choose "Hide my email", in which case you'll see a `@privaterelay.appleid.com` address.
-- kerNEl checks each token's **issuer, audience (your ID), expiry and anti-replay nonce/state**, then creates a profile. *Sign up* and *sign in* are the same tap: the first sign-in creates the account, opens the name-tag onboarding, and carries over any guest XP and saved stories.
-- GitHub Pages has no server, so profiles, XP and saved stories live in **that browser's localStorage**. They don't sync between devices. If you add a backend later, send the ID token to it and **verify the token's signature there** before trusting it.
-
----
-
-## 2½. Optional backend: synced accounts, shared reactions, real thumbnails, codme AI
-
-The [`backend/`](backend/) folder is a free Cloudflare Worker that adds cross-device accounts, public reaction counts, real article thumbnails, a more reliable news feed, and an AI-powered codme. Setup steps are in [`backend/README.md`](backend/README.md). When it's running, put its URL in `apiBase` in the config. Without it, the site works exactly as described below.
+**Security**
+- Passwords are hashed on the server with PBKDF2-SHA256 and a random salt. Only the hash is stored, never the password.
+- Session tokens and recovery codes are stored as hashes too.
+- Login attempts are rate-limited per visitor and per username, and so are sign-ups.
+- Wrong usernames and wrong passwords get the same message, so nobody can probe which usernames exist.
+- The site must be served over **https** (GitHub Pages is) so passwords are encrypted on the way.
 
 ## 3. How the news works
 
@@ -110,10 +79,10 @@ kids.html         kerNEl Kids
 404.html          "this kernel never popped"
 css/main.css      main styles (dark/light, chaos mode, responsive)
 css/kids.css      kids styles (+ print styles for the certificate)
-js/config.js      ← your settings: refresh time, Google/Apple IDs, sources
+js/config.js      ← your settings: refresh time, server address (apiBase), sources
 js/app.js         main page: rendering, refresh loop, saving, XP, dialogs
 js/news.js        fetching, categorising, de-duplicating, searching
-js/auth.js        Google Identity Services + Sign in with Apple JS
+js/auth.js        accounts: sign up / in, recovery codes, password changes, sessions
 js/codme.js       the codme chat robot
 js/kids.js        the nine kids adventures
 js/fun.js         sound effects, confetti, popcorn rain, Konami code

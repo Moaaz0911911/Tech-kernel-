@@ -33,16 +33,22 @@ CREATE TABLE IF NOT EXISTS source_status (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-  id        TEXT PRIMARY KEY,               -- "google:<sub>" or "apple:<sub>"
-  provider  TEXT NOT NULL,
-  email     TEXT,
-  name      TEXT,
-  picture   TEXT,
-  profile   TEXT NOT NULL DEFAULT '{}',     -- JSON: nickname, avatar, topics
-  data      TEXT NOT NULL DEFAULT '{}',     -- JSON: xp, read, saved, reactions, konami
-  created   INTEGER NOT NULL,
-  updated   INTEGER NOT NULL
+  id            TEXT PRIMARY KEY,             -- random id, e.g. "u_3f9a…"
+  username      TEXT NOT NULL,                -- as the person typed it (shown on the leaderboard)
+  username_lc   TEXT NOT NULL UNIQUE,         -- lower-case, for unique look-ups
+  pass_hash     TEXT NOT NULL,                -- "pbkdf2-sha256$<iterations>$<salt>$<hash>" — never the password itself
+  recovery_hash TEXT,                         -- SHA-256 of the one-time recovery code
+  profile       TEXT NOT NULL DEFAULT '{}',   -- JSON: nickname, avatar, topics, leaderboard
+  data          TEXT NOT NULL DEFAULT '{}',   -- JSON: xp, read, saved, reactions, badges, settings, kids …
+  xp            INTEGER NOT NULL DEFAULT 0,   -- copy of data.xp for the leaderboard
+  on_board      INTEGER NOT NULL DEFAULT 1,   -- 1 = show on the leaderboard
+  streak        INTEGER NOT NULL DEFAULT 0,
+  best_streak   INTEGER NOT NULL DEFAULT 0,
+  last_day      TEXT,                         -- last check-in day (UTC, YYYY-MM-DD)
+  created       INTEGER NOT NULL,
+  updated       INTEGER NOT NULL
 );
+CREATE INDEX IF NOT EXISTS users_board ON users (on_board, xp DESC);
 
 CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,              -- SHA-256 of the bearer token (the token itself is never stored)

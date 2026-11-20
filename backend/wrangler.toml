@@ -14,9 +14,10 @@ database_id = "REPLACE_WITH_YOUR_DATABASE_ID"   # printed by: npx wrangler d1 cr
 [vars]
 # Websites allowed to call this API (comma-separated). localhost is always allowed for testing.
 ALLOWED_ORIGINS = "https://moaaz0911911.github.io"
-# Public IDs — the same values you put in the website's CONFIG.
-GOOGLE_CLIENT_ID = ""
-APPLE_CLIENT_ID = ""
+# Accounts: password hashing rounds. 20000 fits the free plan's CPU limit;
+# on the Workers Paid plan use "100000" (the maximum) — existing passwords upgrade at next sign-in.
+PBKDF2_ITERATIONS = "20000"
+SIGNUPS_PER_IP_HOUR = "5"
 # codme AI limits (protects your Anthropic bill)
 CODME_PER_IP_HOUR = "20"
 CODME_PER_USER_DAY = "100"

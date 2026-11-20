@@ -692,3 +692,59 @@ a.stat:hover { color: var(--red); }
   .ticker-run { animation: none; }
   .ticker-track { overflow-x: auto; }
 }
+
+/* ---------- accounts (username + password) ---------- */
+.auth-form { display: flex; flex-direction: column; gap: 2px; text-align: left; margin-top: 10px; }
+.auth-form .field { margin: 8px 0; }
+.auth-form .field small { font-weight: 500; }
+.pw-wrap { position: relative; display: flex; }
+.pw-wrap input { flex: 1; padding-right: 46px; }
+.field .pw-wrap input { height: 46px; padding-left: 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 600; width: 100%; }
+.field .pw-wrap input:focus { border-color: var(--red); outline: none; }
+.pw-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; cursor: pointer; font-size: 1.1rem; padding: 6px; }
+.auth-form .pw-meter { height: 8px; border-radius: 999px; background: var(--card-2); overflow: hidden; margin-top: -2px; }
+.auth-form .pw-meter i { display: block; height: 100%; width: 0; border-radius: 999px; transition: width .3s var(--pop), background .3s; }
+.pw-label { color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.name-check { font-weight: 700; min-height: 1.2em; }
+.name-check.good { color: var(--mint); }
+.name-check.bad { color: #ff6b78; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; margin: 8px 0; cursor: pointer; text-align: left; }
+.check input { width: 18px; height: 18px; accent-color: var(--red); }
+.auth-error { min-height: 1.2em; margin: 4px 0 6px; font-weight: 600; }
+.auth-link { align-self: center; margin-top: 10px; font-size: .88rem; color: var(--muted); }
+.auth-form.shake { animation: nope .4s; }
+@keyframes nope { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.btn.busy { opacity: .7; cursor: progress; }
+.recovery-code {
+  margin: 12px 0; padding: 16px; border-radius: 16px; text-align: center; user-select: all;
+  font: 700 clamp(1rem, 4.5vw, 1.35rem) ui-monospace, Menlo, monospace; letter-spacing: .06em; word-break: break-all;
+  background: var(--butter); color: #111; border: 3px dashed var(--hard);
+}
+.code-actions { display: flex; gap: 8px; justify-content: center; }
+.mini-title { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 6px 0 2px; }
+#accountDialog .auth-form { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.danger-zone { text-align: left; padding-top: 12px; }
+.btn-danger { background: transparent; color: #ff6b78; border-color: #ff6b78; }
+.btn-danger:hover { background: #ff4d5e; color: #fff; }
+.synced { margin: 0; text-align: center; }
+.pw-stats { flex-wrap: wrap; gap: 4px 10px; }
+
+/* achievements */
+.ach-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.ach-grid p { grid-column: 1 / -1; margin: 0 0 4px; }
+.ach { display: grid; place-items: center; aspect-ratio: 1; border-radius: 12px; background: var(--card-2); font-size: 1.25rem; filter: grayscale(1); opacity: .55; cursor: help; transition: transform .2s var(--pop); }
+.ach.on { filter: none; opacity: 1; background: color-mix(in srgb, var(--butter) 30%, var(--card-2)); box-shadow: inset 0 0 0 2px var(--butter); }
+.ach:hover { transform: scale(1.15) rotate(-6deg); }
+
+/* leaderboard */
+.board { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.board li { display: grid; grid-template-columns: 28px 28px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 12px; }
+.board li:nth-child(odd) { background: var(--card-2); }
+.board li.me { box-shadow: inset 0 0 0 2px var(--red); }
+.b-place { font-weight: 800; text-align: center; }
+.b-ava { font-size: 1.2rem; text-align: center; }
+.b-name { min-width: 0; line-height: 1.15; }
+.b-name b, .b-name small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.b-name small { color: var(--muted); font-size: .72rem; }
+.b-xp { font-weight: 800; text-align: right; line-height: 1; }
+.b-xp small { display: block; font-size: .6rem; color: var(--muted); font-weight: 600; }

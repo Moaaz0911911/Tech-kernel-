@@ -1,6 +1,43 @@
 // kerNEl Kids — nine mini-adventures that teach how tech works.
 import { $, $$, esc, pick, store, toast, sleep } from './utils.js';
 import { sfx, burst, burstFrom, rain } from './fun.js';
+import { auth } from './auth.js';
+
+// ---------- saving progress to the kerNEl account (when signed in on the main page) ----------
+let syncTimer = 0;
+function syncKids() {
+  if (!auth.user) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    auth.api('/api/me/data', { method: 'PATCH', body: {
+      kids: { stars: store.get('kids:stars', {}), robotLevel: store.get('kids:robotLevel', 0), name: store.get('kids:name', '') },
+      settings: { kidsRead: !!store.get('kids:read', false) },
+    } }).catch(() => {});
+  }, 1200);
+}
+
+async function pullKids() {
+  const el = $('#kidsSync');
+  if (!auth.user) {
+    if (auth.ready) el.innerHTML = '💾 <a href="index.html">Sign in</a> to save your stars';
+    return;
+  }
+  el.textContent = `☁️ Saved to @${auth.user.username}`;
+  try {
+    const { user } = await auth.api('/api/me');
+    const k = user.data?.kids;
+    if (k) { // stars only ever go up, so merging never loses progress
+      const local = store.get('kids:stars', {});
+      for (const [id, n] of Object.entries(k.stars || {})) local[id] = Math.max(local[id] || 0, n);
+      store.set('kids:stars', local);
+      stars = local;
+      store.set('kids:robotLevel', Math.max(store.get('kids:robotLevel', 0), k.robotLevel || 0));
+      if (k.name && !store.get('kids:name', '')) store.set('kids:name', k.name);
+      paintStars();
+    }
+    syncKids(); // send anything earned on this device before signing in
+  } catch { el.textContent = '📡 Offline — stars are saved on this device'; }
+}
 
 const LESSONS = [
   { id: 'computer', emoji: '🖥️', title: 'Inside a computer', badge: 'Hardware Hero', color: '#ff9f43' },
@@ -30,6 +67,7 @@ function award(id, n, where) {
   stars = { ...stars, [id]: n };
   store.set('kids:stars', stars);
   paintStars();
+  syncKids();
   const lesson = LESSONS.find((l) => l.id === id);
   if (where) burstFrom(where, { emojis: ['⭐', '🌟', '✨'], count: 18 });
   sfx.win();
@@ -253,6 +291,7 @@ function initRobot() {
   $('#robotNext').addEventListener('click', () => {
     level = Math.min(level + 1, LEVELS.length - 1);
     store.set('kids:robotLevel', level);
+    syncKids();
     program = [];
     drawProgram();
     reset();
@@ -629,7 +668,7 @@ function initCertificate() {
     dlg.showModal();
     rain(['🎓', '⭐', '🍿'], 40);
   });
-  $('#certName').addEventListener('input', (e) => store.set('kids:name', e.target.value));
+  $('#certName').addEventListener('input', (e) => { store.set('kids:name', e.target.value); syncKids(); });
   $('#certPrint').addEventListener('click', () => window.print());
   $('#certClose').addEventListener('click', () => dlg.close());
 }
@@ -648,6 +687,7 @@ function paintToggles() {
 
 function boot() {
   paintStars();
+  pullKids();
   paintToggles();
   initComputer();
   initBinary();
@@ -663,6 +703,7 @@ function boot() {
   $('#readToggle').addEventListener('click', () => {
     readAloud = !readAloud;
     store.set('kids:read', readAloud);
+    syncKids();
     paintToggles();
     if (readAloud) speak('Okay! I will read things out loud for you.', true);
     else if ('speechSynthesis' in window) speechSynthesis.cancel();

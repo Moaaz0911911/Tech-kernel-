@@ -52,7 +52,7 @@ let kids = read('kids.html')
   .replace('<link rel="stylesheet" href="css/kids.css">', `<style>\n${read('css/kids.css')}\n</style>`)
   .replace(/href="kids\.html"/g, 'href="#top"')
   .replace(/href="index\.html"/g, 'href="#" data-close-kids')
-  .replace('<script type="module" src="js/kids.js"></script>', () => `<script type="module">\n${safeScript(bundle(['utils', 'fun', 'kids']) + kidsNav)}\n</script>`);
+  .replace('<script type="module" src="js/kids.js"></script>', () => `<script type="module">\n${safeScript(bundle(['config', 'utils', 'fun', 'auth', 'kids']).replace(/href="index\.html"/g, 'href="#" data-close-kids') + kidsNav)}\n</script>`);
 if (/src="js\/|href="css\//.test(kids)) throw new Error('kids.html still references external files');
 
 // ---------------- Main page ----------------

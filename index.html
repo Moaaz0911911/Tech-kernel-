@@ -115,6 +115,17 @@
           <div class="trend-list" id="trendList"></div>
         </section>
 
+        <section class="widget" aria-labelledby="badgeTitle">
+          <h3 id="badgeTitle" class="widget-title">🏅 Achievements</h3>
+          <div class="ach-grid" id="achList"></div>
+        </section>
+
+        <section class="widget widget-board" aria-labelledby="boardTitle" id="boardWidget" hidden>
+          <h3 id="boardTitle" class="widget-title">🏆 Top Kernels</h3>
+          <ol class="board" id="boardList"></ol>
+          <p class="muted small" id="boardMe"></p>
+        </section>
+
         <section class="widget widget-codme">
           <h3 class="widget-title">🤖 Meet codme</h3>
           <p>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
@@ -173,25 +184,62 @@
         <button type="button" class="auth-tab" role="tab" data-mode="signup" aria-selected="false">Sign up</button>
       </div>
       <h2 id="authTitle">Welcome back, kernel! 🍿</h2>
-      <p id="authSub" class="muted">Pick your portal.</p>
-      <p id="authWarn" class="auth-warn" hidden>⚠️ Sign-in only works when this site is opened over <b>https://</b> (like GitHub Pages) or on <b>localhost</b> — not by double-clicking the HTML file.</p>
-      <div class="auth-buttons">
-        <div class="google-slot" id="googleSlot"></div>
-        <button type="button" class="apple-btn" id="appleBtn">
-          <svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-          <span id="appleLabel">Sign in with Apple</span>
-        </button>
+      <p id="authSub" class="muted">Sign in with your kerNEl username.</p>
+      <p id="authOff" class="auth-warn" hidden>🛠️ Accounts need the kerNEl server, and it isn’t switched on yet. Site owner: follow <code>backend/README.md</code>, then put the server address in <code>apiBase</code>.</p>
+
+      <!-- sign in -->
+      <form class="auth-form" id="signinForm" data-view="signin" novalidate>
+        <label class="field"><span>Username</span><input name="username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" required></label>
+        <label class="field"><span>Password</span>
+          <span class="pw-wrap"><input name="password" type="password" autocomplete="current-password" maxlength="128" required><button type="button" class="pw-eye" aria-label="Show password" title="Show password">👁️</button></span>
+        </label>
+        <p class="auth-error" role="alert"></p>
+        <button class="btn btn-primary btn-block btn-big" type="submit">Pop in 🍿</button>
+        <button type="button" class="linkish auth-link" data-mode="recover">Forgot your password?</button>
+      </form>
+
+      <!-- sign up -->
+      <form class="auth-form" id="signupForm" data-view="signup" novalidate hidden>
+        <label class="field"><span>Pick a username <small class="muted">3–20 letters, numbers or _</small></span>
+          <input name="username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" required>
+          <small class="name-check" aria-live="polite"></small>
+        </label>
+        <label class="field"><span>Password <small class="muted">at least 8 characters</small></span>
+          <span class="pw-wrap"><input name="password" type="password" autocomplete="new-password" maxlength="128" required><button type="button" class="pw-eye" aria-label="Show password" title="Show password">👁️</button></span>
+        </label>
+        <div class="pw-meter" aria-hidden="true"><i></i></div>
+        <small class="pw-label" aria-live="polite">🌽 Type a password</small>
+        <label class="field"><span>Type it again</span><input name="confirm" type="password" autocomplete="new-password" maxlength="128" required></label>
+        <label class="check"><input type="checkbox" name="leaderboard" checked> Show me on the 🏆 leaderboard</label>
+        <p class="auth-error" role="alert"></p>
+        <button class="btn btn-primary btn-block btn-big" type="submit">Create my account 🎉</button>
+      </form>
+
+      <!-- forgot password -->
+      <form class="auth-form" id="recoverForm" data-view="recover" novalidate hidden>
+        <p class="muted small">Enter your username and the <b>recovery code</b> you saved when you signed up. You’ll get a new code afterwards.</p>
+        <label class="field"><span>Username</span><input name="username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" required></label>
+        <label class="field"><span>Recovery code</span><input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" maxlength="40" required></label>
+        <label class="field"><span>New password</span>
+          <span class="pw-wrap"><input name="password" type="password" autocomplete="new-password" maxlength="128" required><button type="button" class="pw-eye" aria-label="Show password" title="Show password">👁️</button></span>
+        </label>
+        <p class="auth-error" role="alert"></p>
+        <button class="btn btn-primary btn-block btn-big" type="submit">Reset my password 🔑</button>
+        <button type="button" class="linkish auth-link" data-mode="signin">← Back to sign in</button>
+      </form>
+
+      <!-- recovery code (shown after sign-up / reset) -->
+      <div class="auth-form" id="codeView" data-view="code" hidden>
+        <p><b>Save this recovery code somewhere safe.</b> It’s the only way back into your account if you forget your password, and we can’t show it again.</p>
+        <div class="recovery-code" id="recoveryCode" tabindex="0"></div>
+        <div class="code-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-code="copy">📋 Copy</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-code="download">💾 Download</button>
+        </div>
+        <label class="check"><input type="checkbox" id="codeSaved"> I saved my recovery code</label>
+        <button type="button" class="btn btn-primary btn-block btn-big" id="codeDone" disabled>Continue 🍿</button>
       </div>
-      <p class="auth-fine">New here? Signing in creates your kerNEl account automatically. Your name tag, rank and saved stories are kept in this browser.</p>
-      <details class="setup-help" id="setupHelp" hidden>
-        <summary>🛠️ Site owner: sign-in isn’t switched on yet</summary>
-        <ol>
-          <li><b>Google:</b> create an OAuth Client ID (type “Web application”) in Google Cloud Console, add this site’s origin to “Authorized JavaScript origins”, then paste the ID into <code>js/config.js</code>.</li>
-          <li><b>Apple:</b> create a Services ID with “Sign in with Apple” on developer.apple.com, add this domain and return URL, then paste it into <code>js/config.js</code>.</li>
-        </ol>
-        <p class="setup-values">Google “Authorized JavaScript origin”: <code id="setupOrigin"></code><br>Apple “Return URL”: <code id="setupReturn"></code></p>
-        <p>Full step-by-step guide in the project’s <code>README.md</code>.</p>
-      </details>
+      <p class="auth-fine" id="authFine">Your progress — XP, saved stories, reactions, achievements and kids’ stars — is saved to your account and follows you to every device.</p>
     </div>
   </dialog>
 
@@ -213,8 +261,37 @@
         <legend>What makes your kernel pop? <small>(builds your ⭐ For You feed)</small></legend>
         <div class="topic-grid" id="topicPick"></div>
       </fieldset>
+      <label class="check"><input type="checkbox" name="leaderboard"> Show me on the 🏆 leaderboard</label>
       <button class="btn btn-primary btn-block btn-big" id="profileSave" value="save">Pop me in! 🍿</button>
     </form>
+  </dialog>
+
+  <!-- ===== Account settings ===== -->
+  <dialog id="accountDialog" class="modal" aria-labelledby="accountTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <div class="auth-mascot" aria-hidden="true">🔑</div>
+      <h2 id="accountTitle">Account &amp; security</h2>
+      <p class="muted small" id="accountWho"></p>
+      <form class="auth-form" id="passwordForm" novalidate>
+        <h3 class="mini-title">Change password</h3>
+        <label class="field"><span>Current password</span><input name="current" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>New password</span><input name="password" type="password" autocomplete="new-password" required></label>
+        <p class="auth-error" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit">Change password</button>
+        <small class="muted">Other devices will be signed out.</small>
+      </form>
+      <form class="auth-form" id="newCodeForm" novalidate>
+        <h3 class="mini-title">Lost your recovery code?</h3>
+        <label class="field"><span>Your password</span><input name="password" type="password" autocomplete="current-password" required></label>
+        <p class="auth-error" role="alert"></p>
+        <button class="btn btn-ghost btn-block" type="submit">Make a new recovery code</button>
+      </form>
+      <div class="danger-zone">
+        <h3 class="mini-title">Danger zone</h3>
+        <button type="button" class="btn btn-danger btn-block" id="deleteAccount">🗑️ Delete my account forever</button>
+      </div>
+    </div>
   </dialog>
 
   <!-- ===== codme chat robot ===== -->

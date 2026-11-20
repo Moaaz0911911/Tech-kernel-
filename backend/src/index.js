@@ -1,22 +1,25 @@
 // kerNEl API — Cloudflare Worker entry point.
 import { HttpError, json, readJson, corsHeaders, allowedOrigin, clientIp, rateLimit } from './util.js';
 import { collectNews, findThumbnails, latestStories, sourceStatus, reactionCounts } from './news.js';
-import { verifyIdToken, signIn, requireUser, currentUser, signOut, publicUser, cleanProfile, cleanData, REACTS } from './auth.js';
+import {
+  register, login, recover, changePassword, newCodeFor, usernameAvailable, checkin,
+  requireUser, currentUser, signOut, publicUser, cleanProfile, mergeDataPatch, REACTS,
+} from './auth.js';
 import { codmeReply } from './codme.js';
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
+const RANKS = [[0, 'Unpopped Kernel', '🌽'], [50, 'Warm Kernel', '♨️'], [150, 'Sizzling Kernel', '🔥'], [300, 'Freshly Popped', '🍿'], [600, 'Butter Baron', '🧈'], [1000, 'Popcorn Overlord', '👑'], [2000, 'Galactic Snack Deity', '🌌']];
+const rankOf = (xp) => [...RANKS].reverse().find(([min]) => xp >= min);
 
 async function route(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const m = request.method;
+  const ip = clientIp(request);
 
   if (path === '/' || path === '/api/health') {
-    const row = await env.DB.prepare('SELECT COUNT(*) AS n, MAX(first_seen) AS last FROM stories').first();
-    return json({
-      ok: true, name: 'kerNEl API', stories: row?.n || 0, lastNews: row?.last || null,
-      features: { google: !!env.GOOGLE_CLIENT_ID, apple: !!env.APPLE_CLIENT_ID, codmeAI: !!env.ANTHROPIC_API_KEY },
-    });
+    const row = await env.DB.prepare('SELECT (SELECT COUNT(*) FROM stories) AS n, (SELECT MAX(first_seen) FROM stories) AS last, (SELECT COUNT(*) FROM users) AS users').first();
+    return json({ ok: true, name: 'kerNEl API', stories: row?.n || 0, lastNews: row?.last || null, users: row?.users || 0, features: { accounts: true, codmeAI: !!env.ANTHROPIC_API_KEY } });
   }
 
   // ---------- news ----------
@@ -31,38 +34,58 @@ async function route(request, env, ctx) {
     return json({ items: stories, sources: await sourceStatus(env), at: Date.now() }, 200, { 'Cache-Control': 'public, max-age=20' });
   }
 
-  // ---------- auth ----------
-  if ((path === '/api/auth/google' || path === '/api/auth/apple') && m === 'POST') {
-    await rateLimit(env, `auth:${clientIp(request)}`, 30, 3600_000);
-    const provider = path.endsWith('google') ? 'google' : 'apple';
-    const body = await readJson(request, 20_000);
-    const payload = await verifyIdToken(provider, body.idToken, env, { nonce: body.nonce });
-    const name = typeof body.name === 'string' ? body.name.slice(0, 80) : null;
-    const givenName = typeof body.givenName === 'string' ? body.givenName.slice(0, 40) : null;
-    return json(await signIn(env, provider, payload, { name, givenName }));
+  // ---------- accounts ----------
+  if (path === '/api/auth/available' && m === 'GET') {
+    await rateLimit(env, `avail:${ip}`, 120, 3600_000);
+    return json(await usernameAvailable(env, url.searchParams.get('username')));
+  }
+  if (path === '/api/auth/register' && m === 'POST') {
+    await rateLimit(env, `register:${ip}`, Number(env.SIGNUPS_PER_IP_HOUR) || 5, 3600_000);
+    return json(await register(env, await readJson(request, 5_000)));
+  }
+  if (path === '/api/auth/login' && m === 'POST') {
+    const body = await readJson(request, 5_000);
+    await rateLimit(env, `login:ip:${ip}`, 30, 15 * 60_000);
+    await rateLimit(env, `login:user:${String(body.username || '').toLowerCase().slice(0, 30)}`, 10, 15 * 60_000);
+    return json(await login(env, body));
+  }
+  if (path === '/api/auth/recover' && m === 'POST') {
+    const body = await readJson(request, 5_000);
+    await rateLimit(env, `recover:ip:${ip}`, 10, 3600_000);
+    await rateLimit(env, `recover:user:${String(body.username || '').toLowerCase().slice(0, 30)}`, 5, 3600_000);
+    return json(await recover(env, body));
   }
   if (path === '/api/auth/logout' && m === 'POST') {
     await signOut(request, env);
     return json({ ok: true });
   }
 
-  // ---------- account ----------
-  if (path === '/api/me' && m === 'GET') {
-    return json({ user: publicUser(await requireUser(request, env)) });
+  if (path === '/api/me' && m === 'GET') return json({ user: publicUser(await requireUser(request, env)) });
+  if (path === '/api/me/password' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pw:${user.id}`, 10, 3600_000);
+    return json(await changePassword(env, request, user, await readJson(request, 5_000)));
+  }
+  if (path === '/api/me/recovery-code' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pw:${user.id}`, 10, 3600_000);
+    return json(await newCodeFor(env, user, await readJson(request, 5_000)));
   }
   if (path === '/api/me/profile' && m === 'PUT') {
     const user = await requireUser(request, env);
     const profile = cleanProfile(await readJson(request, 10_000), parse(user.profile, {}));
-    await env.DB.prepare('UPDATE users SET profile = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), Date.now(), user.id).run();
+    await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();
     return json({ profile });
   }
-  if (path === '/api/me/data' && m === 'PUT') {
+  if (path === '/api/me/data' && (m === 'PUT' || m === 'PATCH')) { // partial updates are merged
     const user = await requireUser(request, env);
-    const data = cleanData(await readJson(request, 400_000));
-    await env.DB.prepare('UPDATE users SET data = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), Date.now(), user.id).run();
-    return json({ ok: true });
+    await rateLimit(env, `data:${user.id}`, 600, 3600_000);
+    const data = mergeDataPatch(parse(user.data, {}), await readJson(request, 400_000));
+    await env.DB.prepare('UPDATE users SET data = ?, xp = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), data.xp || 0, Date.now(), user.id).run();
+    return json({ ok: true, xp: data.xp || 0 });
   }
-  if (path === '/api/me' && m === 'DELETE') { // let people delete their account
+  if (path === '/api/me/checkin' && m === 'POST') return json(await checkin(env, await requireUser(request, env)));
+  if (path === '/api/me' && m === 'DELETE') { // delete the account and everything in it
     const user = await requireUser(request, env);
     await env.DB.batch([
       env.DB.prepare('DELETE FROM reactions WHERE user_id = ?').bind(user.id),
@@ -70,6 +93,23 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
     return json({ ok: true });
+  }
+
+  // ---------- leaderboard ----------
+  if (path === '/api/leaderboard' && m === 'GET') {
+    const { results } = await env.DB.prepare('SELECT id, username, profile, xp, streak FROM users WHERE on_board = 1 AND xp > 0 ORDER BY xp DESC, created ASC LIMIT 20').all();
+    const top = results.map((r, i) => {
+      const p = parse(r.profile, {});
+      const [, title, emoji] = rankOf(r.xp);
+      return { place: i + 1, username: r.username, nickname: p.nickname || r.username, avatar: p.avatar || '🍿', xp: r.xp, streak: r.streak, rank: title, rankEmoji: emoji };
+    });
+    let me = null;
+    const user = await currentUser(request, env);
+    if (user) {
+      const ahead = await env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE on_board = 1 AND xp > ?').bind(user.xp).first();
+      me = { place: user.on_board ? (ahead?.n || 0) + 1 : null, xp: user.xp, onBoard: !!user.on_board };
+    }
+    return json({ top, me }, 200, user ? {} : { 'Cache-Control': 'public, max-age=60' });
   }
 
   // ---------- shared reactions ----------
@@ -91,7 +131,7 @@ async function route(request, env, ctx) {
   if (path === '/api/codme' && m === 'POST') {
     const user = await currentUser(request, env);
     // Generous enough for real use, tight enough that nobody can run up the bill.
-    await rateLimit(env, `codme:ip:${clientIp(request)}`, Number(env.CODME_PER_IP_HOUR) || 20, 3600_000);
+    await rateLimit(env, `codme:ip:${ip}`, Number(env.CODME_PER_IP_HOUR) || 20, 3600_000);
     if (user) await rateLimit(env, `codme:user:${user.id}`, Number(env.CODME_PER_USER_DAY) || 100, 864e5);
     await rateLimit(env, 'codme:global', Number(env.CODME_GLOBAL_DAY) || 2000, 864e5);
     const body = await readJson(request, 30_000);
@@ -123,7 +163,10 @@ export default {
     ctx.waitUntil((async () => {
       const r = await collectNews(env);
       const t = await findThumbnails(env, 15);
-      await env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()).run();
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()),
+        env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
+      ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);
     })());
   },

@@ -364,6 +364,7 @@ export function initCodme(api) {
     const msg = String(text || '').trim();
     if (!msg) return;
     addMsg('user', esc(msg));
+    api.onAsk?.();
     chain = chain.then(() => respond(msg)).catch((e) => {
       console.error(e);
       typing(false);

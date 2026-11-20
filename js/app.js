@@ -2,7 +2,7 @@
 import { CONFIG } from './config.js';
 import { $, $$, esc, safeUrl, timeAgo, compact, hash, pick, debounce, store, toast } from './utils.js';
 import { NewsFeed, CATEGORIES, catById, hotness, searchLocal, trends } from './news.js';
-import { auth } from './auth.js';
+import { auth, passwordStrength, USERNAME_RE } from './auth.js';
 import { sfx, burst, burstFrom, rain, onKonami, initDoomscroll } from './fun.js';
 import { initCodme } from './codme.js';
 import { JOKES, FACTS, LOADING_LINES, emojify } from './content.js';
@@ -36,16 +36,19 @@ let tickerSig = '';
 let codme = null;
 
 // ====================================================================================
-// Per-profile data (guest or signed-in account) — lives in this browser only
+// Per-profile data (guest or account). Accounts also save it on the kerNEl server.
 // ====================================================================================
-const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false });
+const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, streak: 0, bestStreak: 0 });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
 let syncTimer = 0;
 const setData = (d) => {
   store.set(`data:${auth.profileKey()}`, d);
   if (auth.user?.apiToken) { // keep the account in sync across devices (debounced)
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => auth.api('/api/me/data', { method: 'PUT', body: getData() }).catch(() => {}), 1500);
+    syncTimer = setTimeout(() => {
+      const { streak, bestStreak, ...rest } = getData(); // streaks are kept by the server itself
+      auth.api('/api/me/data', { method: 'PATCH', body: { ...rest, settings: currentSettings() } }).catch(() => {});
+    }, 1500);
   }
 };
 
@@ -61,7 +64,125 @@ function mergeData(local, server) {
     saved,
     reactions: { ...(server.reactions || {}), ...(local.reactions || {}) },
     konami: !!(local.konami || server.konami),
+    badges: { ...(server.badges || {}), ...(local.badges || {}) },
+    codmeAsks: Math.max(local.codmeAsks || 0, server.codmeAsks || 0),
   };
+}
+
+/** Things the account remembers outside the news data: settings and kids' progress. */
+function applyServerExtras(user) {
+  const data = user?.data || {};
+  const st = data.settings;
+  if (st?.theme && st.theme !== document.documentElement.dataset.theme) { store.set('theme', st.theme); applyTheme(st.theme); }
+  if (st && typeof st.sound === 'boolean' && st.sound !== sfx.enabled) { sfx.toggle(); paintSoundBtn(); }
+  if (st && typeof st.kidsRead === 'boolean') store.set('kids:read', st.kidsRead);
+  if (data.kids) { // stars only go up
+    const local = store.get('kids:stars', {});
+    for (const [id, n] of Object.entries(data.kids.stars || {})) local[id] = Math.max(local[id] || 0, n);
+    store.set('kids:stars', local);
+    store.set('kids:robotLevel', Math.max(store.get('kids:robotLevel', 0), data.kids.robotLevel || 0));
+    if (data.kids.name && !store.get('kids:name', '')) store.set('kids:name', data.kids.name);
+  }
+  if (user?.streak !== undefined) {
+    const d = getData();
+    d.streak = user.streak;
+    d.bestStreak = Math.max(d.bestStreak || 0, user.bestStreak || 0);
+    store.set(`data:${auth.profileKey()}`, d);
+  }
+}
+
+function currentSettings() {
+  return { theme: document.documentElement.dataset.theme, sound: sfx.enabled, kidsRead: !!store.get('kids:read', false) };
+}
+
+// ====================================================================================
+// Achievements
+// ====================================================================================
+const KID_LESSONS = ['computer', 'binary', 'robot', 'pixels', 'internet', 'passwords', 'safety', 'words', 'quiz'];
+const ACHIEVEMENTS = [
+  { id: 'first_pop', emoji: '🍿', name: 'First Pop', desc: 'Read your first story', test: (d) => d.read.length >= 1 },
+  { id: 'bookworm', emoji: '📚', name: 'Bookworm', desc: 'Read 50 stories', test: (d) => d.read.length >= 50 },
+  { id: 'collector', emoji: '🪣', name: 'Collector', desc: 'Save 10 stories', test: (d) => d.saved.length >= 10 },
+  { id: 'reactor', emoji: '🔥', name: 'Hype Machine', desc: 'React to 25 stories', test: (d) => Object.keys(d.reactions).length >= 25 },
+  { id: 'chatty', emoji: '🤖', name: 'codme’s Pal', desc: 'Ask codme 10 questions', test: (d) => (d.codmeAsks || 0) >= 10 },
+  { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Read a story between midnight and 5 am', test: (d, x) => !!x.nightRead },
+  { id: 'chaos_agent', emoji: '🌀', name: 'Chaos Agent', desc: 'Turn on chaos mode', test: (d, x) => !!x.chaos },
+  { id: 'cheat_code', emoji: '🕹️', name: 'Cheat Coder', desc: 'Find the secret code', test: (d) => !!d.konami },
+  { id: 'streak_3', emoji: '📅', name: 'Regular', desc: 'Visit 3 days in a row', test: (d) => (d.bestStreak || 0) >= 3 },
+  { id: 'streak_7', emoji: '🗓️', name: 'Week Warrior', desc: 'Visit 7 days in a row', test: (d) => (d.bestStreak || 0) >= 7 },
+  { id: 'overlord', emoji: '👑', name: 'Popcorn Overlord', desc: 'Reach 1,000 XP', test: (d) => d.xp >= 1000 },
+  { id: 'kid_grad', emoji: '🎓', name: 'Tech Explorer', desc: 'Finish every kerNEl Kids adventure', test: () => KID_LESSONS.every((l) => (store.get('kids:stars', {})[l] || 0) > 0) },
+];
+
+function checkAchievements(extra = {}) {
+  const d = getData();
+  const fresh = ACHIEVEMENTS.filter((a) => !d.badges[a.id] && a.test(d, extra));
+  if (!fresh.length) return;
+  for (const a of fresh) d.badges[a.id] = Date.now();
+  d.xp += 20 * fresh.length;
+  setData(d);
+  fresh.forEach((a, i) => setTimeout(() => {
+    toast(`Achievement unlocked: ${a.name} ${a.emoji} (+20 XP)`, { emoji: '🏅', ms: 5000 });
+    rain([a.emoji, '✨', '🏅'], 30);
+    sfx.win();
+  }, i * 900));
+  renderProfileWidget();
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const d = getData();
+  const got = ACHIEVEMENTS.filter((a) => d.badges[a.id]).length;
+  $('#achList').innerHTML = `<p class="muted small">${got} of ${ACHIEVEMENTS.length} unlocked${auth.user ? '' : ' · sign up to keep them forever'}</p>`
+    + ACHIEVEMENTS.map((a) => {
+      const on = !!d.badges[a.id];
+      return `<span class="ach${on ? ' on' : ''}" title="${esc(a.name)} — ${esc(a.desc)}${on ? ' ✓' : ''}" aria-label="${esc(a.name)}: ${esc(a.desc)}${on ? ', unlocked' : ', locked'}">${on ? a.emoji : '🔒'}</span>`;
+    }).join('');
+}
+
+// ====================================================================================
+// Leaderboard
+// ====================================================================================
+let boardTimer = 0;
+async function loadLeaderboard() {
+  const box = $('#boardWidget');
+  if (!auth.ready) { box.hidden = true; return; }
+  box.hidden = false;
+  clearTimeout(boardTimer);
+  boardTimer = setTimeout(loadLeaderboard, 5 * 60_000);
+  try {
+    const { top, me } = await auth.leaderboard();
+    const medal = ['🥇', '🥈', '🥉'];
+    $('#boardList').innerHTML = top.length
+      ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}">
+          <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava" aria-hidden="true">${esc(u.avatar)}</span>
+          <span class="b-name"><b>${esc(u.nickname)}</b><small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
+          <span class="b-xp">${compact(u.xp)}<small>XP</small></span></li>`).join('')
+      : '<li class="muted small">Nobody yet — be the first kernel to pop! 🍿</li>';
+    $('#boardMe').innerHTML = !auth.user
+      ? '<button type="button" class="linkish" data-action="signup">Sign up</button> to get on the board.'
+      : me?.onBoard === false ? 'You’re hidden from the leaderboard (change it in your name tag).'
+        : me?.place ? `You’re <b>#${me.place}</b> with ${me.xp} XP. Keep popping!` : '';
+  } catch {
+    $('#boardList').innerHTML = '<li class="muted small">Leaderboard is napping — back soon. 😴</li>';
+  }
+}
+
+async function dailyCheckin() {
+  if (!auth.user) return;
+  try {
+    const r = await auth.checkin();
+    const d = getData();
+    d.streak = r.streak;
+    d.bestStreak = Math.max(d.bestStreak || 0, r.bestStreak || 0);
+    store.set(`data:${auth.profileKey()}`, d);
+    if (!r.already && r.bonusXp) {
+      toast(r.streak > 1 ? `${r.streak}-day streak! +${r.bonusXp} XP` : `Daily visit bonus: +${r.bonusXp} XP`, { emoji: '🔥', ms: 4500 });
+      addXp(r.bonusXp);
+    }
+    renderProfileWidget();
+    checkAchievements();
+  } catch { /* offline: try again next visit */ }
 }
 
 function rankFor(xp) {
@@ -82,6 +203,7 @@ function addXp(n) {
     sfx.win();
   }
   renderProfileWidget();
+  checkAchievements();
 }
 
 function findItem(key) {
@@ -380,10 +502,7 @@ function updateStatusLine() {
 }
 
 function avatarHTML(profile, cls = '') {
-  if (profile.avatar === 'photo' && auth.user?.picture) {
-    return `<img class="avatar ${cls}" src="${esc(safeUrl(auth.user.picture))}" alt="" referrerpolicy="no-referrer">`;
-  }
-  return `<span class="avatar avatar-emoji ${cls}" aria-hidden="true">${esc(profile.avatar === 'photo' ? '🙂' : profile.avatar || '🍿')}</span>`;
+  return `<span class="avatar avatar-emoji ${cls}" aria-hidden="true">${esc(profile.avatar || '🍿')}</span>`;
 }
 
 function renderProfileWidget() {
@@ -396,8 +515,8 @@ function renderProfileWidget() {
     <div class="pw-head">${avatarHTML(p, 'avatar-lg')}<div><b>${esc(p.nickname)}</b><span class="rank">${r.emoji} ${esc(r.title)}</span></div></div>
     <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Progress to next rank"><i style="width:${pct}%"></i></div>
     <p class="xp-note">${d.xp} XP${r.next ? ` · ${r.next - d.xp} to next rank` : ' · max rank, legend!'}</p>
-    <div class="pw-stats"><span><b>${d.read.length}</b> read</span><span><b>${d.saved.length}</b> saved</span><span><b>${Object.keys(d.reactions).length}</b> reactions</span></div>
-    ${auth.user ? '' : '<button type="button" class="btn btn-primary btn-block" data-action="signup">Get a name tag — sign up free</button>'}`;
+    <div class="pw-stats"><span><b>${d.read.length}</b> read</span><span><b>${d.saved.length}</b> saved</span><span><b>${Object.keys(d.reactions).length}</b> reactions</span>${auth.user ? `<span title="Visit every day to grow your streak"><b>🔥${d.streak || 0}</b> streak</span>` : ''}</div>
+    ${auth.user ? `<p class="muted small synced">☁️ Saved to @${esc(auth.user.username)}</p>` : '<button type="button" class="btn btn-primary btn-block" data-action="signup">Save your progress — sign up free</button>'}`;
 }
 
 function renderAuthSlot() {
@@ -407,14 +526,15 @@ function renderAuthSlot() {
     return;
   }
   const p = auth.getProfile();
-  const provider = auth.user.provider === 'apple' ? ' Apple' : ' Google';
   slot.innerHTML = `<div class="user-menu">
     <button type="button" class="avatar-btn" data-action="menu" aria-haspopup="menu" aria-expanded="false">${avatarHTML(p)}<span class="nick hide-sm">${esc(p.nickname)}</span><span aria-hidden="true">▾</span></button>
     <div class="menu" role="menu" hidden>
-      <div class="menu-head">${avatarHTML(p, 'avatar-lg')}<div><b>${esc(p.nickname)}</b><small>${esc(auth.user.email || auth.user.name || '')}</small><span class="provider">signed in with${provider}</span></div></div>
+      <div class="menu-head">${avatarHTML(p, 'avatar-lg')}<div><b>${esc(p.nickname)}</b><small>@${esc(auth.user.username)}</small><span class="provider">☁️ progress saved to your account</span></div></div>
       <button type="button" role="menuitem" data-action="edit-profile">✏️ Edit name tag</button>
       <button type="button" role="menuitem" data-action="show-foryou">⭐ For You feed</button>
       <button type="button" role="menuitem" data-action="show-saved">🔖 My popcorn bucket</button>
+      <button type="button" role="menuitem" data-action="show-board">🏆 Leaderboard</button>
+      <button type="button" role="menuitem" data-action="account">🔑 Account &amp; security</button>
       <button type="button" role="menuitem" data-action="signout">🚪 Sign out</button>
     </div></div>`;
 }
@@ -558,6 +678,8 @@ function markRead(key, e) {
   setData(d);
   if (e?.clientX) burst(e.clientX, e.clientY, { emojis: ['✨', '+5'], count: 5, spread: 50 });
   addXp(5);
+  const h = new Date().getHours();
+  if (h < 5) checkAchievements({ nightRead: true });
   syncCards(key);
 }
 
@@ -586,54 +708,82 @@ function emojifyCard(key, btn) {
   sfx.boing();
 }
 
-function showSetup(provider) {
-  const help = $('#setupHelp');
-  help.hidden = false;
-  help.open = true;
-  help.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  toast(`${provider === 'apple' ? 'Apple' : 'Google'} sign-in isn’t switched on yet — the site owner needs to add an ID in js/config.js.`, { emoji: '🛠️', ms: 6000 });
-}
-
-// ---------- auth dialog ----------
+// ---------- sign in / sign up / forgot password ----------
 let authMode = 'signin';
-const GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>';
+let afterCode = null; // what to do once the recovery code is saved
+const AUTH_TEXT = {
+  signin: ['Welcome back, kernel! 🍿', 'Sign in with your kerNEl username and password.'],
+  signup: ['Join the kerNEl! 🎉', 'Free, no email needed. Your XP, saved stories, achievements and kids’ stars get saved to your account.'],
+  recover: ['Forgot your password? 🔑', 'No stress — your recovery code gets you back in.'],
+  code: ['Your recovery code 🛟', 'One last thing before you pop in.'],
+};
 
 function openAuth(mode = 'signin') {
-  authMode = mode;
   const dlg = $('#authDialog');
   if (!dlg.open) dlg.showModal();
-  paintAuth();
+  setAuthMode(mode);
 }
 
-async function paintAuth() {
-  const mode = authMode;
+function setAuthMode(mode) {
+  authMode = mode;
   $$('.auth-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
-  $('#authTitle').textContent = mode === 'signup' ? 'Join the kerNEl! 🎉' : 'Welcome back, kernel! 🍿';
-  $('#authSub').textContent = mode === 'signup'
-    ? 'One tap and you’re in: a name tag, a rank, a For You feed and a bucket for saved stories.'
-    : 'Pick your portal. We never see your password — Google or Apple handle that part. 🔒';
-  $('#appleLabel').textContent = mode === 'signup' ? 'Sign up with Apple' : 'Sign in with Apple';
-  const g = auth.googleReady;
-  const a = auth.appleReady;
-  $('#appleBtn').classList.toggle('needs-setup', !a);
-  // Once at least one provider is set up, hide the other one instead of showing "setup needed" to visitors.
-  $('#appleBtn').hidden = !a && g;
-  $('#googleSlot').hidden = !g && a;
-  $('#authWarn').hidden = auth.originOk;
-  $('#setupHelp').hidden = g || a;
-  $('#setupOrigin').textContent = location.protocol.startsWith('http') ? location.origin : '(open the site from its https:// address to see this)';
-  $('#setupReturn').textContent = location.protocol.startsWith('http') ? auth.appleRedirectURI() : '(open the site from its https:// address to see this)';
-  const slot = $('#googleSlot');
-  if (!g) {
-    slot.innerHTML = `<button type="button" class="gbtn needs-setup" data-setup="google">${GOOGLE_G}<span>${mode === 'signup' ? 'Sign up' : 'Sign in'} with Google</span></button>`;
-    return;
-  }
-  slot.innerHTML = '<div class="gsi-loading">Loading Google…</div>';
+  $('.auth-tabs').hidden = mode === 'code';
+  $('#authTitle').textContent = AUTH_TEXT[mode][0];
+  $('#authSub').textContent = AUTH_TEXT[mode][1];
+  $('#authOff').hidden = auth.ready;
+  $('#authFine').hidden = mode === 'code';
+  $$('#authDialog [data-view]').forEach((f) => { f.hidden = f.dataset.view !== mode; });
+  $$('#authDialog .auth-form input, #authDialog .auth-form button[type="submit"]').forEach((el) => { el.disabled = !auth.ready && mode !== 'code'; });
+  $$('#authDialog .auth-error').forEach((el) => { el.textContent = ''; });
+  const first = $(`#authDialog [data-view="${mode}"] input`);
+  if (first && auth.ready) setTimeout(() => first.focus(), 60);
+}
+
+function showRecoveryCode(code, then) {
+  afterCode = then;
+  $('#recoveryCode').textContent = code;
+  $('#codeSaved').checked = false;
+  $('#codeDone').disabled = true;
+  openAuth('code');
+}
+
+async function runAuthForm(form, fn) {
+  const err = form.querySelector('.auth-error');
+  const btn = form.querySelector('button[type="submit"]');
+  err.textContent = '';
+  btn.disabled = true;
+  btn.classList.add('busy');
   try {
-    await auth.renderGoogleButton(slot, mode);
+    await fn(form.elements);
   } catch (e) {
-    slot.innerHTML = `<p class="auth-error">⚠️ ${esc(e.message)}</p>`;
+    err.textContent = `😵 ${e.message}`;
+    sfx.buzz();
+    form.classList.remove('shake');
+    void form.offsetWidth;
+    form.classList.add('shake');
+  } finally {
+    btn.disabled = !auth.ready;
+    btn.classList.remove('busy');
   }
+}
+
+function paintStrength(form) {
+  const pw = form.elements.password.value;
+  const st = passwordStrength(pw, form.elements.username?.value || '');
+  const meter = form.querySelector('.pw-meter i');
+  if (meter) {
+    meter.style.width = `${(st.score / 4) * 100}%`;
+    meter.style.background = ['#ff4d5e', '#ff4d5e', '#ffb02e', '#ffd23f', '#2ee6a6'][st.score];
+  }
+  const label = form.querySelector('.pw-label');
+  if (label) label.textContent = `${st.emoji} ${st.label}`;
+}
+
+function openAccount() {
+  const dlg = $('#accountDialog');
+  $('#accountWho').textContent = `Signed in as @${auth.user.username}`;
+  $$('#accountDialog form.auth-form').forEach((f) => { f.reset(); f.querySelector('.auth-error').textContent = ''; });
+  if (!dlg.open) dlg.showModal();
 }
 
 // ---------- profile dialog ----------
@@ -644,8 +794,9 @@ function openProfile(isNew = false) {
   $('#profileTitle').textContent = isNew ? 'Make your name tag 🏷️' : 'Edit your name tag ✏️';
   $('#profileSave').textContent = isNew ? 'Pop me in! 🍿' : 'Save changes ✅';
   form.elements.nickname.value = p.nickname || '';
-  const avatars = [...(auth.user?.picture ? ['photo'] : []), ...AVATARS];
-  $('#avatarPick').innerHTML = avatars.map((a) => `<label class="pick-avatar"><input type="radio" name="avatar" value="${esc(a)}" ${p.avatar === a ? 'checked' : ''}><span>${a === 'photo' ? `<img src="${esc(safeUrl(auth.user.picture))}" alt="My photo" referrerpolicy="no-referrer">` : a}</span></label>`).join('');
+  $('#avatarPick').innerHTML = AVATARS.map((a) => `<label class="pick-avatar"><input type="radio" name="avatar" value="${esc(a)}" ${p.avatar === a ? 'checked' : ''}><span>${a}</span></label>`).join('');
+  form.elements.leaderboard.checked = p.leaderboard !== false;
+  form.elements.leaderboard.closest('.check').hidden = !auth.user;
   $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(c.label)}</span></label>`).join('');
   if (!dlg.open) dlg.showModal();
 }
@@ -659,6 +810,9 @@ function migrateGuest() {
   d.saved = [...d.saved, ...(guest.saved || []).filter((s) => !keys.has(s.key))];
   d.read = [...new Set([...d.read, ...(guest.read || [])])];
   d.reactions = { ...(guest.reactions || {}), ...d.reactions };
+  d.badges = { ...(guest.badges || {}), ...d.badges };
+  d.codmeAsks = (d.codmeAsks || 0) + (guest.codmeAsks || 0);
+  d.konami = !!(d.konami || guest.konami);
   setData(d);
   store.del('data:guest');
   const n = guest.saved?.length || 0;
@@ -695,6 +849,8 @@ function handleAction(action, el) {
     case 'show-saved': closeMenus(); setCat('saved'); break;
     case 'show-foryou': closeMenus(); if (!auth.getProfile().topics?.length) openProfile(false); setCat('foryou'); break;
     case 'signout': closeMenus(); auth.signOut(); break;
+    case 'account': closeMenus(); openAccount(); break;
+    case 'show-board': closeMenus(); $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }); loadLeaderboard(); break;
     case 'refresh': refreshNow(true); break;
     case 'more': state.limit += PAGE; renderFeed(); break;
     case 'joke': $('#jokeText').textContent = pick(JOKES); sfx.boing(); burstFrom(el, { emojis: ['😂', '🤣', '😆'], count: 8 }); break;
@@ -707,13 +863,14 @@ function handleAction(action, el) {
       store.set('theme', next);
       applyTheme(next);
       sfx.blip();
+      if (auth.user) setData(getData()); // remember the theme on the account
       break;
     }
-    case 'sound': sfx.toggle(); paintSoundBtn(); break;
+    case 'sound': sfx.toggle(); paintSoundBtn(); if (auth.user) setData(getData()); break;
     case 'chaos': {
       const on = document.documentElement.classList.toggle('chaos');
       el.setAttribute('aria-pressed', String(on));
-      if (on) { rain(['🌀', '🍿', '🤪', '💥'], 40); sfx.boing(); toast('CHAOS MODE: everything is wobbly now. You asked for this. 🌀', { emoji: '🤪' }); }
+      if (on) { rain(['🌀', '🍿', '🤪', '💥'], 40); sfx.boing(); toast('CHAOS MODE: everything is wobbly now. You asked for this. 🌀', { emoji: '🤪' }); checkAchievements({ chaos: true }); }
       else toast('Order restored. Boring, but readable. 😌', { emoji: '🧘' });
       break;
     }
@@ -803,6 +960,7 @@ function boot() {
     trends: () => trends(feed.all(), 8),
     aiEnabled: () => !!auth.apiBase,
     ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages } }),
+    onAsk: () => { const d = getData(); d.codmeAsks = (d.codmeAsks || 0) + 1; setData(d); checkAchievements(); },
   });
 
   // ---- global click delegation ----
@@ -819,8 +977,6 @@ function boot() {
     if (catBtn) setCat(catBtn.dataset.cat);
     const trend = t.closest('[data-trend]');
     if (trend) setQuery(trend.dataset.trend);
-    const setup = t.closest('[data-setup]');
-    if (setup) showSetup(setup.dataset.setup);
     const sortBtn = t.closest('[data-sort]');
     if (sortBtn) {
       if (sortBtn.dataset.sort === 'chaos') { state.chaosSeed = Math.random(); sfx.boing(); burstFrom(sortBtn, { emojis: ['🎲', '🌀'], count: 8 }); }
@@ -860,50 +1016,161 @@ function boot() {
     }
   });
 
-  // ---- auth dialog ----
-  $$('.auth-tab').forEach((b) => b.addEventListener('click', () => { authMode = b.dataset.mode; paintAuth(); }));
-  $('#appleBtn').addEventListener('click', async (e) => {
-    if (!auth.appleReady) { showSetup('apple'); return; }
-    const btn = e.currentTarget;
-    btn.disabled = true;
-    btn.classList.add('busy');
-    try { await auth.signInWithApple(); } finally { btn.disabled = false; btn.classList.remove('busy'); }
-  });
-  $('#authDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+  // ---- sign in / sign up / forgot password ----
+  $$('.auth-tab, .auth-link').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
+  $$('#authDialog .pw-eye').forEach((eye) => eye.addEventListener('click', () => {
+    const input = eye.previousElementSibling;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    eye.textContent = show ? '🙈' : '👁️';
+    eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  }));
+  $('#authDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget && authMode !== 'code') e.currentTarget.close(); });
+  $('#authDialog').addEventListener('cancel', (e) => { if (authMode === 'code') e.preventDefault(); }); // don't lose the code by pressing Esc
   $('#profileDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+  $('#accountDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  const signupForm = $('#signupForm');
+  const nameCheck = signupForm.querySelector('.name-check');
+  const checkName = debounce(async () => {
+    const name = signupForm.elements.username.value.trim();
+    if (!name) { nameCheck.textContent = ''; return; }
+    if (!USERNAME_RE.test(name)) { nameCheck.textContent = '✗ 3–20 letters, numbers or _'; nameCheck.className = 'name-check bad'; return; }
+    try {
+      const r = await auth.checkUsername(name);
+      if (signupForm.elements.username.value.trim() !== name) return;
+      nameCheck.textContent = r.available ? `✓ @${name} is free!` : `✗ ${r.reason || 'Taken'}`;
+      nameCheck.className = `name-check ${r.available ? 'good' : 'bad'}`;
+    } catch { nameCheck.textContent = ''; }
+  }, 350);
+  signupForm.elements.username.addEventListener('input', () => { checkName(); paintStrength(signupForm); });
+  signupForm.elements.password.addEventListener('input', () => paintStrength(signupForm));
+
+  $('#signinForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runAuthForm(e.currentTarget, (f) => {
+      if (!f.username.value.trim() || !f.password.value) throw new Error('Type your username and password');
+      return auth.login(f.username.value.trim(), f.password.value);
+    });
+  });
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    runAuthForm(e.currentTarget, (f) => {
+      const name = f.username.value.trim();
+      if (!USERNAME_RE.test(name)) throw new Error('Usernames are 3–20 letters, numbers or underscores');
+      if (f.password.value.length < 8) throw new Error('Passwords need at least 8 characters');
+      if (f.password.value !== f.confirm.value) throw new Error('The two passwords don’t match');
+      return auth.register(name, f.password.value, { leaderboard: f.leaderboard.checked });
+    });
+  });
+  $('#recoverForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runAuthForm(e.currentTarget, (f) => {
+      if (!f.username.value.trim() || !f.code.value.trim()) throw new Error('Type your username and recovery code');
+      if (f.password.value.length < 8) throw new Error('New passwords need at least 8 characters');
+      return auth.recover(f.username.value.trim(), f.code.value, f.password.value);
+    });
+  });
+  $('#codeSaved').addEventListener('change', (e) => { $('#codeDone').disabled = !e.target.checked; });
+  $('#codeDone').addEventListener('click', () => {
+    $('#authDialog').close();
+    const then = afterCode;
+    afterCode = null;
+    then?.();
+  });
+  $$('[data-code]').forEach((b) => b.addEventListener('click', async () => {
+    const code = $('#recoveryCode').textContent;
+    if (b.dataset.code === 'copy') {
+      try { await navigator.clipboard.writeText(code); toast('Recovery code copied — paste it somewhere safe!', { emoji: '📋' }); }
+      catch { toast('Couldn’t copy — select the code and copy it by hand.', { emoji: '✍️' }); }
+    } else {
+      const text = `kerNEl recovery code for @${auth.user?.username || ''}\n\n${code}\n\nUse it on the “Forgot your password?” screen if you ever forget your password.\n`;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+      a.download = `kernel-recovery-code-${auth.user?.username || 'account'}.txt`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    $('#codeSaved').checked = true;
+    $('#codeDone').disabled = false;
+  }));
+
+  // ---- account & security ----
+  $('#passwordForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runAuthForm(e.currentTarget, async (f) => {
+      if (f.password.value.length < 8) throw new Error('New passwords need at least 8 characters');
+      await auth.changePassword(f.current.value, f.password.value);
+      e.target.reset();
+      toast('Password changed! Other devices were signed out.', { emoji: '🔑' });
+      sfx.ding();
+    });
+  });
+  $('#newCodeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runAuthForm(e.currentTarget, async (f) => {
+      const { recoveryCode } = await auth.newRecoveryCode(f.password.value);
+      $('#accountDialog').close();
+      showRecoveryCode(recoveryCode, () => toast('New recovery code saved. The old one no longer works.', { emoji: '🛟' }));
+    });
+  });
+  $('#deleteAccount').addEventListener('click', async () => {
+    const name = auth.user?.username;
+    const typed = prompt(`This deletes @${name} and ALL its progress forever.\n\nType your username to confirm:`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== String(name).toLowerCase()) { toast('Username didn’t match — nothing was deleted.', { emoji: '😅' }); return; }
+    try {
+      await auth.deleteAccount();
+      $('#accountDialog').close();
+      toast('Account deleted. Thanks for popping by. 🍿', { emoji: '👋', ms: 6000 });
+    } catch (err) { toast(err.message, { emoji: '😵', type: 'error' }); }
+  });
 
   auth.addEventListener('signin', (e) => {
-    const { profile, isNew, serverData } = e.detail;
-    $('#authDialog').close();
+    const { profile, isNew, serverData, recoveryCode, user } = e.detail;
     if (isNew) migrateGuest();
     if (serverData) setData(mergeData(getData(), serverData));
+    applyServerExtras({ data: serverData, streak: e.detail.streak });
+    if (isNew) setData(getData()); // push guest progress + settings to the new account
     heroSig = '';
-    renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
+    renderAuthSlot(); renderNav(); renderProfileWidget(); renderAchievements(); renderHero(); renderFeed();
+    loadLeaderboard();
     burst(window.innerWidth / 2, window.innerHeight / 3, { count: 30, emojis: ['🎉', '🍿', '✨', '🥳'] });
     sfx.win();
-    if (isNew) {
-      toast(`Account created — welcome to the kerNEl, ${profile.nickname}!`, { emoji: '🎉', ms: 5000 });
-      setTimeout(() => openProfile(true), 450);
-    } else {
-      toast(`Welcome back, ${profile.nickname}!`, { emoji: '👋' });
-    }
+    const welcome = () => {
+      if (isNew) {
+        toast(`Account created — welcome to the kerNEl, @${user.username}!`, { emoji: '🎉', ms: 5000 });
+        setTimeout(() => openProfile(true), 300);
+      } else {
+        toast(`Welcome back, ${profile.nickname}!`, { emoji: '👋' });
+      }
+      dailyCheckin();
+    };
+    if (recoveryCode) showRecoveryCode(recoveryCode, welcome);
+    else { $('#authDialog').close(); welcome(); }
   });
-  auth.addEventListener('error', (e) => toast(`Sign-in hiccup: ${e.detail?.message || 'unknown error'}`, { emoji: '😵', type: 'error', ms: 7000 }));
-  auth.addEventListener('cancel', () => toast('Popup closed — no worries, the kernel stays unpopped.', { emoji: '🍎' }));
   auth.addEventListener('signout', (e) => {
     if (state.cat === 'foryou') state.cat = 'all';
     heroSig = '';
-    renderAuthSlot(); renderNav(); renderProfileWidget(); renderHero(); renderFeed();
+    renderAuthSlot(); renderNav(); renderProfileWidget(); renderAchievements(); renderHero(); renderFeed();
+    loadLeaderboard();
     if (!e.detail?.quiet) toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
   });
   auth.addEventListener('expired', () => toast('Your session expired — please sign in again.', { emoji: '⏰', ms: 6000 }));
-  auth.addEventListener('offline', () => toast('Signed in on this device only — the kerNEl server is unreachable, so nothing will sync for now.', { emoji: '📡', ms: 7000 }));
-  // A saved server session: check it's still valid and pull this account's data from other devices.
+  // A saved session: check it's still valid, pull progress from other devices, count today's visit.
   if (auth.user?.apiToken) {
     auth.refreshFromServer()
-      .then((u) => { if (u) { setData(mergeData(getData(), u.data)); renderProfileWidget(); renderFeed(); } })
+      .then((u) => {
+        if (!u) return;
+        setData(mergeData(getData(), u.data));
+        applyServerExtras(u);
+        renderProfileWidget(); renderAchievements(); renderFeed();
+        dailyCheckin();
+      })
       .catch(() => {});
   }
+  renderAchievements();
+  loadLeaderboard();
   auth.addEventListener('profile', () => { renderAuthSlot(); renderProfileWidget(); if (state.cat === 'foryou') renderFeed(); });
 
   $('#profileForm').addEventListener('submit', (e) => {
@@ -913,7 +1180,9 @@ function boot() {
     p.nickname = String(fd.get('nickname') || '').trim().slice(0, 24) || p.nickname;
     p.avatar = String(fd.get('avatar') || p.avatar);
     p.topics = fd.getAll('topics').map(String);
+    if (auth.user) p.leaderboard = fd.get('leaderboard') === 'on';
     auth.saveProfile(p);
+    setTimeout(loadLeaderboard, 800);
     renderNav();
     toast('Name tag updated — looking sharp!', { emoji: '🏷️' });
     burst(window.innerWidth / 2, window.innerHeight / 2, { count: 18 });
@@ -937,7 +1206,7 @@ function boot() {
     if (!d.konami) {
       d.konami = true;
       setData(d);
-      addXp(100);
+      addXp(100); // also unlocks the Cheat Coder achievement
       toast('CHEAT CODE ACCEPTED: +100 XP 🎮', { emoji: '🕹️', ms: 5000 });
     } else {
       toast('Cheat code still works. Popcorn is infinite. 🍿', { emoji: '🕹️' });
