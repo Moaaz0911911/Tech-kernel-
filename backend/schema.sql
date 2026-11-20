@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS notify_prefs (
   mentions        INTEGER NOT NULL DEFAULT 1,
   news            INTEGER NOT NULL DEFAULT 1,
   streak          INTEGER NOT NULL DEFAULT 1,
+  friends         INTEGER NOT NULL DEFAULT 1, -- follows, friends' rank-ups, trophies
   tz              INTEGER NOT NULL DEFAULT 0, -- minutes east of UTC
   news_day        TEXT,
   news_today      INTEGER NOT NULL DEFAULT 0,
@@ -170,4 +171,77 @@ CREATE INDEX IF NOT EXISTS notif_user ON notifications (user_id, id);
 CREATE TABLE IF NOT EXISTS alerted_stories (
   key TEXT PRIMARY KEY,
   at  INTEGER NOT NULL
+);
+
+-- ---------------- story comments ----------------
+CREATE TABLE IF NOT EXISTS comments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  story_key  TEXT NOT NULL,
+  user_id    TEXT NOT NULL,
+  username   TEXT NOT NULL,
+  nickname   TEXT,
+  avatar     TEXT,
+  text       TEXT NOT NULL,
+  reports    INTEGER NOT NULL DEFAULT 0,
+  hidden     INTEGER NOT NULL DEFAULT 0,
+  created    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS comments_story ON comments (story_key, id);
+CREATE INDEX IF NOT EXISTS comments_user ON comments (user_id);
+CREATE TABLE IF NOT EXISTS comment_reports (
+  comment_id INTEGER NOT NULL,
+  user_id    TEXT NOT NULL,
+  at         INTEGER NOT NULL,
+  PRIMARY KEY (comment_id, user_id)
+);
+
+-- ---------------- friends ----------------
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id TEXT NOT NULL,
+  followee_id TEXT NOT NULL,
+  created     INTEGER NOT NULL,
+  PRIMARY KEY (follower_id, followee_id)
+);
+CREATE INDEX IF NOT EXISTS follows_followee ON follows (followee_id);
+CREATE TABLE IF NOT EXISTS activity (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id  TEXT NOT NULL,
+  kind     TEXT NOT NULL,                 -- rank | badge | quiz | tourney | trophy | streak
+  data     TEXT,
+  created  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS activity_user ON activity (user_id, id);
+
+-- ---------------- games ----------------
+CREATE TABLE IF NOT EXISTS quiz_scores (
+  day      TEXT NOT NULL,
+  user_id  TEXT NOT NULL,
+  started  INTEGER,
+  score    INTEGER,                       -- NULL until answered (one go per day)
+  ms       INTEGER,
+  answers  TEXT,
+  at       INTEGER,
+  PRIMARY KEY (day, user_id)
+);
+CREATE TABLE IF NOT EXISTS battle_votes (
+  day      TEXT NOT NULL,
+  user_id  TEXT NOT NULL,
+  pick     TEXT NOT NULL,                 -- 'a' | 'b'
+  at       INTEGER NOT NULL,
+  PRIMARY KEY (day, user_id)
+);
+CREATE TABLE IF NOT EXISTS tourney_scores (
+  week     TEXT NOT NULL,                 -- Monday's date
+  user_id  TEXT NOT NULL,
+  score    INTEGER NOT NULL,
+  answers  TEXT,
+  at       INTEGER NOT NULL,
+  PRIMARY KEY (week, user_id)
+);
+CREATE TABLE IF NOT EXISTS trophies (
+  user_id  TEXT NOT NULL,
+  week     TEXT NOT NULL,
+  place    INTEGER NOT NULL,
+  score    INTEGER,
+  PRIMARY KEY (user_id, week)
 );

@@ -9,12 +9,22 @@ const statements = (sql) => sql
   .split('\n').map((line) => line.replace(/--.*$/, '')).join('\n')
   .split(';').map((s) => s.trim()).filter(Boolean);
 
+// Columns added after the first launch. Each runs once; "duplicate column" errors mean it already ran.
+const MIGRATIONS = [
+  'ALTER TABLE notify_prefs ADD COLUMN friends INTEGER NOT NULL DEFAULT 1',
+];
+
 export class KernelDB extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => {
-      for (const stmt of statements(SCHEMA)) ctx.storage.sql.exec(stmt);
-    });
+    ctx.blockConcurrencyWhile(async () => this.setup());
+  }
+
+  setup() {
+    for (const stmt of statements(SCHEMA)) this.ctx.storage.sql.exec(stmt);
+    for (const stmt of MIGRATIONS) {
+      try { this.ctx.storage.sql.exec(stmt); } catch (e) { if (!/duplicate column/i.test(String(e?.message))) throw e; }
+    }
   }
 
   /** Run one or more queries. Several run together in one transaction (like D1's batch). */
@@ -30,8 +40,8 @@ export class KernelDB extends DurableObject {
       return go();
     } catch (e) {
       // New tables added by an update while this object was still running: create them, then retry once.
-      if (!/no such table/i.test(String(e?.message))) throw e;
-      for (const stmt of statements(SCHEMA)) this.ctx.storage.sql.exec(stmt);
+      if (!/no such (table|column)|has no column/i.test(String(e?.message))) throw e;
+      this.setup();
       return go();
     }
   }

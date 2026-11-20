@@ -2,7 +2,7 @@
 // The VAPID key pair is created inside the Worker on first use and stored in the database,
 // so the private key never leaves Cloudflare.
 import { HttpError } from './util.js';
-import { POLLS } from './community.js';
+import { tr, langOfProfile } from './i18n.js';
 
 const enc = new TextEncoder();
 const b64u = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -13,7 +13,7 @@ const concat = (...parts) => {
   for (const p of parts) { out.set(p, o); o += p.length; }
   return out;
 };
-const KINDS = ['mentions', 'news', 'streak'];
+const KINDS = ['mentions', 'news', 'streak', 'friends'];
 const MAX_PUSHES_PER_RUN = 20; // stays inside the free plan's subrequest limit
 
 // ---------------- VAPID keys ----------------
@@ -117,16 +117,16 @@ export async function unsubscribe(env, user, body) {
 export async function getPrefs(env, user) {
   const r = await env.DB.prepare('SELECT * FROM notify_prefs WHERE user_id = ?').bind(user.id).first();
   const devices = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subs WHERE user_id = ?').bind(user.id).first();
-  return { mentions: r ? !!r.mentions : true, news: r ? !!r.news : true, streak: r ? !!r.streak : true, tz: r?.tz ?? 0, devices: devices?.n || 0 };
+  return { mentions: r ? !!r.mentions : true, news: r ? !!r.news : true, streak: r ? !!r.streak : true, friends: r ? r.friends !== 0 : true, tz: r?.tz ?? 0, devices: devices?.n || 0 };
 }
 
 export async function savePrefs(env, user, body) {
   const prev = await getPrefs(env, user);
   const p = { ...prev, ...(body.prefs || {}) };
   const tz = Number.isFinite(Number(body.tz)) ? Math.max(-840, Math.min(840, Math.round(Number(body.tz)))) : prev.tz;
-  await env.DB.prepare(`INSERT INTO notify_prefs (user_id, mentions, news, streak, tz) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET mentions = excluded.mentions, news = excluded.news, streak = excluded.streak, tz = excluded.tz`)
-    .bind(user.id, p.mentions ? 1 : 0, p.news ? 1 : 0, p.streak ? 1 : 0, tz).run();
+  await env.DB.prepare(`INSERT INTO notify_prefs (user_id, mentions, news, streak, friends, tz) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET mentions = excluded.mentions, news = excluded.news, streak = excluded.streak, friends = excluded.friends, tz = excluded.tz`)
+    .bind(user.id, p.mentions ? 1 : 0, p.news ? 1 : 0, p.streak ? 1 : 0, p.friends ? 1 : 0, tz).run();
   return getPrefs(env, user);
 }
 
@@ -164,7 +164,8 @@ export async function markRead(env, user, body) {
 }
 
 export async function testPush(env, user) {
-  const sent = await notify(env, user.id, { kind: 'mentions', title: '🍿 Notifications are on!', body: 'kerNEl will ping you for mentions, big news and your streak.', url: './', tag: 'test' });
+  const lang = langOfProfile(user.profile);
+  const sent = await notify(env, user.id, { kind: 'mentions', title: tr(lang, 'testTitle'), body: tr(lang, 'testBody'), url: './', tag: 'test' });
   return { sent };
 }
 
@@ -174,12 +175,12 @@ export async function notifyMentions(env, author, msg) {
   const names = [...new Set((msg.text.match(/(?:^|\s)@([A-Za-z0-9_]{3,20})\b/g) || []).map((m) => m.trim().slice(1).toLowerCase()))]
     .filter((n) => n !== author.username.toLowerCase() && n !== 'codme').slice(0, 5);
   if (!names.length) return 0;
-  const { results } = await env.DB.prepare(`SELECT id, username FROM users WHERE username_lc IN (${names.map(() => '?').join(',')})`).bind(...names).all();
+  const { results } = await env.DB.prepare(`SELECT id, username, profile FROM users WHERE username_lc IN (${names.map(() => '?').join(',')})`).bind(...names).all();
   const budget = { left: 15 };
   let n = 0;
   for (const u of results) {
     n += await notify(env, u.id, {
-      kind: 'mentions', title: `💬 @${author.username} mentioned you in #${msg.room}`, body: msg.text.slice(0, 160), url: `./#chat=${msg.room}`, tag: `chat-${msg.room}`, icon: '💬',
+      kind: 'mentions', title: tr(langOfProfile(u.profile), 'mention', { who: author.username, room: msg.room }), body: msg.text.slice(0, 160), url: `./#chat=${msg.room}`, tag: `chat-${msg.room}`, icon: '💬',
     }, budget);
   }
   return n;
@@ -203,7 +204,7 @@ export async function notifyBigNews(env, budget) {
     const count = u.news_day === today ? u.news_today : 0;
     if (count >= 3) continue;
     await env.DB.prepare('UPDATE notify_prefs SET news_day = ?, news_today = ? WHERE user_id = ?').bind(today, count + 1, u.id).run();
-    n += await notify(env, u.id, { kind: 'news', title: `🔥 Big news${mega ? '' : ' in your topics'}`, body: story.title, url: story.url, tag: 'news', icon: '🔥' }, budget);
+    n += await notify(env, u.id, { kind: 'news', title: tr(langOfProfile(u.profile), mega && !topics.includes(story.cat) ? 'bigNews' : 'bigNewsTopics'), body: story.title, url: story.url, tag: 'news', icon: '🔥' }, budget);
   }
   return n;
 }
@@ -212,17 +213,16 @@ export async function notifyBigNews(env, budget) {
 export async function notifyStreaks(env, budget) {
   const now = Date.now();
   const today = new Date(now).toISOString().slice(0, 10);
-  const { results: users } = await env.DB.prepare(`SELECT u.id, u.streak, u.last_day, p.tz, p.last_streak_day FROM notify_prefs p JOIN users u ON u.id = p.user_id
+  const { results: users } = await env.DB.prepare(`SELECT u.id, u.profile, u.streak, u.last_day, p.tz, p.last_streak_day FROM notify_prefs p JOIN users u ON u.id = p.user_id
     WHERE p.streak = 1 AND u.streak >= 1 AND (u.last_day IS NULL OR u.last_day != ?) AND (p.last_streak_day IS NULL OR p.last_streak_day != ?)
       AND u.id IN (SELECT DISTINCT user_id FROM push_subs)`).bind(today, today).all();
-  const question = POLLS[Math.floor(Date.parse(`${today}T00:00:00Z`) / 864e5) % POLLS.length][0];
   let n = 0;
   for (const u of users) {
     if (budget.left <= 0) break;
     const local = new Date(now + (u.tz || 0) * 60_000);
     if (local.getUTCHours() !== 19 || local.getUTCMinutes() >= 10) continue;
     await env.DB.prepare('UPDATE notify_prefs SET last_streak_day = ? WHERE user_id = ?').bind(today, u.id).run();
-    n += await notify(env, u.id, { kind: 'streak', title: `🔥 Keep your ${u.streak}-day streak alive!`, body: `Pop in today. Today’s Hot Take: ${question}`, url: './', tag: 'streak', icon: '🔥' }, budget);
+    n += await notify(env, u.id, { kind: 'streak', title: tr(langOfProfile(u.profile), 'streakTitle', { n: u.streak }), body: tr(langOfProfile(u.profile), 'streakBody'), url: './', tag: 'streak', icon: '🔥' }, budget);
   }
   return n;
 }

@@ -8,6 +8,9 @@ import {
 import { codmeReply } from './codme.js';
 import { assertNotMuted, listMessages, postMessage, reactMessage, reportMessage, deleteMessage, publicProfile, getPoll, votePoll } from './community.js';
 import { getDB, KernelDB } from './db.js';
+import { featureRoute } from './features.js';
+import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordActivity, STREAK_MILESTONES } from './social.js';
+import { awardTrophies } from './play.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
 
 export { KernelDB };
@@ -25,7 +28,7 @@ async function route(request, env, ctx) {
 
   if (path === '/' || path === '/api/health') {
     const row = await env.DB.prepare('SELECT (SELECT COUNT(*) FROM stories) AS n, (SELECT MAX(first_seen) FROM stories) AS last, (SELECT COUNT(*) FROM users) AS users').first();
-    return json({ ok: true, name: 'kerNEl API', stories: row?.n || 0, lastNews: row?.last || null, users: row?.users || 0, features: { accounts: true, codmeAI: !!env.ANTHROPIC_API_KEY } });
+    return json({ ok: true, name: 'kerNEl API', stories: row?.n || 0, lastNews: row?.last || null, users: row?.users || 0, features: { accounts: true, codmeAI: !!env.ANTHROPIC_API_KEY, explainAI: !!env.ANTHROPIC_API_KEY } });
   }
 
   // ---------- news ----------
@@ -37,6 +40,8 @@ async function route(request, env, ctx) {
       ctx.waitUntil(findThumbnails(env));
       stories = await latestStories(env, limit);
     }
+    const comments = await commentCounts(env, stories.map((s) => s.key));
+    for (const s of stories) if (comments[s.key]) s.commentCount = comments[s.key];
     return json({ items: stories, sources: await sourceStatus(env), at: Date.now() }, 200, { 'Cache-Control': 'public, max-age=20' });
   }
 
@@ -79,18 +84,28 @@ async function route(request, env, ctx) {
   }
   if (path === '/api/me/profile' && m === 'PUT') {
     const user = await requireUser(request, env);
-    const profile = cleanProfile(await readJson(request, 10_000), parse(user.profile, {}));
+    const body = await readJson(request, 10_000);
+    const prev = parse(user.profile, {});
+    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { xp: user.xp || 0, trophies: await trophyCount(env, user.id) }) };
     await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();
     return json({ profile });
   }
   if (path === '/api/me/data' && (m === 'PUT' || m === 'PATCH')) { // partial updates are merged
     const user = await requireUser(request, env);
     await rateLimit(env, `data:${user.id}`, 600, 3600_000);
-    const data = mergeDataPatch(parse(user.data, {}), await readJson(request, 400_000));
+    const before = parse(user.data, {});
+    const data = mergeDataPatch(before, await readJson(request, 400_000));
     await env.DB.prepare('UPDATE users SET data = ?, xp = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), data.xp || 0, Date.now(), user.id).run();
+    const events = activityFromData({ ...before, xp: user.xp || 0 }, data); // rank-ups and new badges → friends' feed
+    if (events.length) ctx.waitUntil(recordActivity(env, user, events).catch((e) => console.error('activity', e)));
     return json({ ok: true, xp: data.xp || 0 });
   }
-  if (path === '/api/me/checkin' && m === 'POST') return json(await checkin(env, await requireUser(request, env)));
+  if (path === '/api/me/checkin' && m === 'POST') {
+    const user = await requireUser(request, env);
+    const r = await checkin(env, user);
+    if (!r.already && STREAK_MILESTONES.has(r.streak)) ctx.waitUntil(recordActivity(env, user, [{ kind: 'streak', data: { n: r.streak }, push: r.streak >= 7 }]).catch((e) => console.error('activity', e)));
+    return json(r);
+  }
   if (path === '/api/me' && m === 'DELETE') { // delete the account and everything in it
     const user = await requireUser(request, env);
     await env.DB.batch([
@@ -102,6 +117,14 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM push_subs WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM notify_prefs WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM comments WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM comment_reports WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM follows WHERE follower_id = ? OR followee_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM activity WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM quiz_scores WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM battle_votes WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM tourney_scores WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM trophies WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
@@ -110,11 +133,12 @@ async function route(request, env, ctx) {
 
   // ---------- leaderboard ----------
   if (path === '/api/leaderboard' && m === 'GET') {
-    const { results } = await env.DB.prepare('SELECT id, username, profile, xp, streak FROM users WHERE on_board = 1 AND xp > 0 ORDER BY xp DESC, created ASC LIMIT 20').all();
+    const { results } = await env.DB.prepare('SELECT id, username, profile, xp, streak, last_day FROM users WHERE on_board = 1 AND xp > 0 ORDER BY xp DESC, created ASC LIMIT 20').all();
     const top = results.map((r, i) => {
       const p = parse(r.profile, {});
       const [, title, emoji] = rankOf(r.xp);
-      return { place: i + 1, username: r.username, nickname: p.nickname || r.username, avatar: p.avatar || '🍿', xp: r.xp, streak: r.streak, rank: title, rankEmoji: emoji };
+      const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      return { place: i + 1, username: r.username, nickname: p.nickname || r.username, ...look(p), xp: r.xp, streak: r.last_day >= yesterday ? r.streak : 0, rank: title, rankEmoji: emoji };
     });
     let me = null;
     const user = await currentUser(request, env);
@@ -153,7 +177,10 @@ async function route(request, env, ctx) {
   const del = path.match(/^\/api\/chat\/(\d+)$/);
   if (del && m === 'DELETE') return json(await deleteMessage(env, await requireUser(request, env), del[1]));
   const prof = path.match(/^\/api\/users\/([A-Za-z0-9_]{1,20})$/);
-  if (prof && m === 'GET') return json(await publicProfile(env, prof[1]), 200, { 'Cache-Control': 'public, max-age=30' });
+  if (prof && m === 'GET') {
+    const viewer = await currentUser(request, env);
+    return json(await publicProfile(env, prof[1], viewer), 200, { 'Cache-Control': viewer ? 'private, no-store' : 'public, max-age=30' });
+  }
   if (path === '/api/poll' && m === 'GET') return json(await getPoll(env, await currentUser(request, env)));
   if (path === '/api/poll' && m === 'POST') {
     const user = await requireUser(request, env);
@@ -205,6 +232,9 @@ async function route(request, env, ctx) {
     return json(await codmeReply(env, body, nickname));
   }
 
+  const extra = await featureRoute(request, env, ctx, { path, m, url, ip });
+  if (extra) return extra;
+
   throw new HttpError(404, 'Not found');
 }
 
@@ -235,6 +265,7 @@ export default {
         const budget = { left: MAX_PUSHES_PER_RUN };
         const news = await notifyBigNews(env, budget);
         const streaks = await notifyStreaks(env, budget);
+        await awardTrophies(env).catch((e) => console.error('trophies', e));
         await env.DB.prepare('DELETE FROM notifications WHERE created < ?').bind(Date.now() - 30 * 864e5).run();
         console.log(`notifications: ${news} news pushes, ${streaks} streak pushes`);
       })());
@@ -252,6 +283,14 @@ export default {
         env.DB.prepare('DELETE FROM chat_reacts WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
         env.DB.prepare('DELETE FROM chat_reports WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
         env.DB.prepare('DELETE FROM alerted_stories WHERE at < ?').bind(Date.now() - 3 * 864e5),
+        env.DB.prepare('DELETE FROM activity WHERE created < ?').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM comment_reports WHERE comment_id NOT IN (SELECT id FROM comments)'),
+        // old games and caches: explanations go with their story; quizzes, battles and picks after a while
+        env.DB.prepare("DELETE FROM kv WHERE k LIKE 'x:%' AND substr(k, 3) NOT IN (SELECT key FROM stories)"),
+        env.DB.prepare("DELETE FROM kv WHERE (k LIKE 'quiz:%' OR k LIKE 'battle:%' OR k LIKE 'kidsnews:%') AND substr(k, instr(k, ':') + 1) < ?").bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare("DELETE FROM kv WHERE k LIKE 'tm:%' AND k NOT LIKE ?").bind(`tm:${new Date().getUTCFullYear()}:%`),
+        env.DB.prepare('DELETE FROM quiz_scores WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
       ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);
     })());

@@ -209,9 +209,17 @@ export function cleanProfile(p, prev = {}) {
   const avatar = AVATAR_RE.test(String(p?.avatar || '')) ? p.avatar : prev.avatar || '🍿';
   const topics = Array.isArray(p?.topics) ? [...new Set(p.topics.filter((t) => CAT_IDS.has(t)))] : prev.topics || [];
   const leaderboard = typeof p?.leaderboard === 'boolean' ? p.leaderboard : prev.leaderboard !== false;
-  return { ...prev, nickname, avatar, topics, leaderboard };
+  const lang = ['en', 'ar', 'de', 'tl'].includes(p?.lang) ? p.lang : prev.lang || 'en';
+  return { ...prev, nickname, avatar, topics, leaderboard, lang };
 }
 
+const COUNTERS = new Set(['quizPlayed', 'quizPerfect', 'battleVotes', 'comments', 'explains', 'briefings', 'swipes', 'timeTravels', 'tourneys', 'wrapped']);
+/** Kids' minutes per day (for the grown-ups' dashboard): keep the bigger number for each day, last 30 days. */
+function mergeMinutes(prev = {}, next = {}) {
+  const out = { ...prev };
+  for (const [day, n] of Object.entries(next || {})) if (/^\d{4}-\d{2}-\d{2}$/.test(day)) out[day] = Math.max(out[day] || 0, int(n, 0, 1440));
+  return Object.fromEntries(Object.entries(out).sort().slice(-30));
+}
 const str = (v, n) => (typeof v === 'string' ? v.slice(0, n) : null);
 const int = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.floor(Number(v) || 0)));
 
@@ -238,6 +246,14 @@ export function mergeDataPatch(prev, patch) {
   if ('pollVotes' in patch) out.pollVotes = Math.max(prev.pollVotes || 0, int(patch.pollVotes, 0, 1e5));
   if ('gamesPlayed' in patch) out.gamesPlayed = Math.max(prev.gamesPlayed || 0, int(patch.gamesPlayed, 0, 1e6));
   if ('factPerfect' in patch) out.factPerfect = !!(patch.factPerfect || prev.factPerfect);
+  if ('catReads' in patch) { // stories read per topic (for kerNEl Wrapped); counts only go up
+    out.catReads = { ...(prev.catReads || {}) };
+    for (const [c, n] of Object.entries(patch.catReads || {})) if (CAT_IDS.has(c)) out.catReads[c] = Math.max(out.catReads[c] || 0, int(n, 0, 1e6));
+  }
+  if ('counts' in patch) { // other little counters (quizzes played, battles voted, …); only go up
+    out.counts = { ...(prev.counts || {}) };
+    for (const [c, n] of Object.entries(patch.counts || {})) if (COUNTERS.has(c)) out.counts[c] = Math.max(out.counts[c] || 0, int(n, 0, 1e7));
+  }
   if ('badges' in patch) { // achievements only ever get added
     out.badges = { ...(prev.badges || {}) };
     for (const [id, at] of Object.entries(patch.badges || {}).slice(0, 60)) if (/^[a-z0-9_]{1,30}$/.test(id) && !out.badges[id]) out.badges[id] = Number(at) || Date.now();
@@ -256,8 +272,10 @@ export function mergeDataPatch(prev, patch) {
     for (const [id, n] of Object.entries(k.stars || {})) if (KID_LESSONS.has(id)) stars[id] = Math.max(stars[id] || 0, int(n, 0, 3));
     out.kids = {
       stars,
-      robotLevel: Math.max(prev.kids?.robotLevel || 0, int(k.robotLevel, 0, 2)),
+      robotLevel: Math.max(prev.kids?.robotLevel || 0, int(k.robotLevel, 0, 5)),
       name: typeof k.name === 'string' ? k.name.replace(/[\u0000-\u001f<>]/g, '').slice(0, 30) : prev.kids?.name || '',
+      minutes: mergeMinutes(prev.kids?.minutes, k.minutes),
+      last: Math.max(Number(prev.kids?.last) || 0, Math.min(Date.now() + 60_000, Number(k.last) || 0)),
     };
   }
   return out;

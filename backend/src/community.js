@@ -2,6 +2,9 @@
 import { HttpError } from './util.js';
 import { searchStories, rowToStory } from './news.js';
 import { codmeReply } from './codme.js';
+import { look, liveStreak, followCounts, isFollowing } from './social.js';
+import { trophiesOf } from './play.js';
+import { tr, langOfProfile } from './i18n.js';
 
 export const ROOMS = [
   { id: 'lobby', name: 'Lobby', emoji: '🍿' },
@@ -32,8 +35,10 @@ export function cleanText(text) {
 
 // ---------- messages ----------
 function toMessage(r, myReacts = {}) {
+  const l = r.u_profile ? look(r.u_profile) : { avatar: r.avatar || '🍿', hat: '', frame: 'none' };
   return {
-    id: r.id, room: r.room, user: { username: r.username, nickname: r.nickname || r.username, avatar: r.avatar || '🍿', rank: r.rank_emoji || '🌽', bot: !!r.bot },
+    id: r.id, room: r.room,
+    user: { username: r.username, nickname: r.nickname || r.username, avatar: r.bot ? r.avatar : l.avatar, hat: l.hat, frame: l.frame, rank: r.rank_emoji || '🌽', bot: !!r.bot, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
     text: r.hidden ? '' : r.text, stories: r.hidden ? [] : parse(r.stories, []), reactions: parse(r.reactions, {}), mine: myReacts[r.id] || null,
     hidden: !!r.hidden, created: r.created, updated: r.updated,
   };
@@ -45,14 +50,17 @@ async function myReactions(env, user, ids) {
   return Object.fromEntries(results.map((r) => [r.msg_id, r.emoji]));
 }
 
+// Each message comes with its author's current look (avatar, hat, frame) and live streak.
+const WITH_PEOPLE = 'SELECT m.*, u.profile AS u_profile, u.streak AS u_streak, u.last_day AS u_last FROM chat_messages m LEFT JOIN users u ON u.id = m.user_id';
+
 export async function listMessages(env, user, room, since) {
   if (!ROOM_IDS.has(room)) throw new HttpError(400, 'Unknown room');
   const now = Date.now();
   let rows;
   if (since > 0) {
-    ({ results: rows } = await env.DB.prepare('SELECT * FROM chat_messages WHERE room = ? AND updated > ? ORDER BY id ASC LIMIT 200').bind(room, since).all());
+    ({ results: rows } = await env.DB.prepare(`${WITH_PEOPLE} WHERE m.room = ? AND m.updated > ? ORDER BY m.id ASC LIMIT 200`).bind(room, since).all());
   } else {
-    ({ results: rows } = await env.DB.prepare('SELECT * FROM chat_messages WHERE room = ? AND hidden = 0 ORDER BY id DESC LIMIT 60').bind(room).all());
+    ({ results: rows } = await env.DB.prepare(`${WITH_PEOPLE} WHERE m.room = ? AND m.hidden = 0 ORDER BY m.id DESC LIMIT 60`).bind(room).all());
     rows.reverse();
   }
   if (user) await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, room, now).run();
@@ -74,12 +82,12 @@ export async function assertNotMuted(env, user) {
   if (mute) throw new HttpError(403, `You’re muted until ${new Date(mute.until).toUTCString().slice(5, 22)} UTC because several of your messages were reported.`);
 }
 
-async function insertMessage(env, m) {
+async function insertMessage(env, m, author = null) {
   const now = Date.now();
   const row = await env.DB.prepare(`INSERT INTO chat_messages (room, user_id, username, nickname, avatar, rank_emoji, text, stories, bot, reactions, reports, hidden, created, updated)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '{}', 0, 0, ?, ?) RETURNING *`)
     .bind(m.room, m.userId, m.username, m.nickname, m.avatar, m.rank, m.text, JSON.stringify(m.stories || []), m.bot ? 1 : 0, now, now).first();
-  return toMessage(row);
+  return toMessage(author ? { ...row, u_profile: author.profile, u_streak: author.streak, u_last: author.last_day } : row);
 }
 
 export async function postMessage(env, user, body, ctx) {
@@ -97,10 +105,10 @@ export async function postMessage(env, user, body, ctx) {
   const msg = await insertMessage(env, {
     room, userId: user.id, username: user.username, nickname: (profile.nickname || user.username).slice(0, 24), avatar: profile.avatar || '🍿',
     rank: rankEmoji(user.xp || 0), text, stories,
-  });
+  }, user);
   const ask = text.match(/^@codme\b[\s,:]*(.*)$/is);
   if (ask) { // codme answers in the room
-    const reply = codmeInChat(env, ask[1].trim(), profile.nickname || user.username, room);
+    const reply = codmeInChat(env, ask[1].trim(), profile.nickname || user.username, room, langOfProfile(user.profile));
     if (ctx?.waitUntil) ctx.waitUntil(reply); else await reply;
   }
   return { message: msg };
@@ -108,10 +116,10 @@ export async function postMessage(env, user, body, ctx) {
 
 const pickStory = (s) => ({ key: s.key, title: s.title, url: s.url, source: s.source, cat: s.cat, image: s.image, domain: s.domain, time: s.time });
 
-async function codmeInChat(env, question, nickname, room) {
+async function codmeInChat(env, question, nickname, room, lang = 'en') {
   const bot = { room, userId: 'bot:codme', username: 'codme', nickname: 'codme', avatar: '🤖', rank: '🤖', bot: true };
   try {
-    if (!question) return insertMessage(env, { ...bot, text: `Hi ${nickname}! 👋 Ask me like “@codme rust news” and I’ll sniff out stories for the whole room.` });
+    if (!question) return insertMessage(env, { ...bot, text: tr(lang, 'botHello', { name: nickname }) });
     if (env.ANTHROPIC_API_KEY) {
       try {
         const r = await codmeReply(env, { messages: [{ role: 'user', content: question }] }, nickname);
@@ -122,7 +130,7 @@ async function codmeInChat(env, question, nickname, room) {
     const found = words.length ? await searchStories(env, words, 3) : [];
     return insertMessage(env, {
       ...bot,
-      text: found.length ? `🐽 Sniffed out ${found.length} stor${found.length === 1 ? 'y' : 'ies'} about “${words.join(' ')}” for you, ${nickname}:` : `I sniffed everywhere for “${question.slice(0, 60)}”… nothing in today’s feed. 🍿 Try another word?`,
+      text: found.length ? tr(lang, 'botFound', { n: found.length, q: words.join(' '), name: nickname }) : tr(lang, 'botNone', { q: question.slice(0, 60) }),
       stories: found.map(pickStory),
     });
   } catch (e) {
@@ -171,7 +179,7 @@ export async function deleteMessage(env, user, id) {
 }
 
 // ---------- public profiles ----------
-export async function publicProfile(env, username) {
+export async function publicProfile(env, username, viewer = null) {
   const r = await env.DB.prepare('SELECT * FROM users WHERE username_lc = ?').bind(String(username || '').toLowerCase()).first();
   if (!r) throw new HttpError(404, 'No kernel by that name');
   const p = parse(r.profile, {});
@@ -179,8 +187,10 @@ export async function publicProfile(env, username) {
   const place = r.on_board ? ((await env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE on_board = 1 AND xp > ?').bind(r.xp).first())?.n || 0) + 1 : null;
   const msgs = await env.DB.prepare('SELECT COUNT(*) AS n FROM chat_messages WHERE user_id = ? AND hidden = 0').bind(r.id).first();
   return {
-    username: r.username, nickname: p.nickname || r.username, avatar: p.avatar || '🍿', topics: p.topics || [],
-    xp: r.xp, rank: rankEmoji(r.xp), streak: r.streak, bestStreak: r.best_streak, place,
+    username: r.username, nickname: p.nickname || r.username, ...look(p), topics: p.topics || [],
+    xp: r.xp, rank: rankEmoji(r.xp), streak: liveStreak(r), bestStreak: r.best_streak, place,
+    ...(await followCounts(env, r.id)), isFollowing: await isFollowing(env, viewer, r.id), me: !!viewer && viewer.id === r.id,
+    trophies: await trophiesOf(env, r.id),
     badges: Object.keys(d.badges || {}), kidsStars: Object.values(d.kids?.stars || {}).reduce((a, b) => a + b, 0),
     messages: msgs?.n || 0, joined: r.created,
   };

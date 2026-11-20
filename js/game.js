@@ -3,31 +3,8 @@
 import { $, esc, safeUrl, pick, toast } from './utils.js';
 import { catById } from './news.js';
 import { sfx, burstFrom, rain } from './fun.js';
+import { fakeHeadlines, GIVEAWAY } from './fakes.js';
 
-const W = {
-  who: ['Researchers', 'Engineers at a university lab', 'A team of high-school students', 'Scientists', 'A tiny startup', 'Volunteers in a hackathon'],
-  obj: ['toaster', 'smart fridge', 'robot vacuum', 'microwave', 'doorbell camera', 'calculator', 'pair of headphones', 'electric toothbrush', 'washing machine'],
-  act: ['write poetry', 'recognise sarcasm', 'negotiate its own warranty', 'apologise for burnt toast', 'file its own bug reports', 'play chess blindfolded', 'hum lo-fi beats while working'],
-  product: ['Wi-Fi for houseplants', 'a blockchain for lost socks', 'an AI that names your pets', 'self-folding laundry drones', 'a smart spoon that counts your cereal', 'an app that rates your dad jokes', 'noise-cancelling earmuffs for cats'],
-  gadget: ['phone', 'laptop', 'smartwatch', 'game console', 'e-reader', 'VR headset'],
-  feature: ['charges itself by being complimented', 'refuses to open social media after 10 pm', 'only works when you’re smiling', 'sneezes when the battery is low', 'translates your cat’s meows into emojis'],
-  place: ['an old floppy disk', 'a forgotten server closet', 'a 1990s screensaver', 'the bottom of a ball pit', 'a library’s vending machine'],
-  thing: ['a working computer made of popcorn', 'the world’s smallest keyboard', 'a password from 1987 that still works', 'a robot that only speaks in haiku'],
-  bot: ['A delivery robot', 'A warehouse robot', 'An AI assistant', 'A self-driving lawnmower'],
-  hobby: ['open a bakery', 'become a stand-up comedian', 'travel the world', 'write a cookbook for robots'],
-  behave: ['type', 'debug code', 'answer emails', 'learn new words'],
-  cond: ['eating popcorn', 'listening to whale songs', 'wearing two pairs of socks', 'talking to a rubber duck'],
-};
-const FAKES = [
-  () => `${pick(W.who)} teach a ${pick(W.obj)} to ${pick(W.act)}`,
-  () => `${pick(W.who)} raise $${pick([3, 7, 12, 40, 90])} million to build ${pick(W.product)}`,
-  () => `Study finds people ${pick(W.behave)} ${pick([12, 23, 37, 48])}% faster while ${pick(W.cond)}`,
-  () => `New ${pick(W.gadget)} ${pick(W.feature)}`,
-  () => `${pick(W.who)} discover ${pick(W.thing)} inside ${pick(W.place)}`,
-  () => `${pick(W.bot)} quits its job to ${pick(W.hobby)}`,
-  () => `Update makes every ${pick(W.obj)} in the house ${pick(['sing the startup chime', 'demand a software update first', 'speak like a pirate'])}`,
-];
-const GIVEAWAY = /^(show|ask|tell|launch) hn\b|\[pdf\]|\(\d{4}\)$/i;
 
 export function initGame({ getItems, onDone }) {
   const dlg = $('#gameDialog');
@@ -41,9 +18,8 @@ export function initGame({ getItems, onDone }) {
       .filter((it) => it.title.length >= 30 && it.title.length <= 110 && !GIVEAWAY.test(it.title))
       .sort(() => Math.random() - 0.5).slice(0, 3)
       .map((it) => ({ real: true, title: it.title, item: it }));
-    const fakes = new Set();
-    while (fakes.size < 5 - real.length) fakes.add(pick(FAKES)());
-    return [...real, ...[...fakes].map((title) => ({ real: false, title }))].sort(() => Math.random() - 0.5);
+    const fakes = fakeHeadlines(5 - real.length);
+    return [...real, ...fakes.map((title) => ({ real: false, title }))].sort(() => Math.random() - 0.5);
   }
 
   function show() {
