@@ -10,6 +10,7 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🔄 **Sync** | Name tag, XP, saved stories, reactions, achievements, settings and the kids' stars follow you to every device. |
 | 🏆 **Leaderboard & streaks** | Top 20 by XP (opt-out), daily check-in streaks with bonus XP. |
 | 💬 **Chat** | Rooms, mentions, reactions, story sharing, @codme replies; swear filter, rate limits, reports → auto-hide → 24h mutes; 30-day history. |
+| 🔔 **Notifications** | Per-user inbox + Web Push (RFC 8291 encryption, RFC 8292 VAPID signing; the key pair is generated inside the Worker and never leaves Cloudflare). Mentions instantly; big-news alerts and 7 pm streak reminders on a second cron. |
 | 🗳️ **Daily poll & profiles** | One "Hot Take" a day (one vote each) and public profile cards (no private data). |
 | 🔥 **Shared reactions** | Everyone sees the same reaction counts (signed-in users can vote, one reaction per story each). |
 | 🤖 **codme AI** | codme answers with Claude, using kerNEl's live stories and citing them. Rate-limited per visitor, per user and per day to protect your bill. |
@@ -63,6 +64,11 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `DELETE /api/chat/:id` | Bearer | Delete your own message |
 | `GET /api/users/:username` | – | Public profile card |
 | `GET /api/poll` · `POST /api/poll` | – / Bearer | Today's Hot Take · `{ option }` |
+| `GET /api/push/key` | – | VAPID public key for `PushManager.subscribe()` |
+| `POST /api/push/subscribe` · `/api/push/unsubscribe` | Bearer | `{ subscription, tz? }` · `{ endpoint }` |
+| `POST /api/push/test` | Bearer | Send yourself a test notification |
+| `GET` / `PUT /api/notify/prefs` | Bearer | `{ prefs: { mentions, news, streak }, tz }` |
+| `GET /api/notifications` · `POST /api/notifications/read` | Bearer | 🔔 inbox · `{ id }` or `{ all: true }` |
 | `POST /api/react` | Bearer | `{ key, emoji: "fire"\|"lol"\|"mind"\|"meh"\|null }` → shared counts |
 | `POST /api/codme` | optional | `{ messages: [{ role, content }] }` → `{ reply, stories, refs }` |
 
@@ -87,6 +93,7 @@ src/news.js    collector, RSS/Atom parser, thumbnails, story queries (reuses ../
 src/auth.js    accounts: password hashing, recovery codes, sessions, streaks, cleaning what browsers send
 src/codme.js   Claude-powered codme replies grounded in kerNEl's stories
 src/community.js  chat rooms, @codme in chat, moderation, daily poll, profile cards
+src/push.js    notifications: inbox, Web Push encryption + VAPID, mention / big-news / streak triggers
 schema.sql     database tables
 test/          end-to-end test
 ```

@@ -49,6 +49,7 @@ document.addEventListener('click', (e) => {
 });`;
 let kids = read('kids.html')
   .replace('<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">', `<link rel="icon" href="${favicon}" type="image/svg+xml">`)
+  .replace(/\s*<link rel="(?:manifest|apple-touch-icon)"[^>]*>/g, '') // the one-file version can't ship the app manifest / service worker
   .replace('<link rel="stylesheet" href="css/kids.css">', `<style>\n${read('css/kids.css')}\n</style>`)
   .replace(/href="kids\.html"/g, 'href="#top"')
   .replace(/href="index\.html"/g, 'href="#" data-close-kids')
@@ -86,7 +87,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'utils', 'content', 'fun', 'news', 'auth', 'codme', 'community', 'app'])
+const mainJs = bundle(['config', 'utils', 'content', 'fun', 'news', 'auth', 'codme', 'community', 'notify', 'game', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');
@@ -98,6 +99,7 @@ html.kids-open, html.kids-open body { overflow: hidden; }`;
 
 let html = read('index.html')
   .replace('<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">', `<link rel="icon" href="${favicon}" type="image/svg+xml">`)
+  .replace(/\s*<link rel="(?:manifest|apple-touch-icon)"[^>]*>/g, '') // the one-file version can't ship the app manifest / service worker
   .replace('<link rel="stylesheet" href="css/main.css">', `<style>\n${read('css/main.css')}\n${kidsCss}\n</style>`)
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/<code>js\/config\.js<\/code>/g, 'the <code>CONFIG</code> section near the top of the script in <code>index.html</code>')

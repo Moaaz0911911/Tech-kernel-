@@ -10,6 +10,12 @@
   <meta property="og:description" content="Live tech news every 30 seconds, an AI-ish news robot called codme, and a kids' tech corner.">
   <meta property="og:type" content="website">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="kerNEl">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,6 +64,14 @@
         <button type="button" class="icon-btn hdr-btn" id="themeBtn" data-action="theme" aria-label="Toggle light or dark mode">🌙</button>
         <button type="button" class="icon-btn hdr-btn hide-sm" id="soundBtn" data-action="sound" aria-label="Toggle sound effects" aria-pressed="false">🔇</button>
         <button type="button" class="icon-btn hdr-btn hide-sm" id="chaosBtn" data-action="chaos" aria-label="Chaos mode" aria-pressed="false" title="Chaos mode (you’ve been warned)">🌀</button>
+        <div class="bell-wrap">
+          <button type="button" class="icon-btn hdr-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" hidden>🔔<span class="bell-count" hidden></span></button>
+          <div class="bell-panel" id="bellPanel" hidden>
+            <div class="bell-head"><b>🔔 Notifications</b><span><button type="button" class="linkish" data-bell="read">Mark all read</button> <button type="button" class="icon-btn" data-bell="settings" aria-label="Notification settings" title="Settings">⚙️</button></span></div>
+            <button type="button" class="bell-cta" id="bellCta" hidden>📲 Turn on push notifications for this device</button>
+            <div class="bell-list" id="bellList"></div>
+          </div>
+        </div>
         <div class="auth-slot" id="authSlot"></div>
       </div>
     </div>
@@ -109,6 +123,12 @@
           <p class="poll-q" id="pollQ"></p>
           <div class="poll-body" id="pollBody"></div>
           <p class="muted small" id="pollFoot"></p>
+        </section>
+
+        <section class="widget widget-game" aria-labelledby="gameTitle">
+          <h3 id="gameTitle" class="widget-title">🕵️ Real or Fake?</h3>
+          <p>Five headlines. Some are real stories from today… some were invented by codme. Can you spot the fakes?</p>
+          <button type="button" class="btn btn-primary btn-block" data-action="game">Play (+XP)</button>
         </section>
 
         <section class="widget" aria-labelledby="pwTitle">
@@ -298,6 +318,45 @@
         <h3 class="mini-title">Danger zone</h3>
         <button type="button" class="btn btn-danger btn-block" id="deleteAccount">🗑️ Delete my account forever</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Notification settings ===== -->
+  <dialog id="notifyDialog" class="modal" aria-labelledby="notifyTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <div class="auth-mascot" aria-hidden="true">🔔</div>
+      <h2 id="notifyTitle">Notifications</h2>
+      <p class="ns-state" id="nsState"></p>
+      <ol class="ns-ios" id="nsIOS" hidden>
+        <li>Tap the <b>Share</b> button <span class="ios-share" aria-hidden="true">⬆️</span> at the bottom of Safari.</li>
+        <li>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
+        <li>Open <b>kerNEl</b> from your Home Screen (the popcorn icon 🍿).</li>
+        <li>Come back here: 👤 menu → <b>🔔 Notifications</b> → turn them on.</li>
+      </ol>
+      <button type="button" class="btn btn-primary btn-block btn-big" id="nsOn" hidden>🔔 Turn on notifications</button>
+      <fieldset class="pick ns-kinds">
+        <legend>Ping me when…</legend>
+        <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
+        <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
+        <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
+      </fieldset>
+      <p class="muted small" id="nsDevices"></p>
+      <div class="ns-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="nsTest" hidden>🧪 Send me a test</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="nsOff" hidden>🔕 Turn off on this device</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="nsInstall" hidden>📲 Install kerNEl as an app</button>
+      </div>
+      <p class="auth-fine">Everything also lands in your 🔔 inbox, even when push is off.</p>
+    </div>
+  </dialog>
+
+  <!-- ===== Real or Fake? ===== -->
+  <dialog id="gameDialog" class="modal game-modal" aria-label="Real or Fake?">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2>🕵️ Real or Fake?</h2>
+      <div id="gameBody"></div>
     </div>
   </dialog>
 

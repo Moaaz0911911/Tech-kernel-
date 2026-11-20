@@ -5,6 +5,11 @@ import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
+const DEFAULT_ROOMS = [ // shown instantly, before the server answers
+  { id: 'lobby', name: 'Lobby', emoji: '🍿', online: 0 }, { id: 'ai', name: 'AI', emoji: '🤖', online: 0 },
+  { id: 'gaming', name: 'Gaming', emoji: '🎮', online: 0 }, { id: 'dev', name: 'Dev', emoji: '💻', online: 0 },
+  { id: 'offtopic', name: 'Off-topic', emoji: '🎲', online: 0 },
+];
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
@@ -77,7 +82,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
   }
 
   function paintRooms() {
-    $('#chatRooms').innerHTML = (rooms.length ? rooms : [{ id: 'lobby', name: 'Lobby', emoji: '🍿', online: 0 }]).map((r) =>
+    $('#chatRooms').innerHTML = (rooms.length ? rooms : DEFAULT_ROOMS).map((r) =>
       `<button type="button" class="chat-room" data-room="${r.id}" aria-pressed="${r.id === room}">${r.emoji} ${esc(r.name)}${r.online ? ` <small>${r.online}</small>` : ''}</button>`).join('');
     const total = rooms.reduce((a, r) => a + r.online, 0);
     $('#chatOnline').textContent = total ? `🟢 ${total} kernel${total === 1 ? '' : 's'} online` : '🟢 online';
@@ -316,6 +321,11 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
 
   return {
     open,
+    openRoom: (id) => {
+      if (!DEFAULT_ROOMS.some((r) => r.id === id)) return open();
+      if (id !== room) { room = id; store.set('chat:room', id); msgs = new Map(); since = 0; }
+      open();
+    },
     close,
     toggle: () => (isOpen() ? close() : open()),
     share: (item) => (auth.user ? open(item) : (toast('Sign in to share stories in kerNEl Chat!', { emoji: '💬' }), openAuth('signin'))),

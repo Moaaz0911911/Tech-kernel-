@@ -10,6 +10,10 @@
   <meta property="og:description" content="Live tech news every 30 seconds, an AI-ish news robot called codme, and a kids' tech corner.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23ff2d3d%22%2F%3E%20%3Cg%20fill%3D%22%23fff6d6%22%20stroke%3D%22%231a1209%22%20stroke-width%3D%222.5%22%3E%20%3Ccircle%20cx%3D%2221%22%20cy%3D%2222%22%20r%3D%229%22%2F%3E%3Ccircle%20cx%3D%2233%22%20cy%3D%2214%22%20r%3D%2210%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2222%22%20r%3D%229%22%2F%3E%3Ccircle%20cx%3D%2231%22%20cy%3D%2225%22%20r%3D%228%22%2F%3E%20%3C%2Fg%3E%20%3Cpath%20d%3D%22M13%2027h38l-5%2031H18z%22%20fill%3D%22%23fff%22%20stroke%3D%22%231a1209%22%20stroke-width%3D%222.5%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3Cpath%20d%3D%22M23.5%2027.5l2%2030M32%2027.5v30M40.5%2027.5l-2%2030%22%20stroke%3D%22%23ff2d3d%22%20stroke-width%3D%224.5%22%2F%3E%20%3C%2Fsvg%3E" type="image/svg+xml">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="kerNEl">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -857,6 +861,54 @@ a.stat:hover { color: var(--red); }
   .codme-launcher { z-index: 60; }
 }
 
+/* ---------- 🔔 notifications ---------- */
+.bell-wrap { position: relative; }
+.bell-btn { position: relative; }
+.bell-btn.ring { animation: ring .9s ease-in-out; }
+@keyframes ring { 10%, 30%, 50% { transform: rotate(18deg); } 20%, 40%, 60% { transform: rotate(-18deg); } 70% { transform: none; } }
+.bell-count { position: absolute; top: -2px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font: 800 .66rem/18px var(--font); border: 2px solid var(--header-bg); }
+.bell-panel {
+  position: absolute; right: -60px; top: calc(100% + 10px); width: min(360px, calc(100vw - 24px)); max-height: min(70vh, 520px); overflow: auto; z-index: 55;
+  background: var(--bg-2); color: var(--text); border: 2px solid var(--hard); border-radius: 18px; box-shadow: 6px 6px 0 var(--violet); animation: menuIn .2s var(--pop);
+}
+.bell-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg-2); border-bottom: 1px solid var(--line); font-size: .9rem; }
+.bell-head .linkish { font-size: .78rem; color: var(--muted); }
+.bell-cta { display: block; width: calc(100% - 20px); margin: 10px; padding: 10px; border-radius: 12px; border: 2px dashed var(--violet); background: color-mix(in srgb, var(--violet) 14%, transparent); font-weight: 700; cursor: pointer; }
+.bell-list { display: flex; flex-direction: column; }
+.bell-item { display: flex; gap: 10px; text-align: left; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--line); background: none; cursor: pointer; }
+.bell-item:hover { background: var(--card-2); }
+.bell-item.unread { background: color-mix(in srgb, var(--butter) 10%, transparent); box-shadow: inset 3px 0 0 var(--butter); }
+.bi-icon { font-size: 1.3rem; }
+.bi-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bi-text b { font-size: .88rem; }
+.bi-text small { color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.bi-text time { font-size: .72rem; color: var(--muted); }
+.bell-empty { padding: 18px; color: var(--muted); font-size: .88rem; text-align: center; margin: 0; }
+.ns-state { display: flex; gap: 10px; align-items: center; text-align: left; padding: 12px; border-radius: 14px; background: var(--card-2); font-weight: 600; }
+.ns-icon { font-size: 1.6rem; }
+.ns-ios { text-align: left; padding-left: 22px; margin: 6px 0 14px; }
+.ns-ios li { margin-bottom: 6px; }
+.ios-share { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: var(--sky); color: #fff; font-size: .8rem; }
+.ns-kinds { margin-top: 14px; }
+.ns-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+
+/* ---------- 🕵️ Real or Fake? ---------- */
+.widget-game { background: linear-gradient(150deg, color-mix(in srgb, var(--sky) 22%, var(--card)), var(--card)); }
+.game-modal { width: min(520px, calc(100vw - 24px)); }
+.game-progress { color: var(--muted); font-weight: 700; font-size: .85rem; }
+.game-card { position: relative; margin: 10px 0 16px; padding: 22px 20px; border-radius: 18px; background: var(--card); border: 3px solid var(--hard); box-shadow: 6px 6px 0 var(--sky); font-weight: 800; font-size: clamp(1.1rem, 3.5vw, 1.35rem); line-height: 1.3; animation: popIn .5s var(--pop); }
+.game-quote { color: var(--red); font-family: var(--font-display); font-size: 1.6em; line-height: 0; vertical-align: -.3em; margin: 0 4px; }
+.game-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.game-real { background: var(--mint); color: #111; border: 3px solid var(--hard); box-shadow: 3px 3px 0 var(--hard); }
+.game-fake { background: var(--butter); color: #111; border: 3px solid var(--hard); box-shadow: 3px 3px 0 var(--hard); }
+.game-btns .btn:disabled { opacity: .5; }
+.game-reveal { min-height: 1.5em; margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.game-reveal a { color: var(--sky); }
+.game-end { text-align: center; }
+.game-big { font-size: 4rem; display: inline-block; animation: floaty 2s ease-in-out infinite; }
+.game-fakes { text-align: left; font-size: .88rem; color: var(--muted); padding-left: 18px; }
+@media (max-width: 720px) { .bell-panel { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
+
 
 /* single-file: kids corner overlay */
 #kidsFrame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1000; background: #8fd3ff; }
@@ -906,6 +958,14 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <button type="button" class="icon-btn hdr-btn" id="themeBtn" data-action="theme" aria-label="Toggle light or dark mode">🌙</button>
         <button type="button" class="icon-btn hdr-btn hide-sm" id="soundBtn" data-action="sound" aria-label="Toggle sound effects" aria-pressed="false">🔇</button>
         <button type="button" class="icon-btn hdr-btn hide-sm" id="chaosBtn" data-action="chaos" aria-label="Chaos mode" aria-pressed="false" title="Chaos mode (you’ve been warned)">🌀</button>
+        <div class="bell-wrap">
+          <button type="button" class="icon-btn hdr-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" hidden>🔔<span class="bell-count" hidden></span></button>
+          <div class="bell-panel" id="bellPanel" hidden>
+            <div class="bell-head"><b>🔔 Notifications</b><span><button type="button" class="linkish" data-bell="read">Mark all read</button> <button type="button" class="icon-btn" data-bell="settings" aria-label="Notification settings" title="Settings">⚙️</button></span></div>
+            <button type="button" class="bell-cta" id="bellCta" hidden>📲 Turn on push notifications for this device</button>
+            <div class="bell-list" id="bellList"></div>
+          </div>
+        </div>
         <div class="auth-slot" id="authSlot"></div>
       </div>
     </div>
@@ -957,6 +1017,12 @@ html.kids-open, html.kids-open body { overflow: hidden; }
           <p class="poll-q" id="pollQ"></p>
           <div class="poll-body" id="pollBody"></div>
           <p class="muted small" id="pollFoot"></p>
+        </section>
+
+        <section class="widget widget-game" aria-labelledby="gameTitle">
+          <h3 id="gameTitle" class="widget-title">🕵️ Real or Fake?</h3>
+          <p>Five headlines. Some are real stories from today… some were invented by codme. Can you spot the fakes?</p>
+          <button type="button" class="btn btn-primary btn-block" data-action="game">Play (+XP)</button>
         </section>
 
         <section class="widget" aria-labelledby="pwTitle">
@@ -1146,6 +1212,45 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <h3 class="mini-title">Danger zone</h3>
         <button type="button" class="btn btn-danger btn-block" id="deleteAccount">🗑️ Delete my account forever</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Notification settings ===== -->
+  <dialog id="notifyDialog" class="modal" aria-labelledby="notifyTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <div class="auth-mascot" aria-hidden="true">🔔</div>
+      <h2 id="notifyTitle">Notifications</h2>
+      <p class="ns-state" id="nsState"></p>
+      <ol class="ns-ios" id="nsIOS" hidden>
+        <li>Tap the <b>Share</b> button <span class="ios-share" aria-hidden="true">⬆️</span> at the bottom of Safari.</li>
+        <li>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
+        <li>Open <b>kerNEl</b> from your Home Screen (the popcorn icon 🍿).</li>
+        <li>Come back here: 👤 menu → <b>🔔 Notifications</b> → turn them on.</li>
+      </ol>
+      <button type="button" class="btn btn-primary btn-block btn-big" id="nsOn" hidden>🔔 Turn on notifications</button>
+      <fieldset class="pick ns-kinds">
+        <legend>Ping me when…</legend>
+        <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
+        <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
+        <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
+      </fieldset>
+      <p class="muted small" id="nsDevices"></p>
+      <div class="ns-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="nsTest" hidden>🧪 Send me a test</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="nsOff" hidden>🔕 Turn off on this device</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="nsInstall" hidden>📲 Install kerNEl as an app</button>
+      </div>
+      <p class="auth-fine">Everything also lands in your 🔔 inbox, even when push is off.</p>
+    </div>
+  </dialog>
+
+  <!-- ===== Real or Fake? ===== -->
+  <dialog id="gameDialog" class="modal game-modal" aria-label="Real or Fake?">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2>🕵️ Real or Fake?</h2>
+      <div id="gameBody"></div>
     </div>
   </dialog>
 
@@ -2722,6 +2827,11 @@ const { auth } = __m["auth"];
 const { sfx, burstFrom } = __m["fun"];
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
+const DEFAULT_ROOMS = [ // shown instantly, before the server answers
+  { id: 'lobby', name: 'Lobby', emoji: '🍿', online: 0 }, { id: 'ai', name: 'AI', emoji: '🤖', online: 0 },
+  { id: 'gaming', name: 'Gaming', emoji: '🎮', online: 0 }, { id: 'dev', name: 'Dev', emoji: '💻', online: 0 },
+  { id: 'offtopic', name: 'Off-topic', emoji: '🎲', online: 0 },
+];
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
@@ -2794,7 +2904,7 @@ function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }) {
   }
 
   function paintRooms() {
-    $('#chatRooms').innerHTML = (rooms.length ? rooms : [{ id: 'lobby', name: 'Lobby', emoji: '🍿', online: 0 }]).map((r) =>
+    $('#chatRooms').innerHTML = (rooms.length ? rooms : DEFAULT_ROOMS).map((r) =>
       `<button type="button" class="chat-room" data-room="${r.id}" aria-pressed="${r.id === room}">${r.emoji} ${esc(r.name)}${r.online ? ` <small>${r.online}</small>` : ''}</button>`).join('');
     const total = rooms.reduce((a, r) => a + r.online, 0);
     $('#chatOnline').textContent = total ? `🟢 ${total} kernel${total === 1 ? '' : 's'} online` : '🟢 online';
@@ -3033,6 +3143,11 @@ function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }) {
 
   return {
     open,
+    openRoom: (id) => {
+      if (!DEFAULT_ROOMS.some((r) => r.id === id)) return open();
+      if (id !== room) { room = id; store.set('chat:room', id); msgs = new Map(); since = 0; }
+      open();
+    },
     close,
     toggle: () => (isOpen() ? close() : open()),
     share: (item) => (auth.user ? open(item) : (toast('Sign in to share stories in kerNEl Chat!', { emoji: '💬' }), openAuth('signin'))),
@@ -3042,6 +3157,355 @@ function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }) {
 }
 
 return { initCommunity };
+})();
+
+// ===== notify.js =====
+__m["notify"] = (() => {
+// kerNEl notifications on the website: 🔔 inbox, Web Push on/off, settings, install-as-app, deep links.
+const { $, $$, esc, timeAgo, toast, store } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom } = __m["fun"];
+
+const b64uToBytes = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4)), (c) => c.charCodeAt(0));
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const secure = () => location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+const pushSupported = () => secure() && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function initNotify({ openAuth, openRoom }) {
+  const bell = $('#bellBtn');
+  const panel = $('#bellPanel');
+  let swReg = null;
+  let installEvent = null;
+  let timer = 0;
+  let items = [];
+
+  // ---------- service worker (push + offline) ----------
+  // (the one-file build has no manifest and no sw.js next to it, so it skips this)
+  if (secure() && 'serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) {
+    navigator.serviceWorker.register('sw.js').then((r) => { swReg = r; }).catch(() => {});
+    navigator.serviceWorker.addEventListener('message', (e) => { if (e.data?.type === 'kernel-open') go(e.data.url); });
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; paintInstall(); });
+  window.addEventListener('appinstalled', () => { installEvent = null; paintInstall(); toast('kerNEl is on your home screen! 🍿', { emoji: '📲' }); });
+  const swReady = () => (swReg ? Promise.resolve(swReg) : navigator.serviceWorker.ready);
+
+  // ---------- deep links (#chat=room) ----------
+  function go(url) {
+    const u = new URL(url, location.href);
+    if (u.origin !== location.origin) { window.open(u.href, '_blank', 'noopener'); return; }
+    if (u.hash.startsWith('#chat=')) { openRoom(u.hash.slice(6)); history.replaceState(null, '', location.pathname + location.search); return; }
+    if (u.pathname !== location.pathname) location.href = u.href;
+  }
+  const fromHash = () => { if (location.hash.startsWith('#chat=')) go(location.href); };
+  window.addEventListener('hashchange', fromHash);
+  setTimeout(fromHash, 300);
+
+  // ---------- 🔔 inbox ----------
+  function paintBell(unread) {
+    const show = auth.ready && !!auth.user;
+    bell.hidden = !show;
+    const count = bell.querySelector('.bell-count');
+    count.hidden = !unread;
+    count.textContent = unread > 9 ? '9+' : String(unread || '');
+    bell.setAttribute('aria-label', unread ? `Notifications, ${unread} new` : 'Notifications');
+  }
+
+  async function loadInbox() {
+    clearTimeout(timer);
+    if (!auth.user) { paintBell(0); return; }
+    try {
+      const r = await auth.api('/api/notifications');
+      const prevTop = items[0]?.id;
+      items = r.items;
+      paintBell(r.unread);
+      if (!panel.hidden) paintPanel();
+      if (prevTop && items[0] && items[0].id > prevTop && !items[0].read) { // something new while you're here
+        toast(items[0].title, { emoji: '🔔', ms: 5000 });
+        bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring');
+        sfx.ding();
+      }
+    } catch { /* offline */ }
+    timer = setTimeout(() => (document.hidden ? (timer = setTimeout(loadInbox, 60_000)) : loadInbox()), 60_000);
+  }
+
+  function paintPanel() {
+    const pushOn = store.get('push:on', false);
+    $('#bellList').innerHTML = items.length
+      ? items.map((n) => `<button type="button" class="bell-item${n.read ? '' : ' unread'}" data-nid="${n.id}" data-url="${esc(n.url || './')}">
+          <span class="bi-icon" aria-hidden="true">${esc(n.icon || '🍿')}</span>
+          <span class="bi-text"><b>${esc(n.title)}</b>${n.body ? `<small>${esc(n.body)}</small>` : ''}<time>${timeAgo(n.created)}</time></span></button>`).join('')
+      : '<p class="bell-empty">🍿 Nothing yet. When someone @mentions you, big news breaks in your topics, or your streak needs saving, it shows up here.</p>';
+    $('#bellCta').hidden = pushOn || !pushPossible();
+  }
+
+  function togglePanel(force) {
+    const open = force ?? panel.hidden;
+    panel.hidden = !open;
+    bell.setAttribute('aria-expanded', String(open));
+    if (open) { paintPanel(); loadInbox(); }
+  }
+
+  bell.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
+  document.addEventListener('click', (e) => { if (!panel.hidden && !e.target.closest?.('#bellPanel')) togglePanel(false); });
+  panel.addEventListener('click', async (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    if (!t) return;
+    if (t.closest('[data-bell="read"]')) {
+      await auth.api('/api/notifications/read', { method: 'POST', body: { all: true } }).catch(() => {});
+      items = items.map((n) => ({ ...n, read: true }));
+      paintBell(0); paintPanel();
+      return;
+    }
+    if (t.closest('[data-bell="settings"]')) { togglePanel(false); openSettings(); return; }
+    const item = t.closest('[data-nid]');
+    if (item) {
+      auth.api('/api/notifications/read', { method: 'POST', body: { id: Number(item.dataset.nid) } }).catch(() => {});
+      togglePanel(false);
+      go(item.dataset.url);
+      setTimeout(loadInbox, 500);
+    }
+  });
+
+  // ---------- settings + turning push on ----------
+  const pushPossible = () => pushSupported() && !(isIOS() && !isStandalone());
+
+  async function devicePushState() {
+    if (isIOS() && !isStandalone()) return 'ios-install'; // Apple: push only for Home Screen apps
+    if (!pushSupported()) return 'unsupported';
+    if (Notification.permission === 'denied') return 'blocked';
+    try {
+      const reg = await swReady();
+      const sub = await reg.pushManager.getSubscription();
+      store.set('push:on', !!sub && Notification.permission === 'granted');
+      return sub && Notification.permission === 'granted' ? 'on' : 'off';
+    } catch { return 'off'; }
+  }
+
+  const STATE_TEXT = {
+    on: ['🔔', 'Notifications are ON for this device.'],
+    off: ['🔕', 'Notifications are off on this device.'],
+    blocked: ['⛔', 'Notifications are blocked for kerNEl in your browser settings. Allow them there, then come back.'],
+    unsupported: ['🤷', 'This browser can’t do push notifications. Try Chrome, Edge, Firefox or Safari.'],
+    'ios-install': ['📱', 'On iPhone and iPad, notifications work once kerNEl is on your Home Screen (Apple’s rule). Here’s how:'],
+  };
+
+  async function paintSettings() {
+    const state = await devicePushState();
+    const [icon, text] = STATE_TEXT[state];
+    $('#nsState').innerHTML = `<span class="ns-icon">${icon}</span><span>${esc(text)}</span>`;
+    $('#nsIOS').hidden = state !== 'ios-install';
+    $('#nsOn').hidden = state !== 'off';
+    $('#nsOff').hidden = state !== 'on';
+    $('#nsTest').hidden = state !== 'on';
+    paintInstall();
+    if (auth.user) {
+      try {
+        const p = await auth.api('/api/notify/prefs');
+        for (const k of ['mentions', 'news', 'streak']) $(`#notifyDialog [name="${k}"]`).checked = !!p[k];
+        $('#nsDevices').textContent = p.devices ? `Push is on for ${p.devices} device${p.devices === 1 ? '' : 's'}.` : '';
+      } catch { /* offline */ }
+    }
+  }
+
+  function paintInstall() {
+    const btn = $('#nsInstall');
+    if (btn) btn.hidden = !installEvent || isStandalone();
+  }
+
+  function openSettings() {
+    if (!auth.user) { toast('Sign in to get notifications.', { emoji: '🔔' }); openAuth('signin'); return; }
+    const dlg = $('#notifyDialog');
+    if (!dlg.open) dlg.showModal();
+    paintSettings();
+  }
+
+  async function enablePush(btn) {
+    try {
+      btn.disabled = true;
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { toast('No worries — you can turn notifications on any time.', { emoji: '🔕' }); return paintSettings(); }
+      const reg = await swReady();
+      const { publicKey } = await auth.api('/api/push/key', { auth: false });
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(publicKey) });
+      await auth.api('/api/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON(), tz: -new Date().getTimezoneOffset() } });
+      store.set('push:on', true);
+      burstFrom(btn, { emojis: ['🔔', '🍿', '✨'], count: 14 });
+      sfx.win();
+      await auth.api('/api/push/test', { method: 'POST' }).catch(() => {});
+      toast('Notifications on! A test one is on its way. 🔔', { emoji: '🎉' });
+    } catch (e) {
+      toast(`Couldn’t turn on notifications: ${e.message}`, { emoji: '😵', type: 'error', ms: 6000 });
+    } finally {
+      btn.disabled = false;
+      paintSettings();
+      loadInbox();
+    }
+  }
+
+  async function disablePush() {
+    try {
+      const reg = await swReady();
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await auth.api('/api/push/unsubscribe', { method: 'POST', body: { endpoint: sub.endpoint } }).catch(() => {});
+        await sub.unsubscribe();
+      }
+      store.set('push:on', false);
+      toast('Notifications off on this device. 🔕', { emoji: '🔕' });
+    } finally { paintSettings(); }
+  }
+
+  $('#nsOn').addEventListener('click', (e) => enablePush(e.currentTarget));
+  $('#nsOff').addEventListener('click', disablePush);
+  $('#nsTest').addEventListener('click', async () => {
+    try { const r = await auth.api('/api/push/test', { method: 'POST' }); toast(r.sent ? 'Test sent — look at your notifications! 🔔' : 'Sent to your 🔔 inbox (no device received it).', { emoji: '🧪' }); }
+    catch (e) { toast(e.message, { emoji: '😵' }); }
+    loadInbox();
+  });
+  $('#nsInstall').addEventListener('click', async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice.catch(() => {});
+    installEvent = null;
+    paintInstall();
+  });
+  $$('#notifyDialog .ns-kinds input').forEach((box) => box.addEventListener('change', () => {
+    const prefs = Object.fromEntries(['mentions', 'news', 'streak'].map((k) => [k, $(`#notifyDialog [name="${k}"]`).checked]));
+    auth.api('/api/notify/prefs', { method: 'PUT', body: { prefs, tz: -new Date().getTimezoneOffset() } }).catch(() => {});
+  }));
+  $('#notifyDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+  $('#bellCta').addEventListener('click', () => { togglePanel(false); openSettings(); });
+
+  // ---------- lifecycle ----------
+  auth.addEventListener('signin', () => { paintBell(0); loadInbox(); });
+  auth.addEventListener('signout', () => { items = []; paintBell(0); togglePanel(false); });
+  paintBell(0);
+  if (auth.user) {
+    loadInbox();
+    // keep the time zone fresh so streak reminders arrive in your evening
+    if (store.get('push:on', false)) auth.api('/api/notify/prefs', { method: 'PUT', body: { tz: -new Date().getTimezoneOffset() } }).catch(() => {});
+  }
+
+  return { openSettings, refresh: loadInbox };
+}
+
+return { initNotify };
+})();
+
+// ===== game.js =====
+__m["game"] = (() => {
+// 🕵️ Real or Fake? — guess which headlines are real kerNEl stories and which were invented by codme.
+// Fakes are always revealed, and they never name real companies, products or people.
+const { $, esc, safeUrl, pick, toast } = __m["utils"];
+const { catById } = __m["news"];
+const { sfx, burstFrom, rain } = __m["fun"];
+
+const W = {
+  who: ['Researchers', 'Engineers at a university lab', 'A team of high-school students', 'Scientists', 'A tiny startup', 'Volunteers in a hackathon'],
+  obj: ['toaster', 'smart fridge', 'robot vacuum', 'microwave', 'doorbell camera', 'calculator', 'pair of headphones', 'electric toothbrush', 'washing machine'],
+  act: ['write poetry', 'recognise sarcasm', 'negotiate its own warranty', 'apologise for burnt toast', 'file its own bug reports', 'play chess blindfolded', 'hum lo-fi beats while working'],
+  product: ['Wi-Fi for houseplants', 'a blockchain for lost socks', 'an AI that names your pets', 'self-folding laundry drones', 'a smart spoon that counts your cereal', 'an app that rates your dad jokes', 'noise-cancelling earmuffs for cats'],
+  gadget: ['phone', 'laptop', 'smartwatch', 'game console', 'e-reader', 'VR headset'],
+  feature: ['charges itself by being complimented', 'refuses to open social media after 10 pm', 'only works when you’re smiling', 'sneezes when the battery is low', 'translates your cat’s meows into emojis'],
+  place: ['an old floppy disk', 'a forgotten server closet', 'a 1990s screensaver', 'the bottom of a ball pit', 'a library’s vending machine'],
+  thing: ['a working computer made of popcorn', 'the world’s smallest keyboard', 'a password from 1987 that still works', 'a robot that only speaks in haiku'],
+  bot: ['A delivery robot', 'A warehouse robot', 'An AI assistant', 'A self-driving lawnmower'],
+  hobby: ['open a bakery', 'become a stand-up comedian', 'travel the world', 'write a cookbook for robots'],
+  behave: ['type', 'debug code', 'answer emails', 'learn new words'],
+  cond: ['eating popcorn', 'listening to whale songs', 'wearing two pairs of socks', 'talking to a rubber duck'],
+};
+const FAKES = [
+  () => `${pick(W.who)} teach a ${pick(W.obj)} to ${pick(W.act)}`,
+  () => `${pick(W.who)} raise $${pick([3, 7, 12, 40, 90])} million to build ${pick(W.product)}`,
+  () => `Study finds people ${pick(W.behave)} ${pick([12, 23, 37, 48])}% faster while ${pick(W.cond)}`,
+  () => `New ${pick(W.gadget)} ${pick(W.feature)}`,
+  () => `${pick(W.who)} discover ${pick(W.thing)} inside ${pick(W.place)}`,
+  () => `${pick(W.bot)} quits its job to ${pick(W.hobby)}`,
+  () => `Update makes every ${pick(W.obj)} in the house ${pick(['sing the startup chime', 'demand a software update first', 'speak like a pirate'])}`,
+];
+const GIVEAWAY = /^(show|ask|tell|launch) hn\b|\[pdf\]|\(\d{4}\)$/i;
+
+function initGame({ getItems, onDone }) {
+  const dlg = $('#gameDialog');
+  const body = $('#gameBody');
+  let rounds = [];
+  let i = 0;
+  let score = 0;
+
+  function build() {
+    const real = getItems()
+      .filter((it) => it.title.length >= 30 && it.title.length <= 110 && !GIVEAWAY.test(it.title))
+      .sort(() => Math.random() - 0.5).slice(0, 3)
+      .map((it) => ({ real: true, title: it.title, item: it }));
+    const fakes = new Set();
+    while (fakes.size < 5 - real.length) fakes.add(pick(FAKES)());
+    return [...real, ...[...fakes].map((title) => ({ real: false, title }))].sort(() => Math.random() - 0.5);
+  }
+
+  function show() {
+    if (i >= rounds.length) return finish();
+    const r = rounds[i];
+    body.innerHTML = `
+      <p class="game-progress">Headline ${i + 1} of ${rounds.length} · score ${score}</p>
+      <div class="game-card"><span class="game-quote">“</span>${esc(r.title)}<span class="game-quote">”</span></div>
+      <div class="game-btns">
+        <button type="button" class="btn btn-big game-real" data-guess="real">✅ Real</button>
+        <button type="button" class="btn btn-big game-fake" data-guess="fake">🤡 Fake</button>
+      </div>
+      <p class="game-reveal" aria-live="polite"></p>`;
+  }
+
+  function guess(choice, btn) {
+    const r = rounds[i];
+    const right = (choice === 'real') === r.real;
+    if (right) { score++; sfx.ding(); burstFrom(btn, { emojis: ['✅', '🍿', '✨'], count: 10 }); } else { sfx.buzz(); }
+    body.querySelectorAll('[data-guess]').forEach((b) => { b.disabled = true; });
+    const c = r.item ? catById(r.item.cat) : null;
+    body.querySelector('.game-reveal').innerHTML = `${right ? '🎉 <b>Correct!</b>' : '😅 <b>Nope!</b>'} ${r.real
+      ? `It’s <b>real</b> — ${c.emoji} from ${esc(r.item.source)}. <a href="${esc(safeUrl(r.item.url))}" target="_blank" rel="noopener noreferrer">Read it</a>`
+      : 'It’s <b>fake</b> — codme made it up. 🤡'}
+      <button type="button" class="btn btn-primary btn-sm" data-next>${i + 1 < rounds.length ? 'Next ➡️' : 'See my score 🏁'}</button>`;
+    body.querySelector('[data-next]').focus();
+  }
+
+  function finish() {
+    const perfect = score === rounds.length;
+    const fakes = rounds.filter((r) => !r.real).map((r) => `<li>🤡 ${esc(r.title)}</li>`).join('');
+    body.innerHTML = `
+      <div class="game-end"><span class="game-big">${perfect ? '🕵️' : score >= 3 ? '🍿' : '🌽'}</span>
+      <h3>${score} / ${rounds.length} ${perfect ? '— master fact-checker!' : score >= 3 ? '— sharp eyes!' : '— the fakes got you!'}</h3>
+      <p class="muted">+${score * 3} XP</p>
+      <p class="small"><b>Reminder: these were made up by codme</b> 👇</p><ul class="game-fakes">${fakes}</ul>
+      <button type="button" class="btn btn-primary btn-big" data-again>Play again 🔄</button></div>`;
+    if (perfect) rain(['🕵️', '✅', '🍿'], 40);
+    onDone(score, rounds.length);
+  }
+
+  body.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    if (!t) return;
+    const g = t.closest('[data-guess]');
+    if (g) return guess(g.dataset.guess, g);
+    if (t.closest('[data-next]')) { i++; return show(); }
+    if (t.closest('[data-again]')) return start();
+  });
+  dlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) dlg.close(); });
+
+  function start() {
+    if (getItems().length < 5) { toast('The news is still popping — try again in a few seconds!', { emoji: '🍿' }); return; }
+    rounds = build();
+    i = 0;
+    score = 0;
+    if (!dlg.open) dlg.showModal();
+    show();
+    sfx.pop();
+  }
+  return { start };
+}
+
+return { initGame };
 })();
 
 // ===== app.js =====
@@ -3054,6 +3518,8 @@ const { auth, passwordStrength, USERNAME_RE } = __m["auth"];
 const { sfx, burst, burstFrom, rain, onKonami, initDoomscroll } = __m["fun"];
 const { initCodme } = __m["codme"];
 const { initCommunity } = __m["community"];
+const { initNotify } = __m["notify"];
+const { initGame } = __m["game"];
 const { JOKES, FACTS, LOADING_LINES, emojify } = __m["content"];
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -3084,11 +3550,13 @@ let heroSig = '';
 let tickerSig = '';
 let codme = null;
 let community = null;
+let notifier = null;
+let game = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
 // ====================================================================================
-const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, streak: 0, bestStreak: 0 });
+const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, gamesPlayed: 0, factPerfect: false, streak: 0, bestStreak: 0 });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
 let syncTimer = 0;
 const setData = (d) => {
@@ -3118,6 +3586,8 @@ function mergeData(local, server) {
     codmeAsks: Math.max(local.codmeAsks || 0, server.codmeAsks || 0),
     chatSent: Math.max(local.chatSent || 0, server.chatSent || 0),
     pollVotes: Math.max(local.pollVotes || 0, server.pollVotes || 0),
+    gamesPlayed: Math.max(local.gamesPlayed || 0, server.gamesPlayed || 0),
+    factPerfect: !!(local.factPerfect || server.factPerfect),
   };
 }
 
@@ -3160,6 +3630,7 @@ const ACHIEVEMENTS = [
   { id: 'social', emoji: '🦋', name: 'Social Butterfly', desc: 'Send your first kerNEl Chat message', test: (d) => (d.chatSent || 0) >= 1 },
   { id: 'chatterbox', emoji: '💬', name: 'Chatterbox', desc: 'Send 25 chat messages', test: (d) => (d.chatSent || 0) >= 25 },
   { id: 'hot_taker', emoji: '🗳️', name: 'Hot Taker', desc: 'Vote in 3 daily polls', test: (d) => (d.pollVotes || 0) >= 3 },
+  { id: 'fact_checker', emoji: '🕵️', name: 'Fact Checker', desc: 'Score 5/5 in Real or Fake?', test: (d) => !!d.factPerfect },
   { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Read a story between midnight and 5 am', test: (d, x) => !!x.nightRead },
   { id: 'chaos_agent', emoji: '🌀', name: 'Chaos Agent', desc: 'Turn on chaos mode', test: (d, x) => !!x.chaos },
   { id: 'cheat_code', emoji: '🕹️', name: 'Cheat Coder', desc: 'Find the secret code', test: (d) => !!d.konami },
@@ -3590,6 +4061,7 @@ function renderAuthSlot() {
       <button type="button" role="menuitem" data-action="show-foryou">⭐ For You feed</button>
       <button type="button" role="menuitem" data-action="show-saved">🔖 My popcorn bucket</button>
       <button type="button" role="menuitem" data-action="show-board">🏆 Leaderboard</button>
+      <button type="button" role="menuitem" data-action="notify">🔔 Notifications</button>
       <button type="button" role="menuitem" data-action="account">🔑 Account &amp; security</button>
       <button type="button" role="menuitem" data-action="signout">🚪 Sign out</button>
     </div></div>`;
@@ -3914,6 +4386,8 @@ function handleAction(action, el) {
     case 'fact': $('#factText').textContent = pick(FACTS); sfx.blip(); break;
     case 'codme': codme?.open(); break;
     case 'chat': community?.toggle(); break;
+    case 'notify': closeMenus(); notifier?.openSettings(); break;
+    case 'game': game?.start(); break;
     case 'ask-codme': codme?.open(state.query ? `news about ${state.query}` : undefined); break;
     case 'clear-search': setQuery(''); $('#search').focus(); break;
     case 'theme': {
@@ -4027,6 +4501,18 @@ function boot() {
     onVote: () => { const d = getData(); d.pollVotes = (d.pollVotes || 0) + 1; setData(d); addXp(5); },
     badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
     rankTitle: (xp) => rankFor(xp).title,
+  });
+
+  notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
+  game = initGame({
+    getItems: () => feed.all(),
+    onDone: (score, total) => {
+      const d = getData();
+      d.gamesPlayed = (d.gamesPlayed || 0) + 1;
+      if (score === total) d.factPerfect = true;
+      setData(d);
+      if (score) addXp(score * 3); else checkAchievements();
+    },
   });
 
   // ---- global click delegation ----

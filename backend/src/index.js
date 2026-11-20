@@ -8,10 +8,12 @@ import {
 import { codmeReply } from './codme.js';
 import { assertNotMuted, listMessages, postMessage, reactMessage, reportMessage, deleteMessage, publicProfile, getPoll, votePoll } from './community.js';
 import { getDB, KernelDB } from './db.js';
+import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
 
 export { KernelDB };
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
+const NOTIFY_CRON = '2-59/5 * * * *';
 const RANKS = [[0, 'Unpopped Kernel', '🌽'], [50, 'Warm Kernel', '♨️'], [150, 'Sizzling Kernel', '🔥'], [300, 'Freshly Popped', '🍿'], [600, 'Butter Baron', '🧈'], [1000, 'Popcorn Overlord', '👑'], [2000, 'Galactic Snack Deity', '🌌']];
 const rankOf = (xp) => [...RANKS].reverse().find(([min]) => xp >= min);
 
@@ -97,6 +99,9 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM chat_reacts WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM presence WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM poll_votes WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM push_subs WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM notify_prefs WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
@@ -131,7 +136,9 @@ async function route(request, env, ctx) {
     await assertNotMuted(env, user);
     await rateLimit(env, `chat:burst:${user.id}`, 4, 10_000);
     await rateLimit(env, `chat:hour:${user.id}`, 120, 3600_000);
-    return json(await postMessage(env, user, await readJson(request, 5_000), ctx));
+    const posted = await postMessage(env, user, await readJson(request, 5_000), ctx);
+    ctx.waitUntil(notifyMentions(env, user, posted.message).catch((e) => console.error('mentions', e)));
+    return json(posted);
   }
   if (path === '/api/chat/react' && m === 'POST') {
     const user = await requireUser(request, env);
@@ -152,6 +159,24 @@ async function route(request, env, ctx) {
     const user = await requireUser(request, env);
     return json(await votePoll(env, user, await readJson(request, 1_000)));
   }
+
+  // ---------- notifications ----------
+  if (path === '/api/push/key' && m === 'GET') return json({ publicKey: await vapidPublicKey(env) }, 200, { 'Cache-Control': 'public, max-age=3600' });
+  if (path === '/api/push/subscribe' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pushsub:${user.id}`, 30, 3600_000);
+    return json(await subscribe(env, user, await readJson(request, 5_000)));
+  }
+  if (path === '/api/push/unsubscribe' && m === 'POST') return json(await unsubscribe(env, await requireUser(request, env), await readJson(request, 5_000)));
+  if (path === '/api/push/test' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pushtest:${user.id}`, 5, 3600_000);
+    return json(await testPush(env, user));
+  }
+  if (path === '/api/notify/prefs' && m === 'GET') return json(await getPrefs(env, await requireUser(request, env)));
+  if (path === '/api/notify/prefs' && m === 'PUT') return json(await savePrefs(env, await requireUser(request, env), await readJson(request, 2_000)));
+  if (path === '/api/notifications' && m === 'GET') return json(await listNotifications(env, await requireUser(request, env)));
+  if (path === '/api/notifications/read' && m === 'POST') return json(await markRead(env, await requireUser(request, env), await readJson(request, 1_000)));
 
   // ---------- shared reactions ----------
   if (path === '/api/react' && m === 'POST') {
@@ -200,9 +225,21 @@ export default {
     return res;
   },
 
-  // Cron trigger (see wrangler.toml): refresh the news, then look for thumbnails.
+  // Cron triggers (see wrangler.toml). Each run has its own subrequest budget, so the work is split:
+  //   "*/5 * * * *"    → refresh the news, find thumbnails, tidy up
+  //   "2-59/5 * * * *" → big-news alerts and streak reminders (push notifications)
   async scheduled(event, rawEnv, ctx) {
     const env = { ...rawEnv, DB: getDB(rawEnv) };
+    if (event.cron === NOTIFY_CRON) {
+      ctx.waitUntil((async () => {
+        const budget = { left: MAX_PUSHES_PER_RUN };
+        const news = await notifyBigNews(env, budget);
+        const streaks = await notifyStreaks(env, budget);
+        await env.DB.prepare('DELETE FROM notifications WHERE created < ?').bind(Date.now() - 30 * 864e5).run();
+        console.log(`notifications: ${news} news pushes, ${streaks} streak pushes`);
+      })());
+      return;
+    }
     ctx.waitUntil((async () => {
       const r = await collectNews(env);
       const t = await findThumbnails(env, 15);
@@ -214,6 +251,7 @@ export default {
         env.DB.prepare('DELETE FROM chat_messages WHERE created < ?').bind(Date.now() - 30 * 864e5), // chat keeps 30 days
         env.DB.prepare('DELETE FROM chat_reacts WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
         env.DB.prepare('DELETE FROM chat_reports WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
+        env.DB.prepare('DELETE FROM alerted_stories WHERE at < ?').bind(Date.now() - 3 * 864e5),
       ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);
     })());

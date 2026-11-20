@@ -3,7 +3,7 @@
 // Run: npm test   (bundles first, then runs this file)
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import { readFileSync, readdirSync } from 'node:fs';
-import { generateKeyPairSync, createSign } from 'node:crypto';
+import { generateKeyPairSync, createSign, createECDH, createDecipheriv, hkdfSync, createPublicKey, verify as cryptoVerify, randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
 
 const here = new URL('..', import.meta.url).pathname;
@@ -35,8 +35,13 @@ const RSS = `<?xml version="1.0"?><rss><channel><title>The Verge</title>
 const ATOM = `<feed><entry><title>Wired: robots learn to dance</title><link rel="alternate" href="https://www.wired.com/robots-dance"/>
   <updated>${new Date().toISOString()}</updated><summary>Dancing robots.</summary></entry></feed>`;
 
+const pushes = [];
 async function outbound(request) {
   const url = new URL(request.url);
+  if (url.hostname === 'fcm.googleapis.com') { // a browser push service
+    pushes.push({ endpoint: request.url, headers: Object.fromEntries(request.headers), body: Buffer.from(await request.arrayBuffer()) });
+    return new Response('', { status: url.pathname.endsWith('/gone') ? 410 : 201 });
+  }
   const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } });
   if (url.hostname === 'hn.algolia.com') return J(hnHits(url.pathname.includes('by_date') ? 6 : 8));
   if (url.hostname === 'dev.to') return J([{ id: 1, title: 'CSS tricks that feel illegal', url: 'https://dev.to/a/css', published_at: new Date().toISOString(), public_reactions_count: 50, comments_count: 4, cover_image: 'https://dev.to/cover.png', description: 'container queries', tag_list: ['css'] }]);
@@ -293,6 +298,81 @@ try {
   ok('public profile card', r.status === 200 && r.data.username === 'Azzy' && r.data.avatar === '🦖' && r.data.xp === 542 && r.data.messages >= 2, JSON.stringify({ rank: r.data.rank, place: r.data.place, badges: r.data.badges.length }));
   ok('profiles never expose private data', !('data' in r.data) && !('pass_hash' in r.data) && !('saved' in r.data));
   ok('unknown profile → 404', (await api('/api/users/nobody_xyz')).status === 404);
+
+  console.log('notifications (Web Push)');
+  // play the browser: a P-256 key pair + auth secret, exactly what PushManager.subscribe() makes
+  const ua = createECDH('prime256v1'); ua.generateKeys();
+  const uaPub = ua.getPublicKey();
+  const authSecret = randomBytes(16);
+  const decrypt = (body) => { // RFC 8291, as the browser does it
+    const salt = body.subarray(0, 16), idlen = body[20], asPub = body.subarray(21, 21 + idlen), ct = body.subarray(21 + idlen);
+    const ikm = Buffer.from(hkdfSync('sha256', ua.computeSecret(asPub), authSecret, Buffer.concat([Buffer.from('WebPush: info\0'), uaPub, asPub]), 32));
+    const cek = Buffer.from(hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16));
+    const nonce = Buffer.from(hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12));
+    const d = createDecipheriv('aes-128-gcm', cek, nonce); d.setAuthTag(ct.subarray(ct.length - 16));
+    const plain = Buffer.concat([d.update(ct.subarray(0, ct.length - 16)), d.final()]);
+    return JSON.parse(plain.subarray(0, plain.lastIndexOf(2)).toString());
+  };
+  const vapidKey = (await api('/api/push/key')).data.publicKey;
+  const vapidOk = (hdr) => { // RFC 8292: verify the server's signed JWT with its public key
+    const [, jwt, k] = hdr.match(/^vapid t=([^,]+), k=(.+)$/);
+    const [h, b, sig] = jwt.split('.');
+    const raw = Buffer.from(k, 'base64url');
+    const key = createPublicKey({ format: 'jwk', key: { kty: 'EC', crv: 'P-256', x: raw.subarray(1, 33).toString('base64url'), y: raw.subarray(33).toString('base64url') } });
+    const claims = JSON.parse(Buffer.from(b, 'base64url'));
+    return k === vapidKey && claims.aud === 'https://fcm.googleapis.com' && claims.exp > Date.now() / 1000 && cryptoVerify('sha256', Buffer.from(`${h}.${b}`), { key, dsaEncoding: 'ieee-p1363' }, Buffer.from(sig, 'base64url'));
+  };
+  ok('server has a VAPID public key', Buffer.from(vapidKey, 'base64url').length === 65);
+  const sub = (endpoint) => ({ endpoint, keys: { p256dh: uaPub.toString('base64url'), auth: authSecret.toString('base64url') } });
+  ok('random URLs can’t be used as push endpoints', (await api('/api/push/subscribe', { method: 'POST', token, body: { subscription: sub('https://evil.example/x') } })).status === 400);
+  r = await api('/api/push/subscribe', { method: 'POST', token, body: { subscription: sub('https://fcm.googleapis.com/fcm/send/azzy-phone'), tz: 180 } });
+  ok('subscribe a device', r.status === 200);
+  r = await api('/api/push/test', { method: 'POST', token });
+  let p = pushes.at(-1);
+  ok('test push sent', r.data.sent === 1 && p.endpoint.endsWith('azzy-phone') && p.headers['content-encoding'] === 'aes128gcm' && p.headers.ttl);
+  ok('push decrypts like a real browser would', decrypt(p.body).title === '🍿 Notifications are on!', JSON.stringify(decrypt(p.body)).slice(0, 80));
+  ok('VAPID signature verifies', vapidOk(p.headers.authorization));
+  const repTok = reporters[0];
+  await api('/api/chat', { method: 'POST', token: repTok, body: { room: 'ai', text: 'hey @Azzy did you see the new model?' }, ip: '9.3.3.1' });
+  await new Promise((res) => setTimeout(res, 400));
+  p = pushes.at(-1);
+  const pm = decrypt(p.body);
+  ok('@mention → push', pm.title === '💬 @Rep_one mentioned you in #ai' && pm.url === './#chat=ai', pm.body);
+  r = await api('/api/notifications', { token });
+  ok('…and it’s in the 🔔 inbox', r.data.unread === 2 && r.data.items[0].title.includes('mentioned you'));
+  await api('/api/notify/prefs', { method: 'PUT', token, body: { prefs: { mentions: false } } });
+  const before = pushes.length;
+  await api('/api/chat', { method: 'POST', token: repTok, body: { room: 'ai', text: '@Azzy ping again' }, ip: '9.3.3.2' });
+  await new Promise((res) => setTimeout(res, 400));
+  ok('turning a kind off stops its pushes (inbox still gets it)', pushes.length === before && (await api('/api/notifications', { token })).data.unread === 3);
+  await api('/api/notify/prefs', { method: 'PUT', token, body: { prefs: { mentions: true } } });
+  await api('/api/push/subscribe', { method: 'POST', token, body: { subscription: sub('https://fcm.googleapis.com/fcm/send/gone') } });
+  ok('two devices', (await api('/api/notify/prefs', { token })).data.devices === 2);
+  await api('/api/push/test', { method: 'POST', token });
+  ok('a device the browser dropped (410) is forgotten', (await api('/api/notify/prefs', { token })).data.devices === 1);
+  await api('/api/notifications/read', { method: 'POST', token, body: { all: true } });
+  ok('mark all read', (await api('/api/notifications', { token })).data.unread === 0);
+  // big news: a hot AI story (Azzy follows AI)
+  await db.prepare("INSERT INTO stories (key, title, url, source, source_id, source_emoji, time, points, comments, cat, domain, first_seen, image_checked) VALUES ('big.example/agi', 'Huge AI breakthrough announced', 'https://big.example/agi', 'Hacker News', 'hn-front', '🟧', ?, 450, 300, 'ai', 'big.example', ?, 1)").bind(Date.now(), Date.now()).run();
+  const worker2 = await mf.getWorker();
+  await worker2.scheduled({ cron: '2-59/5 * * * *' });
+  await new Promise((res) => setTimeout(res, 300));
+  p = pushes.at(-1);
+  ok('big news in your topic → push', decrypt(p.body).title === '🔥 Big news in your topics' && decrypt(p.body).url === 'https://big.example/agi', decrypt(p.body).body);
+  const n0 = pushes.length;
+  await worker2.scheduled({ cron: '2-59/5 * * * *' });
+  ok('the same story never alerts twice', pushes.length === n0);
+  // streak reminder: make it 19:02 for Azzy, who hasn't popped in today
+  const nowD = new Date(); const m = nowD.getUTCHours() * 60 + nowD.getUTCMinutes();
+  let tz = (19 * 60 + 2 - m + 1440) % 1440; if (tz > 840) tz -= 1440;
+  await api('/api/notify/prefs', { method: 'PUT', token, body: { tz } });
+  await db.prepare("UPDATE users SET last_day = '2000-01-01' WHERE username_lc = 'azzy'").run();
+  await worker2.scheduled({ cron: '2-59/5 * * * *' });
+  await new Promise((res) => setTimeout(res, 300));
+  ok('7 pm streak reminder', /Keep your \d+-day streak alive/.test(decrypt(pushes.at(-1).body).title), decrypt(pushes.at(-1).body).body);
+  const n1 = pushes.length;
+  await worker2.scheduled({ cron: '2-59/5 * * * *' });
+  ok('…only once a day', pushes.length === n1);
 
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });

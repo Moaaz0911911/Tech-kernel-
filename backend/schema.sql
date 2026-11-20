@@ -126,3 +126,48 @@ CREATE TABLE IF NOT EXISTS poll_votes (
   at      INTEGER NOT NULL,
   PRIMARY KEY (day, user_id)
 );
+
+-- ---------- notifications ----------
+CREATE TABLE IF NOT EXISTS kv (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL                          -- e.g. the VAPID key pair, made on first use
+);
+
+CREATE TABLE IF NOT EXISTS push_subs (
+  endpoint TEXT PRIMARY KEY,               -- one row per browser/device
+  user_id  TEXT NOT NULL,
+  p256dh   TEXT NOT NULL,
+  auth     TEXT NOT NULL,
+  created  INTEGER NOT NULL,
+  fails    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS push_user ON push_subs (user_id);
+
+CREATE TABLE IF NOT EXISTS notify_prefs (
+  user_id         TEXT PRIMARY KEY,
+  mentions        INTEGER NOT NULL DEFAULT 1,
+  news            INTEGER NOT NULL DEFAULT 1,
+  streak          INTEGER NOT NULL DEFAULT 1,
+  tz              INTEGER NOT NULL DEFAULT 0, -- minutes east of UTC
+  news_day        TEXT,
+  news_today      INTEGER NOT NULL DEFAULT 0,
+  last_streak_day TEXT
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  kind    TEXT NOT NULL,                   -- mentions | news | streak
+  title   TEXT NOT NULL,
+  body    TEXT,
+  url     TEXT,
+  icon    TEXT,
+  created INTEGER NOT NULL,
+  read    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS notif_user ON notifications (user_id, id);
+
+CREATE TABLE IF NOT EXISTS alerted_stories (
+  key TEXT PRIMARY KEY,
+  at  INTEGER NOT NULL
+);

@@ -6,6 +6,8 @@ import { auth, passwordStrength, USERNAME_RE } from './auth.js';
 import { sfx, burst, burstFrom, rain, onKonami, initDoomscroll } from './fun.js';
 import { initCodme } from './codme.js';
 import { initCommunity } from './community.js';
+import { initNotify } from './notify.js';
+import { initGame } from './game.js';
 import { JOKES, FACTS, LOADING_LINES, emojify } from './content.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -36,11 +38,13 @@ let heroSig = '';
 let tickerSig = '';
 let codme = null;
 let community = null;
+let notifier = null;
+let game = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
 // ====================================================================================
-const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, streak: 0, bestStreak: 0 });
+const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, gamesPlayed: 0, factPerfect: false, streak: 0, bestStreak: 0 });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
 let syncTimer = 0;
 const setData = (d) => {
@@ -70,6 +74,8 @@ function mergeData(local, server) {
     codmeAsks: Math.max(local.codmeAsks || 0, server.codmeAsks || 0),
     chatSent: Math.max(local.chatSent || 0, server.chatSent || 0),
     pollVotes: Math.max(local.pollVotes || 0, server.pollVotes || 0),
+    gamesPlayed: Math.max(local.gamesPlayed || 0, server.gamesPlayed || 0),
+    factPerfect: !!(local.factPerfect || server.factPerfect),
   };
 }
 
@@ -112,6 +118,7 @@ const ACHIEVEMENTS = [
   { id: 'social', emoji: '🦋', name: 'Social Butterfly', desc: 'Send your first kerNEl Chat message', test: (d) => (d.chatSent || 0) >= 1 },
   { id: 'chatterbox', emoji: '💬', name: 'Chatterbox', desc: 'Send 25 chat messages', test: (d) => (d.chatSent || 0) >= 25 },
   { id: 'hot_taker', emoji: '🗳️', name: 'Hot Taker', desc: 'Vote in 3 daily polls', test: (d) => (d.pollVotes || 0) >= 3 },
+  { id: 'fact_checker', emoji: '🕵️', name: 'Fact Checker', desc: 'Score 5/5 in Real or Fake?', test: (d) => !!d.factPerfect },
   { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Read a story between midnight and 5 am', test: (d, x) => !!x.nightRead },
   { id: 'chaos_agent', emoji: '🌀', name: 'Chaos Agent', desc: 'Turn on chaos mode', test: (d, x) => !!x.chaos },
   { id: 'cheat_code', emoji: '🕹️', name: 'Cheat Coder', desc: 'Find the secret code', test: (d) => !!d.konami },
@@ -542,6 +549,7 @@ function renderAuthSlot() {
       <button type="button" role="menuitem" data-action="show-foryou">⭐ For You feed</button>
       <button type="button" role="menuitem" data-action="show-saved">🔖 My popcorn bucket</button>
       <button type="button" role="menuitem" data-action="show-board">🏆 Leaderboard</button>
+      <button type="button" role="menuitem" data-action="notify">🔔 Notifications</button>
       <button type="button" role="menuitem" data-action="account">🔑 Account &amp; security</button>
       <button type="button" role="menuitem" data-action="signout">🚪 Sign out</button>
     </div></div>`;
@@ -866,6 +874,8 @@ function handleAction(action, el) {
     case 'fact': $('#factText').textContent = pick(FACTS); sfx.blip(); break;
     case 'codme': codme?.open(); break;
     case 'chat': community?.toggle(); break;
+    case 'notify': closeMenus(); notifier?.openSettings(); break;
+    case 'game': game?.start(); break;
     case 'ask-codme': codme?.open(state.query ? `news about ${state.query}` : undefined); break;
     case 'clear-search': setQuery(''); $('#search').focus(); break;
     case 'theme': {
@@ -979,6 +989,18 @@ function boot() {
     onVote: () => { const d = getData(); d.pollVotes = (d.pollVotes || 0) + 1; setData(d); addXp(5); },
     badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
     rankTitle: (xp) => rankFor(xp).title,
+  });
+
+  notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
+  game = initGame({
+    getItems: () => feed.all(),
+    onDone: (score, total) => {
+      const d = getData();
+      d.gamesPlayed = (d.gamesPlayed || 0) + 1;
+      if (score === total) d.factPerfect = true;
+      setData(d);
+      if (score) addXp(score * 3); else checkAchievements();
+    },
   });
 
   // ---- global click delegation ----

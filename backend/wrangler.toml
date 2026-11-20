@@ -2,9 +2,9 @@ name = "kernel-api"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 
-# Refresh the news every 5 minutes.
+# Every 5 minutes: refresh the news. Two minutes later: send news/streak notifications.
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["*/5 * * * *", "2-59/5 * * * *"]
 
 # Storage: a SQLite-backed Durable Object (no separate database to create).
 [[durable_objects.bindings]]
