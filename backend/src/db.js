@@ -25,7 +25,15 @@ export class KernelDB extends DurableObject {
       if (mode === 'first') return rows[0] ?? null;
       return { results: rows, success: true, meta: { changes: cursor.rowsWritten } };
     });
-    return list.length > 1 ? this.ctx.storage.transactionSync(runAll) : runAll();
+    const go = () => (list.length > 1 ? this.ctx.storage.transactionSync(runAll) : runAll());
+    try {
+      return go();
+    } catch (e) {
+      // New tables added by an update while this object was still running: create them, then retry once.
+      if (!/no such table/i.test(String(e?.message))) throw e;
+      for (const stmt of statements(SCHEMA)) this.ctx.storage.sql.exec(stmt);
+      return go();
+    }
   }
 }
 

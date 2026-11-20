@@ -6,6 +6,7 @@ import {
   requireUser, currentUser, signOut, publicUser, cleanProfile, mergeDataPatch, REACTS,
 } from './auth.js';
 import { codmeReply } from './codme.js';
+import { assertNotMuted, listMessages, postMessage, reactMessage, reportMessage, deleteMessage, publicProfile, getPoll, votePoll } from './community.js';
 import { getDB, KernelDB } from './db.js';
 
 export { KernelDB };
@@ -92,6 +93,10 @@ async function route(request, env, ctx) {
     const user = await requireUser(request, env);
     await env.DB.batch([
       env.DB.prepare('DELETE FROM reactions WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM chat_messages WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM chat_reacts WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM presence WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM poll_votes WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
@@ -113,6 +118,39 @@ async function route(request, env, ctx) {
       me = { place: user.on_board ? (ahead?.n || 0) + 1 : null, xp: user.xp, onBoard: !!user.on_board };
     }
     return json({ top, me }, 200, user ? {} : { 'Cache-Control': 'public, max-age=60' });
+  }
+
+  // ---------- community: chat, profiles, daily poll ----------
+  if (path === '/api/chat' && m === 'GET') {
+    await rateLimit(env, `chatpoll:${ip}`, 2400, 3600_000);
+    const user = await currentUser(request, env);
+    return json(await listMessages(env, user, url.searchParams.get('room') || 'lobby', Number(url.searchParams.get('since')) || 0));
+  }
+  if (path === '/api/chat' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `chat:burst:${user.id}`, 4, 10_000);
+    await rateLimit(env, `chat:hour:${user.id}`, 120, 3600_000);
+    return json(await postMessage(env, user, await readJson(request, 5_000), ctx));
+  }
+  if (path === '/api/chat/react' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `chatreact:${user.id}`, 300, 3600_000);
+    return json(await reactMessage(env, user, await readJson(request, 1_000)));
+  }
+  if (path === '/api/chat/report' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `chatreport:${user.id}`, 30, 3600_000);
+    return json(await reportMessage(env, user, await readJson(request, 1_000)));
+  }
+  const del = path.match(/^\/api\/chat\/(\d+)$/);
+  if (del && m === 'DELETE') return json(await deleteMessage(env, await requireUser(request, env), del[1]));
+  const prof = path.match(/^\/api\/users\/([A-Za-z0-9_]{1,20})$/);
+  if (prof && m === 'GET') return json(await publicProfile(env, prof[1]), 200, { 'Cache-Control': 'public, max-age=30' });
+  if (path === '/api/poll' && m === 'GET') return json(await getPoll(env, await currentUser(request, env)));
+  if (path === '/api/poll' && m === 'POST') {
+    const user = await requireUser(request, env);
+    return json(await votePoll(env, user, await readJson(request, 1_000)));
   }
 
   // ---------- shared reactions ----------
@@ -171,6 +209,11 @@ export default {
       await env.DB.batch([
         env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()),
         env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
+        env.DB.prepare('DELETE FROM presence WHERE at < ?').bind(Date.now() - 864e5),
+        env.DB.prepare('DELETE FROM mutes WHERE until < ?').bind(Date.now()),
+        env.DB.prepare('DELETE FROM chat_messages WHERE created < ?').bind(Date.now() - 30 * 864e5), // chat keeps 30 days
+        env.DB.prepare('DELETE FROM chat_reacts WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
+        env.DB.prepare('DELETE FROM chat_reports WHERE msg_id NOT IN (SELECT id FROM chat_messages)'),
       ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);
     })());

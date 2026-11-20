@@ -748,3 +748,95 @@ a.stat:hover { color: var(--red); }
 .b-name small { color: var(--muted); font-size: .72rem; }
 .b-xp { font-weight: 800; text-align: right; line-height: 1; }
 .b-xp small { display: block; font-size: .6rem; color: var(--muted); font-weight: 600; }
+
+/* ---------- kerNEl Chat ---------- */
+.nav-chat { background: color-mix(in srgb, var(--violet) 35%, transparent); color: #fff !important; position: relative; }
+.nav-chat:hover { background: var(--violet); }
+.chat-dot { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--butter); color: #111; font: 800 .66rem/18px var(--font); text-align: center; border: 2px solid var(--header-bg); }
+.card-mini [data-chatshare] { display: none; }
+.chat-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(420px, 100vw); display: flex; flex-direction: column;
+  background: var(--bg-2); border-left: 3px solid var(--hard); box-shadow: -10px 0 0 color-mix(in srgb, var(--violet) 60%, transparent);
+  transform: translateX(105%); transition: transform .3s var(--pop);
+}
+.chat-drawer.open { transform: none; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; background: linear-gradient(120deg, var(--violet), var(--red)); color: #fff; }
+.chat-head b { font: 1.15rem var(--font-display); font-weight: 400; display: block; }
+.chat-head small { font-size: .78rem; opacity: .95; }
+.chat-head .icon-btn { color: #fff; }
+.chat-rooms { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; border-bottom: 2px solid var(--line); scrollbar-width: none; flex: none; }
+.chat-rooms::-webkit-scrollbar { display: none; }
+.chat-room { flex: none; border: 2px solid var(--line); background: var(--card); border-radius: 999px; padding: 5px 11px; font-weight: 700; font-size: .84rem; cursor: pointer; }
+.chat-room small { background: var(--mint); color: #111; border-radius: 999px; padding: 0 6px; font-size: .7rem; margin-left: 2px; }
+.chat-room[aria-pressed="true"] { background: var(--violet); border-color: var(--hard); color: #fff; }
+.chat-log { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; overscroll-behavior: contain; }
+.chat-empty { margin: auto; text-align: center; color: var(--muted); }
+.chat-empty span { font-size: 3rem; display: inline-block; }
+.spin { animation: shake .3s infinite; }
+.cmsg { display: flex; gap: 8px; align-items: flex-start; animation: msgIn .3s var(--pop); }
+.cm-ava { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-size: 1.2rem; cursor: pointer; padding: 0; }
+.cm-ava.bot { background: linear-gradient(145deg, var(--violet), var(--red)); border-color: var(--hard); cursor: default; }
+.cm-body { min-width: 0; flex: 1; background: var(--card); border: 2px solid var(--line); border-radius: 4px 16px 16px 16px; padding: 7px 10px; }
+.cmsg.me .cm-body { background: color-mix(in srgb, var(--red) 16%, var(--card)); border-color: color-mix(in srgb, var(--red) 45%, var(--line)); }
+.cmsg.bot .cm-body { background: color-mix(in srgb, var(--violet) 14%, var(--card)); }
+.cmsg.mention .cm-body { box-shadow: inset 4px 0 0 var(--butter); }
+.cm-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; font-size: .78rem; }
+.cm-name { border: 0; background: none; padding: 0; font-weight: 800; font-size: .88rem; cursor: pointer; color: var(--text); }
+.cm-name:hover { text-decoration: underline; }
+.cm-handle, .cm-head time { color: var(--muted); }
+.cm-head time { margin-left: auto; }
+.cm-text { font-size: .92rem; overflow-wrap: anywhere; margin-top: 2px; }
+.at { color: var(--violet); cursor: pointer; }
+.at.me { background: var(--butter); color: #111; border-radius: 6px; padding: 0 3px; }
+.cm-story { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; padding: 8px; border-radius: 12px; background: var(--card-2); text-decoration: none; border: 1px solid var(--line); }
+.cm-story:hover { border-color: var(--violet); }
+.cm-story b { display: block; font-size: .85rem; line-height: 1.25; }
+.cm-story small { color: var(--muted); font-size: .72rem; }
+.cm-story-emoji { font-size: 1.2rem; }
+.cm-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.cm-react, .cm-more { border: 1px solid var(--line); background: var(--card-2); border-radius: 999px; padding: 1px 8px; font-size: .78rem; cursor: pointer; }
+.cm-react.on { background: var(--butter); color: #111; border-color: var(--hard); }
+.cm-more { opacity: .6; }
+.cm-more:hover { opacity: 1; }
+.cm-picker { display: flex; gap: 4px; margin-top: 5px; }
+.cm-picker button { border: 0; background: var(--card-2); border-radius: 10px; font-size: 1.15rem; padding: 3px 6px; cursor: pointer; transition: transform .2s var(--pop); }
+.cm-picker button:hover { transform: scale(1.25) rotate(-8deg); }
+.chat-share { display: flex; gap: 6px; align-items: center; margin: 0 12px; }
+.chat-share .cm-story { flex: 1; margin: 0; }
+.chat-muted { margin: 6px 12px 0; font-size: .82rem; color: #ff6b78; font-weight: 600; }
+.chat-form { display: flex; gap: 6px; align-items: center; padding: 10px 12px 6px; border-top: 2px solid var(--line); }
+.chat-form input { flex: 1; min-width: 0; height: 44px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); color: var(--text); padding: 0 16px; font: inherit; font-size: .92rem; }
+.chat-form input:focus { outline: none; border-color: var(--violet); }
+.chat-codme { flex: none; width: 40px; height: 40px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-size: 1.15rem; cursor: pointer; }
+.chat-guest { text-align: center; padding: 12px; border-top: 2px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.chat-guest p { width: 100%; margin: 0; font-weight: 700; }
+.chat-rules { margin: 0; padding: 4px 12px 10px; font-size: .72rem; color: var(--muted); text-align: center; }
+
+/* ---------- Hot Take poll ---------- */
+.widget-poll { background: linear-gradient(150deg, color-mix(in srgb, var(--butter) 22%, var(--card)), var(--card)); }
+.poll-q { font-weight: 800; font-size: 1.02rem; }
+.poll-body { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.poll-opt { text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 8px 12px; font-weight: 700; cursor: pointer; transition: transform .2s var(--pop); }
+.poll-opt:hover { transform: translateX(4px); border-color: var(--red); }
+.poll-row { display: grid; grid-template-columns: minmax(0, 1fr) 70px 38px; gap: 6px; align-items: center; font-size: .86rem; }
+.poll-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.poll-row.mine .poll-label { color: var(--red); font-weight: 800; }
+.poll-bar { height: 10px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+.poll-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--butter), var(--red)); border-radius: 999px; transition: width .6s var(--pop); }
+.poll-row b { text-align: right; }
+
+/* ---------- profile cards ---------- */
+.board li[data-user] { cursor: pointer; }
+.board li[data-user]:hover { background: color-mix(in srgb, var(--violet) 15%, var(--card-2)); }
+.user-card .uc-ava { font-size: 3.6rem; width: 92px; height: 92px; margin: 0 auto 6px; display: grid; place-items: center; border-radius: 28px; background: var(--butter); border: 3px solid var(--hard); box-shadow: 5px 5px 0 var(--red); animation: floaty 2.4s ease-in-out infinite; }
+.uc-rank { font-weight: 800; }
+.uc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0; }
+.uc-stats span { background: var(--card-2); border-radius: 12px; padding: 8px 4px; font-size: .72rem; color: var(--muted); display: flex; flex-direction: column; }
+.uc-stats b { font-size: 1.05rem; color: var(--text); }
+.uc-badges { font-size: 1.4rem; letter-spacing: 4px; }
+.uc-topics { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+
+@media (max-width: 720px) {
+  .chat-drawer { width: 100vw; border-left: 0; box-shadow: none; }
+  .codme-launcher { z-index: 60; }
+}

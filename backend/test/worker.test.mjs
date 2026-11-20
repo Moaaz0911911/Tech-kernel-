@@ -232,6 +232,68 @@ try {
   r = await api('/api/codme', { method: 'POST', body: { messages: [{ role: 'user', content: 'hi' }] }, ip: '9.9.9.9' });
   ok('rate limit protects your bill', r.status === 429, r.data.error);
 
+  console.log('community: chat');
+  r = await api('/api/chat?room=lobby');
+  ok('anyone can read the chat', r.status === 200 && Array.isArray(r.data.messages) && r.data.rooms.length === 5);
+  ok('guests cannot post', (await api('/api/chat', { method: 'POST', body: { room: 'lobby', text: 'hi' } })).status === 401);
+  r = await api('/api/chat', { method: 'POST', token, body: { room: 'lobby', text: 'Hello kernels! 🍿 this sh1t is great' } });
+  ok('signed-in users can post (swear filter on)', r.status === 200 && r.data.message.text === 'Hello kernels! 🍿 this 🍿🍿 is great', r.data.message.text);
+  ok('message carries name tag + rank', r.data.message.user.username === 'Azzy' && r.data.message.user.avatar === '🦖');
+  const firstId = r.data.message.id;
+  r = await api('/api/chat', { method: 'POST', token, body: { room: 'lobby', text: 'cocktail scunthorpe Dickens' } });
+  ok('innocent words are left alone', r.data.message.text === 'cocktail scunthorpe Dickens');
+  r = await api('/api/chat', { method: 'POST', token, body: { room: 'dev', text: 'look at this', storyKey: story.key } });
+  ok('share a kerNEl story into chat', r.data.message.stories[0]?.title === story.title);
+  r = await api('/api/chat', { method: 'POST', token, body: { room: 'dev', text: '', storyKey: 'evil.example/phish' } });
+  ok('unknown links cannot be shared', r.status === 400);
+  for (let i = 0; i < 4; i++) r = await api('/api/chat', { method: 'POST', token, body: { room: 'offtopic', text: `spam ${i}` } });
+  ok('chat flooding is rate-limited', r.status === 429, r.data.error);
+  r = await api('/api/chat', { method: 'POST', token: keiToken, body: { room: 'dev', text: '@codme rust' } });
+  r = await api('/api/chat?room=dev', { token: keiToken });
+  const botMsg = r.data.messages.find((m) => m.user.bot);
+  ok('@codme answers in the room', !!botMsg && botMsg.stories.length > 0 && /rust/i.test(botMsg.stories[0].title), botMsg?.text);
+  ok('online count includes you', r.data.rooms.find((x) => x.id === 'dev').online >= 1);
+  const since = r.data.now;
+  r = await api('/api/chat/react', { method: 'POST', token: keiToken, body: { id: firstId, emoji: '🔥' } });
+  ok('react to a message', r.data.reactions['🔥'] === 1);
+  r = await api(`/api/chat?room=lobby&since=${since - 1}`, { token });
+  ok('polling returns only what changed', r.data.messages.length === 1 && r.data.messages[0].id === firstId && r.data.messages[0].reactions['🔥'] === 1);
+  ok('you can’t delete someone else’s message', (await api(`/api/chat/${firstId}`, { method: 'DELETE', token: keiToken })).status === 403);
+  ok('delete your own message', (await api(`/api/chat/${firstId}`, { method: 'DELETE', token })).status === 200);
+  r = await api('/api/chat?room=lobby');
+  ok('deleted message disappears', !r.data.messages.some((m) => m.id === firstId));
+
+  console.log('community: reports & mutes');
+  // three reporters hide a message; three hidden messages in a day mute the author
+  const reporters = [];
+  for (const [i, n] of ['Rep_one', 'Rep_two', 'Rep_three'].entries()) {
+    const rr = await api('/api/auth/register', { method: 'POST', body: { username: n, password: `Report-Pass-${i}9!` }, ip: `9.1.1.${i}` });
+    reporters.push(rr.data.token);
+  }
+  ok('can’t report yourself', (await api('/api/chat/report', { method: 'POST', token: keiToken, body: { id: botMsg.id + 0 } })).status !== 500);
+  for (let k = 0; k < 3; k++) {
+    const m = await api('/api/chat', { method: 'POST', token: keiToken, body: { room: 'gaming', text: `rude message ${k}` }, ip: `9.2.2.${k}` });
+    await new Promise((res) => setTimeout(res, 50));
+    for (const t of reporters) await api('/api/chat/report', { method: 'POST', token: t, body: { id: m.data.message.id } });
+  }
+  r = await api('/api/chat?room=gaming');
+  ok('3 reports hide a message', !r.data.messages.some((m) => /rude/.test(m.text)));
+  r = await api('/api/chat', { method: 'POST', token: keiToken, body: { room: 'gaming', text: 'am I muted?' } });
+  ok('3 hidden messages in a day = 24h mute', r.status === 403, r.data.error);
+
+  console.log('community: poll & profiles');
+  r = await api('/api/poll');
+  ok('daily poll has a question', r.status === 200 && r.data.question && r.data.options.length >= 3, r.data.question);
+  ok('guests cannot vote', (await api('/api/poll', { method: 'POST', body: { option: 0 } })).status === 401);
+  r = await api('/api/poll', { method: 'POST', token, body: { option: 1 } });
+  ok('vote counts', r.data.counts[1] === 1 && r.data.mine === 1 && r.data.firstVote);
+  r = await api('/api/poll', { method: 'POST', token, body: { option: 0 } });
+  ok('one vote per person per day', r.data.counts[0] === 0 && r.data.mine === 1 && !r.data.firstVote);
+  r = await api('/api/users/azzy');
+  ok('public profile card', r.status === 200 && r.data.username === 'Azzy' && r.data.avatar === '🦖' && r.data.xp === 542 && r.data.messages >= 2, JSON.stringify({ rank: r.data.rank, place: r.data.place, badges: r.data.badges.length }));
+  ok('profiles never expose private data', !('data' in r.data) && !('pass_hash' in r.data) && !('saved' in r.data));
+  ok('unknown profile → 404', (await api('/api/users/nobody_xyz')).status === 404);
+
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });
   ok('signed-out token stops working', (await api('/api/me', { token })).status === 401);

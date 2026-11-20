@@ -104,6 +104,13 @@
           <span class="kp-go" aria-hidden="true">→</span>
         </a>
 
+        <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
+          <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
+          <p class="poll-q" id="pollQ"></p>
+          <div class="poll-body" id="pollBody"></div>
+          <p class="muted small" id="pollFoot"></p>
+        </section>
+
         <section class="widget" aria-labelledby="pwTitle">
           <h3 id="pwTitle" class="widget-title">🏷️ Your name tag</h3>
           <div id="profileWidget"></div>
@@ -170,7 +177,7 @@
         <a href="https://hn.algolia.com/api" target="_blank" rel="noopener noreferrer">News: Hacker News (Algolia)</a>
         <a href="https://developers.forem.com/api" target="_blank" rel="noopener noreferrer">DEV Community API</a>
       </div>
-      <p class="tiny">Shortcuts: <kbd>/</kbd> search · <kbd>r</kbd> refresh · <kbd>c</kbd> codme · psst, try the Konami code 🎮 · © <span id="year"></span> kerNEl</p>
+      <p class="tiny">Shortcuts: <kbd>/</kbd> search · <kbd>r</kbd> refresh · <kbd>c</kbd> codme · <kbd>t</kbd> chat · psst, try the Konami code 🎮 · © <span id="year"></span> kerNEl</p>
     </div>
   </footer>
 
@@ -292,6 +299,35 @@
         <button type="button" class="btn btn-danger btn-block" id="deleteAccount">🗑️ Delete my account forever</button>
       </div>
     </div>
+  </dialog>
+
+  <!-- ===== kerNEl Chat ===== -->
+  <aside class="chat-drawer" id="chatDrawer" role="dialog" aria-label="kerNEl Chat" hidden>
+    <header class="chat-head">
+      <div><b>💬 kerNEl Chat</b><small id="chatOnline">🟢 online</small></div>
+      <button type="button" class="icon-btn" data-cm="close" aria-label="Close chat">✕</button>
+    </header>
+    <nav class="chat-rooms" id="chatRooms" aria-label="Chat rooms"></nav>
+    <div class="chat-log" id="chatLog" aria-live="polite"></div>
+    <div class="chat-share" id="chatShare" hidden></div>
+    <p class="chat-muted" id="chatMuted" hidden></p>
+    <form class="chat-form" id="chatForm" hidden>
+      <button type="button" class="chat-codme" data-cm="codme" title="Ask codme in the room">🤖</button>
+      <label class="sr-only" for="chatInput">Message</label>
+      <input id="chatInput" maxlength="500" autocomplete="off" placeholder="Say something nice… (try @codme ai)" enterkeyhint="send">
+      <button type="submit" class="send-btn" aria-label="Send">➤</button>
+    </form>
+    <div class="chat-guest" id="chatGuest" hidden>
+      <p>Join the conversation! 🍿</p>
+      <button type="button" class="btn btn-primary" data-cm="signup">Sign up free</button>
+      <button type="button" class="btn btn-ghost" data-cm="signin">Sign in</button>
+    </div>
+    <p class="chat-rules">Be kind 💛 Don’t share personal info. Messages with 3 reports get hidden.</p>
+  </aside>
+
+  <dialog id="userCard" class="modal" aria-label="Profile">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body user-card" id="userCardBody"></div>
   </dialog>
 
   <!-- ===== codme chat robot ===== -->

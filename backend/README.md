@@ -9,6 +9,8 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🔐 **Accounts** | Username + password (no email). Passwords hashed with salted PBKDF2-SHA256; one-time recovery codes for forgotten passwords; 30-day sessions stored as hashes; rate-limited logins and sign-ups. |
 | 🔄 **Sync** | Name tag, XP, saved stories, reactions, achievements, settings and the kids' stars follow you to every device. |
 | 🏆 **Leaderboard & streaks** | Top 20 by XP (opt-out), daily check-in streaks with bonus XP. |
+| 💬 **Chat** | Rooms, mentions, reactions, story sharing, @codme replies; swear filter, rate limits, reports → auto-hide → 24h mutes; 30-day history. |
+| 🗳️ **Daily poll & profiles** | One "Hot Take" a day (one vote each) and public profile cards (no private data). |
 | 🔥 **Shared reactions** | Everyone sees the same reaction counts (signed-in users can vote, one reaction per story each). |
 | 🤖 **codme AI** | codme answers with Claude, using kerNEl's live stories and citing them. Rate-limited per visitor, per user and per day to protect your bill. |
 
@@ -55,6 +57,12 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `POST /api/me/recovery-code` | Bearer | `{ password }` → a new recovery code |
 | `DELETE /api/me` | Bearer | Delete the account and everything in it |
 | `GET /api/leaderboard` | optional | Top 20 by XP, plus your place |
+| `GET /api/chat?room=&since=` | optional | Messages changed since `since` (ms), rooms + online counts |
+| `POST /api/chat` | Bearer | `{ room, text, storyKey? }` (start with `@codme` to ask the bot) |
+| `POST /api/chat/react` · `/api/chat/report` | Bearer | `{ id, emoji? }` |
+| `DELETE /api/chat/:id` | Bearer | Delete your own message |
+| `GET /api/users/:username` | – | Public profile card |
+| `GET /api/poll` · `POST /api/poll` | – / Bearer | Today's Hot Take · `{ option }` |
 | `POST /api/react` | Bearer | `{ key, emoji: "fire"\|"lol"\|"mind"\|"meh"\|null }` → shared counts |
 | `POST /api/codme` | optional | `{ messages: [{ role, content }] }` → `{ reply, stories, refs }` |
 
@@ -78,6 +86,7 @@ src/db.js      storage: SQLite Durable Object (or D1 if bound)
 src/news.js    collector, RSS/Atom parser, thumbnails, story queries (reuses ../js/news.js for categories)
 src/auth.js    accounts: password hashing, recovery codes, sessions, streaks, cleaning what browsers send
 src/codme.js   Claude-powered codme replies grounded in kerNEl's stories
+src/community.js  chat rooms, @codme in chat, moderation, daily poll, profile cards
 schema.sql     database tables
 test/          end-to-end test
 ```

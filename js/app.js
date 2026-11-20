@@ -5,6 +5,7 @@ import { NewsFeed, CATEGORIES, catById, hotness, searchLocal, trends } from './n
 import { auth, passwordStrength, USERNAME_RE } from './auth.js';
 import { sfx, burst, burstFrom, rain, onKonami, initDoomscroll } from './fun.js';
 import { initCodme } from './codme.js';
+import { initCommunity } from './community.js';
 import { JOKES, FACTS, LOADING_LINES, emojify } from './content.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -34,11 +35,12 @@ let nextAt = Date.now();
 let heroSig = '';
 let tickerSig = '';
 let codme = null;
+let community = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
 // ====================================================================================
-const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, streak: 0, bestStreak: 0 });
+const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, streak: 0, bestStreak: 0 });
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
 let syncTimer = 0;
 const setData = (d) => {
@@ -66,6 +68,8 @@ function mergeData(local, server) {
     konami: !!(local.konami || server.konami),
     badges: { ...(server.badges || {}), ...(local.badges || {}) },
     codmeAsks: Math.max(local.codmeAsks || 0, server.codmeAsks || 0),
+    chatSent: Math.max(local.chatSent || 0, server.chatSent || 0),
+    pollVotes: Math.max(local.pollVotes || 0, server.pollVotes || 0),
   };
 }
 
@@ -105,6 +109,9 @@ const ACHIEVEMENTS = [
   { id: 'collector', emoji: '🪣', name: 'Collector', desc: 'Save 10 stories', test: (d) => d.saved.length >= 10 },
   { id: 'reactor', emoji: '🔥', name: 'Hype Machine', desc: 'React to 25 stories', test: (d) => Object.keys(d.reactions).length >= 25 },
   { id: 'chatty', emoji: '🤖', name: 'codme’s Pal', desc: 'Ask codme 10 questions', test: (d) => (d.codmeAsks || 0) >= 10 },
+  { id: 'social', emoji: '🦋', name: 'Social Butterfly', desc: 'Send your first kerNEl Chat message', test: (d) => (d.chatSent || 0) >= 1 },
+  { id: 'chatterbox', emoji: '💬', name: 'Chatterbox', desc: 'Send 25 chat messages', test: (d) => (d.chatSent || 0) >= 25 },
+  { id: 'hot_taker', emoji: '🗳️', name: 'Hot Taker', desc: 'Vote in 3 daily polls', test: (d) => (d.pollVotes || 0) >= 3 },
   { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Read a story between midnight and 5 am', test: (d, x) => !!x.nightRead },
   { id: 'chaos_agent', emoji: '🌀', name: 'Chaos Agent', desc: 'Turn on chaos mode', test: (d, x) => !!x.chaos },
   { id: 'cheat_code', emoji: '🕹️', name: 'Cheat Coder', desc: 'Find the secret code', test: (d) => !!d.konami },
@@ -154,7 +161,7 @@ async function loadLeaderboard() {
     const { top, me } = await auth.leaderboard();
     const medal = ['🥇', '🥈', '🥉'];
     $('#boardList').innerHTML = top.length
-      ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}">
+      ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}" data-user="${esc(u.username)}" title="See ${esc(u.nickname)}'s profile">
           <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava" aria-hidden="true">${esc(u.avatar)}</span>
           <span class="b-name"><b>${esc(u.nickname)}</b><small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
           <span class="b-xp">${compact(u.xp)}<small>XP</small></span></li>`).join('')
@@ -281,6 +288,7 @@ function cardHTML(it, variant, d) {
         <span class="spacer"></span>
         ${reactsHTML(it, mine)}
         <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? 'Remove from your bucket' : 'Save to your popcorn bucket'}">${saved ? '🔖' : '📑'}</button>
+        <button type="button" class="icon-btn" data-chatshare title="Share to kerNEl Chat">💬</button>
         <button type="button" class="icon-btn" data-emojify title="Emoji TL;DR">🪄</button>
         <button type="button" class="icon-btn" data-share title="Share">🔗</button>
       </div>
@@ -548,6 +556,7 @@ function renderNav() {
     { id: 'saved', label: 'Saved', emoji: '🔖' },
   ];
   nav.innerHTML = tabs.map((t) => `<button type="button" class="nav-btn" data-cat="${t.id}" aria-pressed="${state.cat === t.id}"><span aria-hidden="true">${t.emoji}</span> ${esc(t.label)}</button>`).join('')
+    + (auth.ready ? '<button type="button" class="nav-btn nav-chat" data-action="chat"><span aria-hidden="true">💬</span> Chat<span class="chat-dot" hidden></span></button>' : '')
     + '<a class="nav-btn nav-kids" href="kids.html"><span aria-hidden="true">🧸</span> Kids</a>';
 }
 
@@ -856,6 +865,7 @@ function handleAction(action, el) {
     case 'joke': $('#jokeText').textContent = pick(JOKES); sfx.boing(); burstFrom(el, { emojis: ['😂', '🤣', '😆'], count: 8 }); break;
     case 'fact': $('#factText').textContent = pick(FACTS); sfx.blip(); break;
     case 'codme': codme?.open(); break;
+    case 'chat': community?.toggle(); break;
     case 'ask-codme': codme?.open(state.query ? `news about ${state.query}` : undefined); break;
     case 'clear-search': setQuery(''); $('#search').focus(); break;
     case 'theme': {
@@ -963,6 +973,14 @@ function boot() {
     onAsk: () => { const d = getData(); d.codmeAsks = (d.codmeAsks || 0) + 1; setData(d); checkAchievements(); },
   });
 
+  community = initCommunity({
+    openAuth,
+    onSent: () => { const d = getData(); d.chatSent = (d.chatSent || 0) + 1; setData(d); addXp(2); },
+    onVote: () => { const d = getData(); d.pollVotes = (d.pollVotes || 0) + 1; setData(d); addXp(5); },
+    badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
+    rankTitle: (xp) => rankFor(xp).title,
+  });
+
   // ---- global click delegation ----
   document.addEventListener('click', (e) => {
     const t = e.target;
@@ -994,6 +1012,7 @@ function boot() {
       else if ((b = t.closest('[data-react]'))) react(key, b);
       else if ((b = t.closest('[data-emojify]'))) emojifyCard(key, b);
       else if (t.closest('[data-share]')) share(key);
+      else if (t.closest('[data-chatshare]')) { const it = findItem(key); if (it && community) community.share(it); else if (!community) toast('Chat needs the kerNEl server.', { emoji: '💬' }); }
       else if (t.closest('[data-open]')) markRead(key, e);
     }
   });
@@ -1197,6 +1216,7 @@ function boot() {
     if (e.key === '/') { e.preventDefault(); search.focus(); }
     else if (e.key === 'r') refreshNow(true);
     else if (e.key === 'c') codme?.toggle();
+    else if (e.key === 't') community?.toggle();
   });
 
   onKonami(() => {

@@ -72,3 +72,57 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   count  INTEGER NOT NULL,
   reset  INTEGER NOT NULL
 );
+
+-- ---------- community ----------
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  room       TEXT NOT NULL,
+  user_id    TEXT NOT NULL,
+  username   TEXT NOT NULL,
+  nickname   TEXT,
+  avatar     TEXT,
+  rank_emoji TEXT,
+  text       TEXT NOT NULL,
+  stories    TEXT NOT NULL DEFAULT '[]',  -- JSON: shared story cards
+  bot        INTEGER NOT NULL DEFAULT 0,
+  reactions  TEXT NOT NULL DEFAULT '{}',  -- JSON: emoji -> count
+  reports    INTEGER NOT NULL DEFAULT 0,
+  hidden     INTEGER NOT NULL DEFAULT 0,  -- deleted by its author, or hidden after 3 reports
+  created    INTEGER NOT NULL,
+  updated    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS chat_room_updated ON chat_messages (room, updated);
+CREATE INDEX IF NOT EXISTS chat_user ON chat_messages (user_id, created);
+
+CREATE TABLE IF NOT EXISTS chat_reacts (
+  msg_id  INTEGER NOT NULL,
+  user_id TEXT NOT NULL,
+  emoji   TEXT NOT NULL,
+  PRIMARY KEY (msg_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS chat_reports (
+  msg_id  INTEGER NOT NULL,
+  user_id TEXT NOT NULL,
+  at      INTEGER NOT NULL,
+  PRIMARY KEY (msg_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS mutes (
+  user_id TEXT PRIMARY KEY,
+  until   INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS presence (
+  user_id TEXT PRIMARY KEY,
+  room    TEXT NOT NULL,
+  at      INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS poll_votes (
+  day     TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  option  INTEGER NOT NULL,
+  at      INTEGER NOT NULL,
+  PRIMARY KEY (day, user_id)
+);

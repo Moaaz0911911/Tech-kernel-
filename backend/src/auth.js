@@ -234,6 +234,8 @@ export function mergeDataPatch(prev, patch) {
   }
   if ('konami' in patch) out.konami = !!(patch.konami || prev.konami);
   if ('codmeAsks' in patch) out.codmeAsks = Math.max(prev.codmeAsks || 0, int(patch.codmeAsks, 0, 1e6));
+  if ('chatSent' in patch) out.chatSent = Math.max(prev.chatSent || 0, int(patch.chatSent, 0, 1e7));
+  if ('pollVotes' in patch) out.pollVotes = Math.max(prev.pollVotes || 0, int(patch.pollVotes, 0, 1e5));
   if ('badges' in patch) { // achievements only ever get added
     out.badges = { ...(prev.badges || {}) };
     for (const [id, at] of Object.entries(patch.badges || {}).slice(0, 60)) if (/^[a-z0-9_]{1,30}$/.test(id) && !out.badges[id]) out.badges[id] = Number(at) || Date.now();

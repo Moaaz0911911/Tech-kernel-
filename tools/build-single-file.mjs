@@ -86,7 +86,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'utils', 'content', 'fun', 'news', 'auth', 'codme', 'app'])
+const mainJs = bundle(['config', 'utils', 'content', 'fun', 'news', 'auth', 'codme', 'community', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');
