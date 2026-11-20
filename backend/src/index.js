@@ -6,6 +6,9 @@ import {
   requireUser, currentUser, signOut, publicUser, cleanProfile, mergeDataPatch, REACTS,
 } from './auth.js';
 import { codmeReply } from './codme.js';
+import { getDB, KernelDB } from './db.js';
+
+export { KernelDB };
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
 const RANKS = [[0, 'Unpopped Kernel', '🌽'], [50, 'Warm Kernel', '♨️'], [150, 'Sizzling Kernel', '🔥'], [300, 'Freshly Popped', '🍿'], [600, 'Butter Baron', '🧈'], [1000, 'Popcorn Overlord', '👑'], [2000, 'Galactic Snack Deity', '🌌']];
@@ -143,7 +146,8 @@ async function route(request, env, ctx) {
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, rawEnv, ctx) {
+    const env = { ...rawEnv, DB: getDB(rawEnv) };
     const cors = corsHeaders(request, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: allowedOrigin(request, env) ? 204 : 403, headers: cors });
     let res;
@@ -159,7 +163,8 @@ export default {
   },
 
   // Cron trigger (see wrangler.toml): refresh the news, then look for thumbnails.
-  async scheduled(event, env, ctx) {
+  async scheduled(event, rawEnv, ctx) {
+    const env = { ...rawEnv, DB: getDB(rawEnv) };
     ctx.waitUntil((async () => {
       const r = await collectNews(env);
       const t = await findThumbnails(env, 15);

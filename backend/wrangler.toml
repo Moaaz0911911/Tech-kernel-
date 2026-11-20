@@ -6,10 +6,20 @@ compatibility_date = "2026-11-01"
 [triggers]
 crons = ["*/5 * * * *"]
 
-[[d1_databases]]
-binding = "DB"
-database_name = "kernel-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"   # printed by: npx wrangler d1 create kernel-db
+# Storage: a SQLite-backed Durable Object (no separate database to create).
+[[durable_objects.bindings]]
+name = "KERNEL_DB"
+class_name = "KernelDB"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["KernelDB"]
+
+# Lets the code import schema.sql as text.
+[[rules]]
+type = "Text"
+globs = ["**/*.sql"]
+fallthrough = true
 
 [vars]
 # Websites allowed to call this API (comma-separated). localhost is always allowed for testing.

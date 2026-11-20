@@ -2,7 +2,7 @@
 // Every outbound request (news sites, Google/Apple keys, Anthropic) is answered by stand-ins below.
 // Run: npm test   (bundles first, then runs this file)
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { generateKeyPairSync, createSign } from 'node:crypto';
 import assert from 'node:assert/strict';
 
@@ -62,16 +62,31 @@ async function outbound(request) {
 const mf = new Miniflare(convertV4MiniflareOptions({
   workers: [{
     name: 'kernel-api',
-    modules: true,
-    scriptPath: `${here}.build/index.js`,
+    modulesRoot: `${here}.build`,
+    modules: [
+      { type: 'ESModule', path: `${here}.build/index.js` },
+      ...readdirSync(`${here}.build`).filter((f) => f.endsWith('.sql')).map((f) => ({ type: 'Text', path: `${here}.build/${f}` })),
+    ],
     compatibilityDate: '2026-11-01',
-    d1Databases: { DB: 'test-db' },
+    ...(process.env.STORAGE === 'do'
+      ? { durableObjects: { KERNEL_DB: { className: 'KernelDB', useSQLite: true } } }
+      : { d1Databases: { DB: 'test-db' } }),
     bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3' },
     outboundService: outbound,
   }],
 }));
-const db = await mf.getD1Database('DB');
-for (const stmt of readFileSync(`${here}schema.sql`, 'utf8').split(';').map((s) => s.trim()).filter(Boolean)) await db.prepare(stmt).run();
+let db;
+if (process.env.STORAGE === 'do') { // talk to the Durable Object the same way the worker does
+  const ns = await mf.getDurableObjectNamespace('KERNEL_DB');
+  const stub = ns.get(ns.idFromName('main'));
+  const stmt = (sql, params = []) => ({ bind: (...p) => stmt(sql, p), first: async () => (await stub.query([{ sql, params, mode: 'first' }]))[0], run: async () => (await stub.query([{ sql, params, mode: 'run' }]))[0] });
+  db = { prepare: (sql) => stmt(sql) };
+  console.log('storage: Durable Object (SQLite)');
+} else {
+  db = await mf.getD1Database('DB');
+  for (const stmt of readFileSync(`${here}schema.sql`, 'utf8').split(';').map((s) => s.trim()).filter(Boolean)) await db.prepare(stmt).run();
+  console.log('storage: D1');
+}
 
 const ORIGIN = 'https://moaaz0911911.github.io';
 const api = async (path, { method = 'GET', body, token, origin = ORIGIN, ip = '1.2.3.4' } = {}) => {

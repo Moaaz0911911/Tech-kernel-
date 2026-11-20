@@ -33,10 +33,10 @@ The news, codme and kids section work right away. Sign-in needs the one-time set
 
 ## 2. Accounts and the kerNEl server
 
-Accounts (username + password), synced progress, the leaderboard, streaks, shared reactions, real thumbnails and AI codme all run on the small free server in [`backend/`](backend/), a Cloudflare Worker. Set it up once with the steps in [`backend/README.md`](backend/README.md) (about 10 minutes), then put its address in the config:
+Accounts (username + password), synced progress, the leaderboard, streaks, shared reactions, real thumbnails and AI codme all run on the small free server in [`backend/`](backend/), a Cloudflare Worker. **It's live at https://kernel-api.tech-kernel.workers.dev** and the site is already connected to it:
 
 ```js
-apiBase: 'https://kernel-api.YOUR-NAME.workers.dev',
+apiBase: 'https://kernel-api.tech-kernel.workers.dev',
 ```
 
 That's `js/config.js` for the multi-file site, or the `CONFIG` block in the single-file `index.html`. Until `apiBase` is set, the site still shows the news and kids corner; the sign-in window explains that accounts aren't switched on yet, and progress is kept in the visitor's browser.

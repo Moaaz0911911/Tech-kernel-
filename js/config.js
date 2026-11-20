@@ -9,7 +9,7 @@ export const CONFIG = {
   // e.g. "https://kernel-api.YOUR-NAME.workers.dev".
   // Needed for accounts (username + password) and saving progress, shared reactions,
   // real thumbnails, the leaderboard and AI codme. Without it, the site still shows news.
-  apiBase: '',
+  apiBase: 'https://kernel-api.tech-kernel.workers.dev',
 
   // Turn news sources on/off (used when the server isn't set or is down).
   sources: {

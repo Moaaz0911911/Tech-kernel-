@@ -1,6 +1,6 @@
 # 🍿 kerNEl backend
 
-A small **Cloudflare Worker** with a free **D1** database that gives kerNEl:
+A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for storage that gives kerNEl:
 
 | Feature | What it does |
 |---|---|
@@ -14,40 +14,27 @@ A small **Cloudflare Worker** with a free **D1** database that gives kerNEl:
 
 The website keeps working without the backend. If the backend is down, it fetches news directly like before.
 
-**Cost:** Cloudflare Workers + D1 free tier covers a hobby site (100k requests a day, 5 GB database). The only paid part is codme AI, billed by Anthropic per use. Turn it off by not setting the key.
+**Cost:** Cloudflare's free Workers plan covers a hobby site (100k requests a day, plus free SQLite storage). The only paid part is codme AI, billed by Anthropic per use. Turn it off by not setting the key.
 
 ---
 
-## Deploy (about 10 minutes, once)
+## Deploy
 
-You need [Node.js](https://nodejs.org) 20+ and a free [Cloudflare account](https://dash.cloudflare.com/sign-up).
+**kerNEl's live server:** https://kernel-api.tech-kernel.workers.dev (check it at `/api/health`).
+
+To deploy your own copy, you need [Node.js](https://nodejs.org) 20+ and a free [Cloudflare account](https://dash.cloudflare.com/sign-up):
 
 ```bash
 cd backend
 npm install
-npx wrangler login                     # opens the browser to connect your Cloudflare account
-npx wrangler d1 create kernel-db       # prints a database_id
+npx wrangler login      # or set CLOUDFLARE_API_TOKEN (template "Edit Cloudflare Workers")
+npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 ```
 
-1. Paste the printed `database_id` into `wrangler.toml` (replace `REPLACE_WITH_YOUR_DATABASE_ID`).
-2. In `wrangler.toml` → `[vars]`, set `ALLOWED_ORIGINS` to your site, e.g. `https://moaaz0911911.github.io`.
-3. Create the tables and deploy:
-   ```bash
-   npm run db:init
-   npm run deploy                      # prints your URL: https://kernel-api.<you>.workers.dev
-   ```
-4. **codme AI (optional):** get an API key at <https://console.anthropic.com>, then run
-   `npx wrangler secret put ANTHROPIC_API_KEY` and paste it when asked.
-   (Or in the Cloudflare dashboard: Workers → kernel-api → Settings → Variables and Secrets → Add → Secret.)
-5. Put the worker URL in the website's config as `apiBase`. In `js/config.js` for the multi-file site, or the `CONFIG` block of the single-file `index.html`:
-   ```js
-   apiBase: 'https://kernel-api.<you>.workers.dev',
-   ```
-6. Open `https://kernel-api.<you>.workers.dev/api/health`. It should show `"ok": true` and which features are on.
-
-News appears on the first visit, and the cron keeps it fresh every 5 minutes after that.
-
----
+- There's no database to create. Data lives in a SQLite-backed **Durable Object**, and its tables are created automatically on first use. If you prefer D1, bind it as `DB` and it is used instead.
+- In `wrangler.toml`, set `ALLOWED_ORIGINS` to your site's address.
+- **codme AI (optional):** `npx wrangler secret put ANTHROPIC_API_KEY` (key from <https://console.anthropic.com>). Without it, codme uses its built-in offline brain.
+- Put the worker URL in the website's config as `apiBase`.
 
 ## API
 
@@ -78,15 +65,16 @@ Limits you can change in `wrangler.toml`: `CODME_PER_IP_HOUR` (20), `CODME_PER_U
 ## Develop & test
 
 ```bash
-npm test          # bundles the worker and runs it in Cloudflare's local runtime (Miniflare) with a local D1;
+npm test          # bundles the worker and runs it in Cloudflare's local runtime (Miniflare); STORAGE=do npm test uses the Durable Object
                   # every outside service (news sites, Anthropic) is replaced by test stand-ins
-npm run dev       # local dev server at http://localhost:8787 (run `npx wrangler d1 execute kernel-db --local --file=schema.sql` first)
+npm run dev       # local dev server at http://localhost:8787
 ```
 
 ## Files
 
 ```
 src/index.js   routes, CORS, cron handler
+src/db.js      storage: SQLite Durable Object (or D1 if bound)
 src/news.js    collector, RSS/Atom parser, thumbnails, story queries (reuses ../js/news.js for categories)
 src/auth.js    accounts: password hashing, recovery codes, sessions, streaks, cleaning what browsers send
 src/codme.js   Claude-powered codme replies grounded in kerNEl's stories
