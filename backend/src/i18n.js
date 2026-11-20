@@ -99,10 +99,10 @@ const T = {
     tl: 'Hi {name}! 👋 Tanungin mo ako ng “@codme rust news” at hahanapan ko ng balita ang buong room.',
   },
   botFound: {
-    en: '🐽 Sniffed out {n} stories about “{q}” for you, {name}:',
-    ar: '🐽 لقيتلك {n} خبر عن “{q}” يا {name}:',
-    de: '🐽 {n} Storys über „{q}“ für dich gefunden, {name}:',
-    tl: '🐽 Nakahanap ako ng {n} balita tungkol sa “{q}” para sa’yo, {name}:',
+    en: '🐽 Here’s what I sniffed out about “{q}”, {name}:',
+    ar: '🐽 دي الحاجات اللي لقيتها عن “{q}” يا {name}:',
+    de: '🐽 Das hab ich zu „{q}“ erschnüffelt, {name}:',
+    tl: '🐽 Heto ang nasinghot ko tungkol sa “{q}”, {name}:',
   },
   botNone: {
     en: 'I sniffed everywhere for “{q}”… nothing in today’s feed. 🍿 Try another word?',

@@ -1,20 +1,44 @@
 # 🍿 kerNEl — tech news, freshly popped
 
-**kerNEl** is a loud, funny, IGN-style tech news site that runs entirely on **GitHub Pages**. No server or build step is needed; it's plain HTML, CSS and JavaScript.
+**kerNEl** is a loud, funny, IGN-style tech news site that runs on **GitHub Pages**. No build step is needed; it's plain HTML, CSS and JavaScript, plus a small free server for accounts and the social stuff.
 
-- 🔴 **Live news that refreshes every 30 seconds.** Hacker News, DEV Community, The Verge, TechCrunch, Ars Technica and Engadget, merged and de-duplicated. A popcorn-kernel countdown in the header "pops" on every refresh, and new stories get a 🍿 *JUST POPPED* sticker.
-- 🤖 **codme**, a chat robot with googly eyes that follow your cursor. It finds specific news ("OpenAI this week", "SpaceX in 2023", "what's hot in gaming?"), explains tech words ("what is an API?"), summarises the day, tells jokes, and accepts voice input in Chrome and Edge. It searches the live feed **and** the full Hacker News archive.
-- 🔐 **Accounts with a username and password**, no email or Google/Apple needed. Everything is saved to the account and follows you to every device: XP and rank, saved stories, reactions, achievements, daily streak, theme and sound settings, and the kids' stars. Forgot your password? The **recovery code** you got at sign-up resets it.
-- 💬 **kerNEl Chat:** live chat rooms (Lobby, AI, Gaming, Dev, Off-topic) for signed-in users, with an online count, @mentions, emoji reactions and sharing news stories as cards. Ask **@codme** in a room and the bot answers everyone. Built-in safety: a swear filter, flood limits, a report button (3 reports hides a message; repeat offenders are muted for 24 hours), and deleting your own messages. Chat history is kept for 30 days.
-- 🔔 **Notifications, even when kerNEl is closed** (Web Push): someone @mentions you in chat, big breaking news in your favourite topics (max 3 a day), or a 7 pm reminder before your streak breaks. Everything also lands in the 🔔 inbox. On iPhone/iPad, add kerNEl to the Home Screen first (Share → Add to Home Screen); that's Apple's rule for web notifications.
-- 📲 **Installable app:** add kerNEl to your home screen and it opens like a real app with its own icon. It even loads offline with the last news it saw.
-- 🕵️ **Real or Fake?:** a game with five headlines, some real stories from today's feed and some absurd fakes invented by codme. Fakes are always revealed and never name real companies or people.
-- 🗳️ **Hot Take of the Day:** a daily tech poll with live results.
-- 👤 **Profile cards:** tap any name in the chat or on the leaderboard.
-- 🏆 **Leaderboard, 🔥 daily streaks and 🏅 16 achievements** (you can hide yourself from the leaderboard).
-- 🧸 **kerNEl Kids**: nine mini-games that teach kids how tech works, with stars, badges and a printable certificate:
-  inside a computer · binary light bulbs · program-the-robot maze · pixel painter · how internet packets travel · password monster · online-safety superhero quiz · tech word flip cards · big tech quiz. It also has a 🔊 "Read to me" option.
-- 🎉 **Funny extras:** category filters, hot/newest/🎲 chaos sorting, emoji reactions, *Emoji TL;DR* 🪄, saved "popcorn bucket", XP and ranks (Unpopped Kernel → Popcorn Overlord), Hype-o-meter trending words, a source-health panel, a doomscroll meter ("you've scrolled 3.2 giraffes"), 🌀 chaos mode, dark/light themes, sound effects, keyboard shortcuts (`/` search, `r` refresh, `c` codme) and a Konami-code easter egg.
+## 🌐 Four languages
+
+English · **العربي المصري** (Egyptian Arabic, right-to-left) · **Deutsch** · **Tagalog**. Pick one from the 🌐 button in the header (or the footer). Everything switches: menus, codme, games, notifications, the daily poll, and every kerNEl Kids lesson. Your choice is saved to your account, so your other devices switch too.
+
+- kerNEl picks your language automatically the first time, based on your browser.
+- codme understands questions in all four languages ("عايز اخبار عن ابل النهارده", "Neueste KI News", "Ano ang API?").
+- Headlines stay in their original language (English). For the article itself, 🧠 → **🌐 Read the article in my language** opens a translated copy.
+- Push notifications arrive in each person's own language.
+- Translations live in [`js/i18n-main.js`](js/i18n-main.js) (news site) and [`js/i18n-kids.js`](js/i18n-kids.js) (kids corner). Each row reads `[English, Arabic, German, Tagalog]`, so fixing a word means editing one line. `node tools/i18n-check.mjs main` (or `kids`) lists anything still missing.
+
+## What's on the news site
+
+- 🔴 **Live news that refreshes every 30 seconds** from Hacker News, DEV, The Verge, TechCrunch, Ars Technica, Engadget and Wired, with real thumbnails.
+- 🤖 **codme**, the news-sniffing robot: finds any story ("SpaceX in 2023"), explains tech words, summarises the day, tells jokes, takes voice input.
+- 🧠 **Explain like I'm 10 / ⚡ TL;DR** on every story. With an AI key on the server it's written by Claude in your language; without one, codme's quick explainer uses the headline, the publisher's summary and the glossary.
+- 🧠 **Daily Kernel Quiz**: 5 questions made from today's headlines (fill the missing word, which section, who published it, which got more upvotes, spot codme's fake). One go per day, with a daily board.
+- 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
+- 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
+- 🗨️ **Story comments** with @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
+- 👯 **Friends**: follow people from their profile card, see their streak flames and a feed of their rank-ups, achievements, quiz scores and trophies. They get a notification when you follow them.
+- 🎩 **Hats and frames** for your avatar, unlocked with XP (and a Champion look for trophy winners). They show in chat, comments, the leaderboard and on profile cards, next to a 🔥 streak flame.
+- 🎁 **kerNEl Wrapped**: a shareable picture of your stats, your "news vibe" and favourite section.
+- 🎧 **Daily audio briefing**: the top 5 stories read aloud, with pause and skip.
+- 📱 **Swipe mode**: one story at a time. Swipe up for the next one, right to save, left to skip, double-tap for 🔥.
+- 📼 **Tech Time Machine**: the biggest tech story on this day, every year back to 2007.
+- 💬 **kerNEl Chat** rooms, 🗳️ **Hot Take of the Day**, 🔔 **notifications** (also when kerNEl is closed), 📲 **installable app**, 🏆 **leaderboard**, 🔥 **streaks** and 🏅 **26 achievements**.
+- 🔐 **Accounts with a username and password** (no email). Everything is saved to the account: XP, saved stories, reactions, achievements, streak, theme, language, kids' stars.
+- 🎉 The fun extras are still there: chaos mode, popcorn rain, the doomscroll meter, keyboard shortcuts (`/` search, `r` refresh, `c` codme, `t` chat, `q` quiz, `s` swipe) and the Konami code.
+
+## 🧸 kerNEl Kids
+
+Nine mini-games that teach how tech works: inside a computer · binary light bulbs · program-the-robot · pixel painter · internet packets · password monster · online-safety superhero · tech word cards · the big quiz. Plus:
+
+- 🔁 **Robot loops**: levels 4–6 add a *Repeat* block and a "repeat my whole program" loop, with a limit on how many blocks you may use.
+- 📰 **Kid News**: three upbeat tech stories from this week, picked by the server with a strict filter (no crime, politics, money talk or scary words), explained in kid language.
+- 👪 **Grown-ups dashboard** (behind a little times-table question): stars per adventure, robot level, minutes played this week, what to try next, conversation starters, and a print button.
+- Stars, badges, a printable certificate and 🔊 read-aloud in the chosen language.
 
 ---
 
@@ -68,16 +92,34 @@ That's `js/config.js` for the multi-file site, or the `CONFIG` block in the sing
 | DEV Community top posts of the day | [DEV API](https://developers.forem.com/api) | every 60 s |
 | The Verge, TechCrunch, Ars Technica, Engadget | RSS through [rss2json.com](https://rss2json.com) | every 5 min |
 
-- Everything is fetched by the visitor's browser. Polling pauses while the tab is hidden and catches up as soon as you come back.
+- With the kerNEl server switched on (it is), the server collects all eight sources (including Wired) every 5 minutes, adds real thumbnails, and the site asks it for news every 30 seconds. If the server is ever down, the browser falls back to fetching the sources in this table itself.
+- Polling pauses while the tab is hidden and catches up as soon as you come back.
 - Stories are de-duplicated by URL, auto-sorted into categories (AI, Gadgets, Gaming, Security, Space, Dev, Science, Money), and cached so the page loads instantly next time.
 - If a source is down, the **Source health** panel shows it "napping" 🔴 and the rest keep working. You can switch sources on or off in `js/config.js`.
 - Every headline links to the original publisher.
 
-**codme** isn't a cloud LLM; it runs entirely in your browser. It works out what you're asking (topic, time range like "today" or "in 2023", "hot" vs "latest"), searches the live feed with typo-tolerant matching, and searches the Hacker News archive through Algolia for anything older or rarer. Because nothing is sent to an AI service, there's no API key to leak and nothing to pay for.
+**codme** has two brains. Its built-in brain runs in your browser: it works out what you're asking (topic, time range like "today" or "in 2023", "hot" vs "latest", in any of the four languages), searches the live feed with typo-tolerant matching, and searches the Hacker News archive through Algolia for anything older or rarer. If the site owner adds an Anthropic API key to the server (see [`backend/README.md`](backend/README.md)), codme and the 🧠 explainers also use Claude, which answers in your language and cites kerNEl's stories. The key stays on the server, never in the website.
 
 ---
 
-## 4. Files
+## 4. Use your own domain (like kernel.news)
+
+GitHub Pages works with a domain you own. The domain itself costs money (usually $10–15 a year from a registrar such as Cloudflare, Namecheap or Porkbun); everything else is free.
+
+1. **Buy the domain** at a registrar.
+2. **Point it at GitHub:** in the registrar's DNS settings, add
+   - for a subdomain like `www.your-domain.com`: a **CNAME** record `www` → `moaaz0911911.github.io`
+   - for the bare domain `your-domain.com`: four **A** records → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+3. **Tell GitHub:** repository **Settings → Pages → Custom domain**, type the domain, click **Save**. GitHub adds a `CNAME` file to the branch for you. Wait for the DNS check to turn green (minutes to a few hours), then tick **Enforce HTTPS**.
+4. **Tell the kerNEl server it's allowed:** in [`backend/wrangler.toml`](backend/wrangler.toml), add the new address to `ALLOWED_ORIGINS`, separated by a comma, and redeploy:
+   ```toml
+   ALLOWED_ORIGINS = "https://moaaz0911911.github.io,https://www.your-domain.com"
+   ```
+   Without this step the site loads, but sign-in, chat and the games can't reach the server.
+
+Accounts are tied to the server, not the address, so everyone keeps their progress after the move. Things saved only in a browser (a guest's XP, the language choice) stay with the old address.
+
+## 5. Files
 
 ```
 index.html        main news site
@@ -87,14 +129,29 @@ css/main.css      main styles (dark/light, chaos mode, responsive)
 css/kids.css      kids styles (+ print styles for the certificate)
 js/config.js      ← your settings: refresh time, server address (apiBase), sources
 js/app.js         main page: rendering, refresh loop, saving, XP, dialogs
+js/i18n.js        languages: picking one, t() lookups, right-to-left, translated dates
+js/i18n-main.js   ← translations for the news site [English, Arabic, German, Tagalog]
+js/i18n-kids.js   ← translations for kerNEl Kids
+js/play.js        Daily Quiz, Popcorn Battle, weekly tournament
+js/social.js      story comments, friends + activity feed
+js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
+js/look.js        avatars with hats, frames and streak flames
+js/cosmetics.js   the hats and frames (shared with the server)
+js/fakes.js       codme's made-up headlines (shared with the server)
+js/community.js   chat, Hot Take poll, profile cards
+js/notify.js      notifications + installable app
+js/game.js        Real or Fake?
 js/news.js        fetching, categorising, de-duplicating, searching
 js/auth.js        accounts: sign up / in, recovery codes, password changes, sessions
 js/codme.js       the codme chat robot
-js/kids.js        the nine kids adventures
+js/kids.js        the nine kids adventures, kid news, grown-ups dashboard
 js/fun.js         sound effects, confetti, popcorn rain, Konami code
 js/content.js     jokes, fun facts, glossary, emoji dictionary
 js/utils.js       helpers (escaping, storage, toasts, JWT decoding)
-assets/favicon.svg
+assets/           icons
+sw.js             offline cache + push notifications
+tools/            single-file builder, translation checker
+backend/          the kerNEl server (Cloudflare Worker)
 .nojekyll         tells GitHub Pages to serve files as-is
 ```
 

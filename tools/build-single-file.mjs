@@ -53,7 +53,7 @@ let kids = read('kids.html')
   .replace('<link rel="stylesheet" href="css/kids.css">', `<style>\n${read('css/kids.css')}\n</style>`)
   .replace(/href="kids\.html"/g, 'href="#top"')
   .replace(/href="index\.html"/g, 'href="#" data-close-kids')
-  .replace('<script type="module" src="js/kids.js"></script>', () => `<script type="module">\n${safeScript(bundle(['config', 'utils', 'fun', 'auth', 'kids']).replace(/href="index\.html"/g, 'href="#" data-close-kids') + kidsNav)}\n</script>`);
+  .replace('<script type="module" src="js/kids.js"></script>', () => `<script type="module">\n${safeScript(bundle(['config', 'i18n', 'utils', 'fun', 'auth', 'i18n-kids', 'kids']).replace(/href="index\.html"/g, 'href="#" data-close-kids') + kidsNav)}\n</script>`);
 if (/src="js\/|href="css\//.test(kids)) throw new Error('kids.html still references external files');
 
 // ---------------- Main page ----------------
@@ -87,7 +87,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'utils', 'content', 'fun', 'news', 'auth', 'codme', 'community', 'notify', 'game', 'app'])
+const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'look', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');

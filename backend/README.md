@@ -14,6 +14,16 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🗳️ **Daily poll & profiles** | One "Hot Take" a day (one vote each) and public profile cards (no private data). |
 | 🔥 **Shared reactions** | Everyone sees the same reaction counts (signed-in users can vote, one reaction per story each). |
 | 🤖 **codme AI** | codme answers with Claude, using kerNEl's live stories and citing them. Rate-limited per visitor, per user and per day to protect your bill. |
+| 🧠 **Explain / TL;DR** | Claude explains a story like you're 10, or gives a 3-point TL;DR, in the reader's language. Each answer is cached and shared, so a story is only explained once per language. |
+| 🧠 **Daily Kernel Quiz** | 5 questions generated from the day's headlines, the same for everyone. Answers stay on the server until you play; one go per person per day; a daily board (ties go to the fastest). |
+| 🍿 **Popcorn Battles** | Two of the day's hottest stories, one vote each; yesterday's winner is the Story of the Day. |
+| 🏆 **Weekly tournament** | 8 Real-or-Fake headlines per week (the fakes never name real people or companies). On Monday the top 3 get trophies and a notification. |
+| 🗨️ **Comments** | Comments on any kerNEl story, with @mentions, the swear filter, reports (3 → hidden), mutes and comment counts in `/api/news`. |
+| 👯 **Friends** | Follow people; their rank-ups, achievements, quiz/tournament scores, trophies and streak milestones go to a friends feed, and the big ones to followers' phones. |
+| 🎩 **Looks** | Hats and frames unlocked by XP (and trophies), checked on the server so nobody can fake a crown. |
+| 🌐 **Languages** | Notifications and codme's chat replies in English, Egyptian Arabic, German or Tagalog, following each person's chosen language. |
+| 🧸 **Kid news** | Three upbeat stories from the week, picked with a strict filter (no crime, politics, money talk or scary words). |
+| 📼 **Time Machine** | The top Hacker News story on today's date for every year since 2007, cached for the day. |
 
 The website keeps working without the backend. If the backend is down, it fetches news directly like before.
 
@@ -36,7 +46,7 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 
 - There's no database to create. Data lives in a SQLite-backed **Durable Object**, and its tables are created automatically on first use. If you prefer D1, bind it as `DB` and it is used instead.
 - In `wrangler.toml`, set `ALLOWED_ORIGINS` to your site's address.
-- **codme AI (optional):** `npx wrangler secret put ANTHROPIC_API_KEY` (key from <https://console.anthropic.com>). Without it, codme uses its built-in offline brain.
+- **codme AI + explainers (optional):** `npx wrangler secret put ANTHROPIC_API_KEY` (key from <https://console.anthropic.com>). Without it, codme uses its built-in offline brain and the 🧠 button uses the quick explainer.
 - Put the worker URL in the website's config as `apiBase`.
 
 ## API
@@ -51,7 +61,7 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `POST /api/auth/recover` | – | `{ username, recoveryCode, newPassword }` → `{ token, recoveryCode (new), user }` |
 | `POST /api/auth/logout` | Bearer | End this session |
 | `GET /api/me` | Bearer | Account, profile, streak and synced data |
-| `PUT /api/me/profile` | Bearer | `{ nickname, avatar, topics, leaderboard }` |
+| `PUT /api/me/profile` | Bearer | `{ nickname, avatar, topics, leaderboard, hat, frame, lang }` (hats/frames are checked against XP and trophies) |
 | `PATCH /api/me/data` | Bearer | Any of `{ xp, read, saved, reactions, badges, settings, kids, codmeAsks, konami }`, merged in |
 | `POST /api/me/checkin` | Bearer | Daily streak → `{ streak, bestStreak, bonusXp }` |
 | `POST /api/me/password` | Bearer | `{ currentPassword, newPassword }` (signs out other devices) |
@@ -71,8 +81,21 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/notifications` · `POST /api/notifications/read` | Bearer | 🔔 inbox · `{ id }` or `{ all: true }` |
 | `POST /api/react` | Bearer | `{ key, emoji: "fire"\|"lol"\|"mind"\|"meh"\|null }` → shared counts |
 | `POST /api/codme` | optional | `{ messages: [{ role, content }] }` → `{ reply, stories, refs }` |
+| `POST /api/explain` | optional | `{ key, mode: "eli10"\|"tldr", lang }` → `{ text }` (503 `{ offline: true }` without an AI key) |
+| `GET` / `POST /api/quiz` | optional | Today's questions (no answers) · `{ answers: [n…] }` → score, right answers, board |
+| `GET /api/quiz/board` | – | Today's quiz board |
+| `GET` / `POST /api/battle` | – / Bearer | Today's battle + yesterday's Story of the Day · `{ pick: "a"\|"b" }` |
+| `GET` / `POST /api/tournament` | optional / Bearer | This week's 8 headlines, board, last week's winners · `{ answers: { id: "real"\|"fake" } }` |
+| `GET /api/comments?key=` · `POST /api/comments` | – / Bearer | A story's comments · `{ key, text }` |
+| `POST /api/comments/report` · `DELETE /api/comments/:id` | Bearer | `{ id }` · delete your own |
+| `POST /api/follow` | Bearer | `{ username, follow: true\|false }` |
+| `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
+| `GET /api/kids/news` | – | This week's three kid-friendly stories |
+| `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
 
-Limits you can change in `wrangler.toml`: `CODME_PER_IP_HOUR` (20), `CODME_PER_USER_DAY` (100), `CODME_GLOBAL_DAY` (2000), `SIGNUPS_PER_IP_HOUR` (5).
+Limits you can change in `wrangler.toml`: `CODME_PER_IP_HOUR` (20), `CODME_PER_USER_DAY` (100), `CODME_GLOBAL_DAY` (2000), `EXPLAIN_PER_IP_HOUR` (40), `EXPLAIN_GLOBAL_DAY` (1500, counts only new explanations), `SIGNUPS_PER_IP_HOUR` (5).
+
+**Using your own domain?** Add it to `ALLOWED_ORIGINS` (comma-separated) and redeploy, or browsers on the new address can't talk to the server.
 
 **Password hashing strength:** `PBKDF2_ITERATIONS` is 20,000 by default. That costs about 4 ms of CPU per sign-in, which fits the free plan's 10 ms limit. On the Workers Paid plan ($5/month), set it to `100000`, the Workers maximum. Existing passwords upgrade automatically the next time each person signs in.
 
@@ -94,6 +117,11 @@ src/auth.js    accounts: password hashing, recovery codes, sessions, streaks, cl
 src/codme.js   Claude-powered codme replies grounded in kerNEl's stories
 src/community.js  chat rooms, @codme in chat, moderation, daily poll, profile cards
 src/push.js    notifications: inbox, Web Push encryption + VAPID, mention / big-news / streak triggers
+src/features.js  routes for the games and social features
+src/play.js    Daily Quiz, Popcorn Battles, weekly tournament + trophies
+src/social.js  comments, follows, friends' activity, avatar looks
+src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine
+src/i18n.js    notification + chat-reply texts in English, Egyptian Arabic, German, Tagalog
 schema.sql     database tables
 test/          end-to-end test
 ```

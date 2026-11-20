@@ -1,6 +1,9 @@
 // Static fun content shared by the site and codme: jokes, facts, glossary, emoji map.
+// (Facts, loading lines and glossary entries are translated with t(); jokes are written per language in i18n-main.js.)
+import { lang } from './i18n.js';
+import { LOCAL_JOKES } from './i18n-main.js';
 
-export const JOKES = [
+const EN_JOKES = [
   'Why do programmers prefer dark mode? Because light attracts bugs. 🐛',
   'I told my computer I needed a break… it said “No problem, I’ll go to sleep.” 😴',
   'Why did the smartphone need glasses? It lost all its contacts. 👓',
@@ -26,6 +29,7 @@ export const JOKES = [
   'What’s a robot’s favourite type of music? Heavy metal. 🤘',
   'Why did the cookie go to the doctor? It was feeling crumby — and the browser kept clearing it. 🍪',
 ];
+export const JOKES = LOCAL_JOKES[lang]?.length ? LOCAL_JOKES[lang] : EN_JOKES;
 
 export const FACTS = [
   'The first computer “bug” was a real moth, found stuck in Harvard’s Mark II computer in 1947. 🦋',

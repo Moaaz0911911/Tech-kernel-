@@ -21,13 +21,18 @@
   <header class="k-header">
     <a class="k-logo" href="kids.html" aria-label="kerNEl Kids home">
       <span class="k-logo-pop" aria-hidden="true">🍿</span>
-      <span>ker<b>NE</b>l <em>Kids</em></span>
+      <span data-no-i18n>ker<b>NE</b>l <em>Kids</em></span>
     </a>
     <div class="k-header-actions">
       <span class="k-sync hide-xs" id="kidsSync"></span>
       <span class="star-count" id="starCount" title="Stars you've earned">⭐ 0</span>
       <button type="button" class="k-icon" id="readToggle" aria-pressed="false" title="Read things out loud">🗣️ <span class="hide-xs">Read aloud</span></button>
       <button type="button" class="k-icon" id="soundToggle" aria-pressed="false" title="Sound effects">🔇</button>
+      <div class="k-lang">
+        <button type="button" class="k-icon" id="kLangBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Language" title="Language">🌐</button>
+        <div class="k-lang-menu" id="kLangMenu" role="menu" hidden></div>
+      </div>
+      <button type="button" class="k-icon" id="parentBtn" title="For grown-ups: see progress">👪 <span class="hide-xs">Grown-ups</span></button>
       <a class="k-back" href="index.html">📰 <span class="hide-xs">Grown-up news</span></a>
     </div>
   </header>
@@ -53,7 +58,7 @@
         </svg>
       </div>
       <div class="bubble-big">
-        <h1>Hi! I’m <span class="rainbow">Poppy</span> the Popcorn! 🍿</h1>
+        <h1 data-i18n>Hi! I’m <span class="rainbow">Poppy</span> the Popcorn! 🍿</h1>
         <p id="heroIntro">Computers, robots and the internet can look like magic — but they’re really just clever ideas you can learn too! Pick an adventure below. Every game you finish earns you shiny stars ⭐.</p>
         <div class="hero-btns">
           <a class="k-btn k-btn-go" href="#map">🚀 Start the adventure</a>
@@ -68,10 +73,17 @@
       <div class="map-grid" id="mapGrid"></div>
     </section>
 
+    <!-- ===== Kid news ===== -->
+    <section class="kid-news" id="kidNews" aria-labelledby="kidNewsTitle" hidden>
+      <h2 id="kidNewsTitle" class="k-section-title">📰 Kid News: good stuff this week</h2>
+      <p class="kn-note">Real tech stories, picked because they’re fun and friendly. 👀 Ask a grown-up before you open a link!</p>
+      <div class="kn-grid" id="kidNewsGrid"></div>
+    </section>
+
     <!-- ===== 1. Inside a computer ===== -->
     <section class="lesson" id="computer" style="--c: #ff9f43">
       <div class="lesson-head"><span class="l-emoji">🖥️</span><div><span class="l-num">Adventure 1</span><h2>What’s inside a computer?</h2></div><span class="l-stars" data-stars="computer"></span></div>
-      <p class="l-intro" id="introComputer">A computer is like a person! It has <b>inputs</b> to listen (like your ears), a <b>brain</b> to think, a <b>memory</b> to remember, and <b>outputs</b> to talk back (like your mouth). Tap each part to meet it!</p>
+      <p class="l-intro" id="introComputer" data-i18n>A computer is like a person! It has <b>inputs</b> to listen (like your ears), a <b>brain</b> to think, a <b>memory</b> to remember, and <b>outputs</b> to talk back (like your mouth). Tap each part to meet it!</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introComputer">🔊 Read to me</button>
       <div class="parts-grid" id="partsGrid"></div>
       <div class="part-info" id="partInfo" aria-live="polite"><span class="pi-emoji">👆</span><p>Tap a part above to learn what it does!</p></div>
@@ -90,7 +102,7 @@
     <!-- ===== 2. Binary ===== -->
     <section class="lesson" id="binary" style="--c: #ffd23f">
       <div class="lesson-head"><span class="l-emoji">💡</span><div><span class="l-num">Adventure 2</span><h2>The secret light code (binary)</h2></div><span class="l-stars" data-stars="binary"></span></div>
-      <p class="l-intro" id="introBinary">Deep down, computers only understand two things: <b>ON</b> and <b>OFF</b> — like a light switch! We write ON as <b>1</b> and OFF as <b>0</b>. Each bulb below is worth a number. Turn bulbs on and add up their numbers to make any number you want!</p>
+      <p class="l-intro" id="introBinary" data-i18n>Deep down, computers only understand two things: <b>ON</b> and <b>OFF</b> — like a light switch! We write ON as <b>1</b> and OFF as <b>0</b>. Each bulb below is worth a number. Turn bulbs on and add up their numbers to make any number you want!</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introBinary">🔊 Read to me</button>
       <div class="bulbs" id="bulbs"></div>
       <div class="binary-readout"><span class="bin-digits" id="binDigits">00000</span> <span class="eq">=</span> <span class="bin-sum" id="binSum">0</span></div>
@@ -104,14 +116,14 @@
         <h3>🕵️ Your name in secret code</h3>
         <label class="k-field"><span>Type your name:</span><input id="nameCode" maxlength="10" autocomplete="off" placeholder="e.g. SAM"></label>
         <div class="name-code" id="nameCodeOut"></div>
-        <p class="tiny-note">Computers store every letter as a number. Capital <b>A</b> is 65, which is <b>01000001</b> in binary!</p>
+        <p class="tiny-note" data-i18n>Computers store every letter as a number. Capital <b>A</b> is 65, which is <b>01000001</b> in binary!</p>
       </div>
     </section>
 
     <!-- ===== 3. Robot ===== -->
     <section class="lesson" id="robot" style="--c: #2ee6a6">
       <div class="lesson-head"><span class="l-emoji">🤖</span><div><span class="l-num">Adventure 3</span><h2>Program the robot!</h2></div><span class="l-stars" data-stars="robot"></span></div>
-      <p class="l-intro" id="introRobot">Robots can’t guess — they only do <b>exactly</b> what their code says, one step at a time, in order. That list of steps is called a <b>program</b>. Build a program with the arrows to get Bolt the robot to its battery 🔋. Watch out for rocks!</p>
+      <p class="l-intro" id="introRobot" data-i18n>Robots can’t guess — they only do <b>exactly</b> what their code says, one step at a time, in order. That list of steps is called a <b>program</b>. Build a program with the arrows to get Bolt the robot to its battery 🔋. Watch out for rocks!</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introRobot">🔊 Read to me</button>
       <div class="robot-wrap">
         <div>
@@ -120,12 +132,26 @@
         </div>
         <div class="robot-controls">
           <div class="program" id="program" aria-label="Your program" aria-live="polite"><span class="program-empty">Your program is empty. Add some steps! 👇</span></div>
+          <div class="repeat-pad" id="repeatPad" hidden>
+            <span>🔁</span>
+            <button type="button" class="arrow loop-btn" data-repeat="2" aria-label="Add: repeat the next step 2 times">×2</button>
+            <button type="button" class="arrow loop-btn" data-repeat="3" aria-label="Add: repeat the next step 3 times">×3</button>
+            <button type="button" class="arrow loop-btn" data-repeat="4" aria-label="Add: repeat the next step 4 times">×4</button>
+          </div>
           <div class="arrow-pad">
             <button type="button" class="arrow" data-cmd="up" aria-label="Add: move up">⬆️</button>
             <button type="button" class="arrow" data-cmd="left" aria-label="Add: move left">⬅️</button>
             <button type="button" class="arrow" data-cmd="down" aria-label="Add: move down">⬇️</button>
             <button type="button" class="arrow" data-cmd="right" aria-label="Add: move right">➡️</button>
           </div>
+          <div class="loop-all" id="loopAll" hidden>
+            <span>🔁 Repeat my whole program</span>
+            <button type="button" class="k-icon" data-loop="-1" aria-label="Fewer times">➖</button>
+            <b id="loopCount">×1</b>
+            <button type="button" class="k-icon" data-loop="1" aria-label="More times">➕</button>
+          </div>
+          <p class="block-limit" id="blockLimit"></p>
+          <p class="robot-tip" id="robotTip" hidden></p>
           <div class="robot-actions">
             <button type="button" class="k-btn k-btn-go" id="robotRun">▶️ Run</button>
             <button type="button" class="k-btn k-btn-soft" id="robotUndo">↩️ Undo</button>
@@ -140,7 +166,7 @@
     <!-- ===== 4. Pixels ===== -->
     <section class="lesson" id="pixels" style="--c: #ff7ab6">
       <div class="lesson-head"><span class="l-emoji">🎨</span><div><span class="l-num">Adventure 4</span><h2>Pixel painter</h2></div><span class="l-stars" data-stars="pixels"></span></div>
-      <p class="l-intro" id="introPixels">Look really, really closely at a screen and you’ll find it’s made of tiny coloured squares called <b>pixels</b>. Every photo, game and video is just lots of pixels! Paint your own pixel picture — tap or drag on the grid.</p>
+      <p class="l-intro" id="introPixels" data-i18n>Look really, really closely at a screen and you’ll find it’s made of tiny coloured squares called <b>pixels</b>. Every photo, game and video is just lots of pixels! Paint your own pixel picture — tap or drag on the grid.</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introPixels">🔊 Read to me</button>
       <div class="pixel-wrap">
         <div class="pixel-grid" id="pixelGrid" aria-label="Pixel drawing grid"></div>
@@ -153,8 +179,8 @@
             <button type="button" class="k-btn k-btn-soft k-btn-sm" id="pixelClear">🧽 Clear</button>
           </div>
           <p class="pixel-count" id="pixelCount">0 of 144 pixels coloured</p>
-          <div class="tiny-preview-wrap"><canvas id="pixelPreview" width="12" height="12" aria-label="Tiny preview"></canvas><p>👀 This is your picture at <b>real size</b>. From far away, pixels blend together!</p></div>
-          <p class="tiny-note">A normal TV screen has about <b>2 million</b> pixels. Phew!</p>
+          <div class="tiny-preview-wrap"><canvas id="pixelPreview" width="12" height="12" aria-label="Tiny preview"></canvas><p data-i18n>👀 This is your picture at <b>real size</b>. From far away, pixels blend together!</p></div>
+          <p class="tiny-note" data-i18n>A normal TV screen has about <b>2 million</b> pixels. Phew!</p>
         </div>
       </div>
     </section>
@@ -162,7 +188,7 @@
     <!-- ===== 5. Internet ===== -->
     <section class="lesson" id="internet" style="--c: #38bdf8">
       <div class="lesson-head"><span class="l-emoji">📨</span><div><span class="l-num">Adventure 5</span><h2>How the internet delivers messages</h2></div><span class="l-stars" data-stars="internet"></span></div>
-      <p class="l-intro" id="introInternet">When you send a message, the internet chops it into tiny pieces called <b>packets</b>. Each packet gets a number and an address, like a little parcel. The packets can travel different roads through helpers called <b>routers</b>, and the computer at the end puts them back in order!</p>
+      <p class="l-intro" id="introInternet" data-i18n>When you send a message, the internet chops it into tiny pieces called <b>packets</b>. Each packet gets a number and an address, like a little parcel. The packets can travel different roads through helpers called <b>routers</b>, and the computer at the end puts them back in order!</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introInternet">🔊 Read to me</button>
       <form class="send-form" id="sendForm">
         <label class="k-field"><span>Your message:</span><input id="sendText" maxlength="28" autocomplete="off" value="HELLO FROM KERNEL"></label>
@@ -178,14 +204,14 @@
         <div class="net-node router" style="left:50%;top:82%"><span>📡</span><small>Router</small></div>
         <div class="net-node" style="left:91%;top:50%"><span>🖥️</span><small>Friend</small></div>
       </div>
-      <div class="arrivals"><b>Arrived (in the order they landed):</b> <span id="arrived">—</span></div>
+      <div class="arrivals"><b>Arrived (in the order they landed):</b> <span id="arrived" data-no-i18n>—</span></div>
       <div class="assembled" id="assembled" aria-live="polite"></div>
     </section>
 
     <!-- ===== 6. Passwords ===== -->
     <section class="lesson" id="passwords" style="--c: #8b5cf6">
       <div class="lesson-head"><span class="l-emoji">🔐</span><div><span class="l-num">Adventure 6</span><h2>Password power-up</h2></div><span class="l-stars" data-stars="passwords"></span></div>
-      <p class="l-intro" id="introPasswords">A password is a secret key for your accounts. Short, easy passwords are like a lock made of jelly — hackers can guess them fast! Long passwords with a mix of letters, numbers and symbols are super strong. Feed the password monster and watch it grow!</p>
+      <p class="l-intro" id="introPasswords" data-i18n>A password is a secret key for your accounts. Short, easy passwords are like a lock made of jelly — hackers can guess them fast! Long passwords with a mix of letters, numbers and symbols are super strong. Feed the password monster and watch it grow!</p>
       <button type="button" class="k-btn k-btn-soft k-btn-sm" data-read="#introPasswords">🔊 Read to me</button>
       <div class="pw-wrap">
         <div>
@@ -203,7 +229,7 @@
       <div class="tip-box">
         <b>🦸 Password rules for superheroes:</b>
         <ul>
-          <li>Use a silly sentence, like <code>Purple-Tiger-Eats-42-Tacos!</code></li>
+          <li data-i18n>Use a silly sentence, like <code>Purple-Tiger-Eats-42-Tacos!</code></li>
           <li>Never share your password with friends — only with your parent or guardian.</li>
           <li>Use a different password for every account.</li>
         </ul>
@@ -247,8 +273,9 @@
   </main>
 
   <footer class="k-footer">
-    <p>🍿 kerNEl Kids · Made for curious minds. <a href="index.html">Back to the grown-up news</a></p>
-    <p class="tiny-note">For grown-ups: everything here runs in the browser — no accounts, no ads, no tracking. Stars are saved only on this device.</p>
+    <p data-i18n>🍿 kerNEl Kids · Made for curious minds. <a href="index.html">Back to the grown-up news</a></p>
+    <p class="k-footer-langs" id="kFooterLangs"></p>
+    <p class="tiny-note">For grown-ups: no ads, no tracking. Stars are saved on this device, and in your kerNEl account if you’re signed in. Tap 👪 Grown-ups to see progress.</p>
   </footer>
 
   <dialog class="cert-dialog" id="certDialog" aria-labelledby="certTitle">
@@ -266,6 +293,23 @@
     <div class="cert-actions">
       <button type="button" class="k-btn k-btn-go" id="certPrint">🖨️ Print it</button>
       <button type="button" class="k-btn k-btn-soft" id="certClose">Close</button>
+    </div>
+  </dialog>
+
+  <dialog class="cert-dialog parent-dialog" id="parentDialog" aria-labelledby="parentTitle">
+    <div class="parent-box">
+      <h2 id="parentTitle">👪 For grown-ups</h2>
+      <form class="parent-gate" id="parentGate">
+        <p>Grown-ups only! Please answer this to continue:</p>
+        <label class="k-field"><span id="gateQ"></span><input id="gateA" inputmode="numeric" autocomplete="off" required></label>
+        <p class="game-msg" id="gateMsg" aria-live="polite"></p>
+        <button type="submit" class="k-btn k-btn-go">Open the dashboard</button>
+      </form>
+      <div class="parent-dash" id="parentDash" hidden></div>
+    </div>
+    <div class="cert-actions">
+      <button type="button" class="k-btn k-btn-go" id="parentPrint" hidden>🖨️ Print progress</button>
+      <button type="button" class="k-btn k-btn-soft" id="parentClose">Close</button>
     </div>
   </dialog>
 

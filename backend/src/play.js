@@ -42,12 +42,13 @@ function makeQuiz(stories, day) {
   const take = (ok) => { const s = pool.find((x) => !used.has(x.key) && ok(x)); if (s) used.add(s.key); return s; };
   const questions = [];
 
-  // 1. fill in the missing word
+  // 1. fill in the missing word (the wrong options look alike, so capital letters don't give it away)
+  const isUpper = (w) => w[0] === w[0].toUpperCase();
   const words = (t) => (t.match(/[A-Za-z][A-Za-z0-9+#.-]{4,14}/g) || []).filter((w) => !STOP.has(w.toLowerCase()) && !/\.$/.test(w));
   const m = take((s) => words(s.title).length >= 1);
   if (m) {
     const answer = words(m.title).sort((a, b) => b.length - a.length)[0];
-    const others = shuffle([...new Set(pool.filter((s) => s.key !== m.key).flatMap((s) => words(s.title)))].filter((w) => w.toLowerCase() !== answer.toLowerCase()), rand).slice(0, 3);
+    const others = shuffle([...new Set(pool.filter((s) => s.key !== m.key).flatMap((s) => words(s.title)))].filter((w) => w.toLowerCase() !== answer.toLowerCase() && isUpper(w) === isUpper(answer)), rand).slice(0, 3);
     if (others.length === 3) {
       const options = shuffle([answer, ...others], rand);
       questions.push({ type: 'missing', headline: m.title.replace(answer, '_____'), options, answer: options.indexOf(answer), story: snap(m) });

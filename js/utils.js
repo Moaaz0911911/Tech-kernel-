@@ -1,4 +1,5 @@
 // Small helpers used everywhere.
+import { timeAgoI18n } from './i18n.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -21,18 +22,9 @@ export function domainOf(u) {
   try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; }
 }
 
+/** "5m ago", in the reader's language. */
 export function timeAgo(ms) {
-  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  if (s < 45) return 'just now';
-  const m = Math.round(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.round(h / 24);
-  if (d < 30) return `${d}d ago`;
-  const mo = Math.round(d / 30);
-  if (mo < 12) return `${mo}mo ago`;
-  return `${Math.round(mo / 12)}y ago`;
+  return timeAgoI18n(ms);
 }
 
 export function compact(n) {

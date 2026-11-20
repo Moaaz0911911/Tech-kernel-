@@ -3,6 +3,8 @@ import { $, $$, esc, safeUrl, timeAgo, toast, store } from './utils.js';
 import { catById } from './news.js';
 import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
+import { t, tn, tServer, fmtDate } from './i18n.js';
+import { lookHTML } from './look.js';
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -13,7 +15,7 @@ const DEFAULT_ROOMS = [ // shown instantly, before the server answers
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
-export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }) {
+export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle }) {
   const drawer = $('#chatDrawer');
   if (!auth.ready) { // community features need the kerNEl server
     drawer.remove();
@@ -47,25 +49,25 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     const c = catById(s.cat);
     return `<a class="cm-story" href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">
       <span class="cm-story-emoji" aria-hidden="true">${c.emoji}</span>
-      <span><b>${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}${s.time ? ` · ${timeAgo(s.time)}` : ''}</small></span></a>`;
+      <span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}${s.time ? ` · ${timeAgo(s.time)}` : ''}</small></span></a>`;
   }
 
   function messageHTML(m) {
     const mine = auth.user && m.user.username.toLowerCase() === myName() && !m.user.bot;
     const mentionsMe = auth.user && !mine && new RegExp(`@${myName()}\\b`, 'i').test(m.text);
     const reacts = Object.entries(m.reactions || {}).filter(([, n]) => n > 0);
-    const who = m.user.bot ? `<span class="cm-ava bot" aria-hidden="true">${esc(m.user.avatar)}</span>` : `<button type="button" class="cm-ava" data-user="${esc(m.user.username)}" aria-label="${esc(m.user.nickname)}'s profile">${esc(m.user.avatar)}</button>`;
+    const who = m.user.bot ? `<span class="cm-ava bot" aria-hidden="true">${esc(m.user.avatar)}</span>` : `<button type="button" class="cm-ava" data-user="${esc(m.user.username)}" aria-label="${esc(t('{name}’s profile', { name: m.user.nickname }))}">${lookHTML(m.user, { streak: m.user.streak })}</button>`;
     return `<div class="cmsg${mine ? ' me' : ''}${mentionsMe ? ' mention' : ''}${m.user.bot ? ' bot' : ''}" data-id="${m.id}">
       ${who}
       <div class="cm-body">
-        <div class="cm-head">${m.user.bot ? `<b class="cm-name">${esc(m.user.nickname)}</b><span class="cm-handle">bot</span>` : `<button type="button" class="cm-name" data-user="${esc(m.user.username)}">${esc(m.user.nickname)}</button><span class="cm-handle">@${esc(m.user.username)} ${esc(m.user.rank)}</span>`}<time data-time="${m.created}">${timeAgo(m.created)}</time></div>
-        ${m.text ? `<div class="cm-text">${formatText(m.text)}</div>` : ''}
+        <div class="cm-head">${m.user.bot ? `<b class="cm-name">${esc(m.user.nickname)}</b><span class="cm-handle">${t('bot')}</span>` : `<button type="button" class="cm-name" data-user="${esc(m.user.username)}">${esc(m.user.nickname)}</button><span class="cm-handle">@${esc(m.user.username)} ${esc(m.user.rank)}</span>`}<time data-time="${m.created}">${timeAgo(m.created)}</time></div>
+        ${m.text ? `<div class="cm-text" dir="auto">${formatText(m.text)}</div>` : ''}
         ${(m.stories || []).map(storyCard).join('')}
         <div class="cm-actions">
           ${reacts.map(([e, n]) => `<button type="button" class="cm-react${m.mine === e ? ' on' : ''}" data-react="${e}">${e} ${n}</button>`).join('')}
-          ${auth.user ? `<button type="button" class="cm-more" data-cm="pick" aria-label="Add a reaction">☺︎＋</button>` : ''}
-          ${mine ? '<button type="button" class="cm-more" data-cm="delete" aria-label="Delete my message">🗑️</button>'
-            : auth.user && !m.user.bot ? '<button type="button" class="cm-more" data-cm="report" aria-label="Report message">🚩</button>' : ''}
+          ${auth.user ? `<button type="button" class="cm-more" data-cm="pick" aria-label="${t('Add a reaction')}">☺︎＋</button>` : ''}
+          ${mine ? `<button type="button" class="cm-more" data-cm="delete" aria-label="${t('Delete my message')}">🗑️</button>`
+            : auth.user && !m.user.bot ? `<button type="button" class="cm-more" data-cm="report" aria-label="${t('Report message')}">🚩</button>` : ''}
         </div>
         <div class="cm-picker" hidden>${REACTS.map((e) => `<button type="button" data-react="${e}">${e}</button>`).join('')}</div>
       </div>
@@ -77,15 +79,15 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     const list = [...msgs.values()].filter((m) => !m.hidden).sort((a, b) => a.id - b.id);
     log.innerHTML = list.length
       ? list.map(messageHTML).join('')
-      : `<div class="chat-empty"><span>${rooms.find((r) => r.id === room)?.emoji || '🍿'}</span><p>It’s quiet in here… say hi and pop the first kernel!</p></div>`;
+      : `<div class="chat-empty"><span>${rooms.find((r) => r.id === room)?.emoji || '🍿'}</span><p>${t('It’s quiet in here… say hi and pop the first kernel!')}</p></div>`;
     if (scrollToEnd || nearBottom) log.scrollTop = log.scrollHeight;
   }
 
   function paintRooms() {
     $('#chatRooms').innerHTML = (rooms.length ? rooms : DEFAULT_ROOMS).map((r) =>
-      `<button type="button" class="chat-room" data-room="${r.id}" aria-pressed="${r.id === room}">${r.emoji} ${esc(r.name)}${r.online ? ` <small>${r.online}</small>` : ''}</button>`).join('');
+      `<button type="button" class="chat-room" data-room="${r.id}" aria-pressed="${r.id === room}">${r.emoji} ${esc(t(r.name))}${r.online ? ` <small>${r.online}</small>` : ''}</button>`).join('');
     const total = rooms.reduce((a, r) => a + r.online, 0);
-    $('#chatOnline').textContent = total ? `🟢 ${total} kernel${total === 1 ? '' : 's'} online` : '🟢 online';
+    $('#chatOnline').textContent = total ? `🟢 ${tn(total, '{n} kernel online', '{n} kernels online')}` : `🟢 ${t('online')}`;
   }
 
   function paintComposer(mutedUntil) {
@@ -93,10 +95,10 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     form.hidden = !signedIn;
     $('#chatGuest').hidden = signedIn;
     $('#chatMuted').hidden = !mutedUntil;
-    if (mutedUntil) $('#chatMuted').textContent = `🔇 You’re muted until ${new Date(mutedUntil).toLocaleString()} because several of your messages were reported.`;
+    if (mutedUntil) $('#chatMuted').textContent = `🔇 ${t('You’re muted until {when} because several of your messages were reported.', { when: fmtDate(mutedUntil, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}`;
     const prev = $('#chatShare');
     prev.hidden = !share;
-    if (share) prev.innerHTML = `${storyCard(share)}<button type="button" class="icon-btn" data-cm="unshare" aria-label="Don’t share this story">✕</button>`;
+    if (share) prev.innerHTML = `${storyCard(share)}<button type="button" class="icon-btn" data-cm="unshare" aria-label="${t('Don’t share this story')}">✕</button>`;
   }
 
   async function poll({ fresh = false } = {}) {
@@ -124,7 +126,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
         paintDot();
       }
     } catch (e) {
-      if (isOpen() && e.status !== 429) $('#chatOnline').textContent = '📡 reconnecting…';
+      if (isOpen() && e.status !== 429) $('#chatOnline').textContent = `📡 ${t('reconnecting…')}`;
     } finally {
       busy = false;
       schedule();
@@ -148,7 +150,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     paintDot();
     paintRooms();
     paintComposer();
-    if (!msgs.size) log.innerHTML = '<div class="chat-empty"><span class="spin">🍿</span><p>Popping the chat…</p></div>';
+    if (!msgs.size) log.innerHTML = `<div class="chat-empty"><span class="spin">🍿</span><p>${t('Popping the chat…')}</p></div>`;
     poll({ fresh: !msgs.size });
     if (auth.user) setTimeout(() => input.focus(), 150);
     sfx.pop();
@@ -165,7 +167,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     msgs = new Map();
     since = 0;
     paintRooms();
-    log.innerHTML = '<div class="chat-empty"><span class="spin">🍿</span><p>Switching rooms…</p></div>';
+    log.innerHTML = `<div class="chat-empty"><span class="spin">🍿</span><p>${t('Switching rooms…')}</p></div>`;
     poll({ fresh: true });
   }
 
@@ -187,7 +189,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
       onSent?.();
       if (/^@codme\b/i.test(text)) setTimeout(() => poll(), 1500); // codme answers in a moment
     } catch (err) {
-      toast(err.message, { emoji: err.status === 403 ? '🔇' : '😵', type: 'error', ms: 6000 });
+      toast(tServer(err.message), { emoji: err.status === 403 ? '🔇' : '😵', type: 'error', ms: 6000 });
       sfx.buzz();
     } finally {
       btn.disabled = false;
@@ -197,21 +199,21 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
   input.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
   drawer.addEventListener('click', async (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    const roomBtn = t.closest('[data-room]');
+    const el = e.target;
+    if (!(el instanceof Element)) return;
+    const roomBtn = el.closest('[data-room]');
     if (roomBtn) return switchRoom(roomBtn.dataset.room);
-    if (t.closest('[data-cm="close"]')) return close();
-    if (t.closest('[data-cm="unshare"]')) { share = null; return paintComposer(); }
-    if (t.closest('[data-cm="codme"]')) { input.value = `@codme ${input.value.replace(/^@codme\s*/i, '')}`; return input.focus(); }
-    if (t.closest('[data-cm="signin"]')) return openAuth('signin');
-    if (t.closest('[data-cm="signup"]')) return openAuth('signup');
-    const row = t.closest('.cmsg');
+    if (el.closest('[data-cm="close"]')) return close();
+    if (el.closest('[data-cm="unshare"]')) { share = null; return paintComposer(); }
+    if (el.closest('[data-cm="codme"]')) { input.value = `@codme ${input.value.replace(/^@codme\s*/i, '')}`; return input.focus(); }
+    if (el.closest('[data-cm="signin"]')) return openAuth('signin');
+    if (el.closest('[data-cm="signup"]')) return openAuth('signup');
+    const row = el.closest('.cmsg');
     if (!row) return;
     const id = Number(row.dataset.id);
     const m = msgs.get(id);
-    if (t.closest('[data-cm="pick"]')) { const p = row.querySelector('.cm-picker'); p.hidden = !p.hidden; return; }
-    const react = t.closest('[data-react]');
+    if (el.closest('[data-cm="pick"]')) { const p = row.querySelector('.cm-picker'); p.hidden = !p.hidden; return; }
+    const react = el.closest('[data-react]');
     if (react && auth.user) {
       const emoji = react.dataset.react === m.mine ? null : react.dataset.react;
       try {
@@ -219,21 +221,21 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
         msgs.set(id, { ...m, reactions: r.reactions, mine: r.mine });
         render();
         if (emoji) { burstFrom(react, { emojis: [emoji], count: 6, spread: 40 }); sfx.pop(); }
-      } catch (err) { toast(err.message, { emoji: '😵' }); }
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
       return;
     }
-    if (t.closest('[data-cm="delete"]')) {
-      if (!confirm('Delete this message?')) return;
-      try { await auth.api(`/api/chat/${id}`, { method: 'DELETE' }); msgs.delete(id); render(); } catch (err) { toast(err.message, { emoji: '😵' }); }
+    if (el.closest('[data-cm="delete"]')) {
+      if (!confirm(t('Delete this message?'))) return;
+      try { await auth.api(`/api/chat/${id}`, { method: 'DELETE' }); msgs.delete(id); render(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
       return;
     }
-    if (t.closest('[data-cm="report"]')) {
-      if (!confirm('Report this message as mean, unsafe or spam? Messages with 3 reports are hidden.')) return;
+    if (el.closest('[data-cm="report"]')) {
+      if (!confirm(t('Report this message as mean, unsafe or spam? Messages with 3 reports are hidden.'))) return;
       try {
         const r = await auth.api('/api/chat/report', { method: 'POST', body: { id } });
-        toast(r.hidden ? 'Thanks — that message is now hidden.' : 'Thanks for reporting. We’ve got it from here. 🛡️', { emoji: '🚩' });
+        toast(r.hidden ? t('Thanks — that message is now hidden.') : t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' });
         if (r.hidden) { msgs.delete(id); render(); }
-      } catch (err) { toast(err.message, { emoji: '😵' }); }
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
     }
   });
   drawer.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
@@ -246,16 +248,17 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
       box.hidden = false;
       const voted = p.mine !== null && p.mine !== undefined;
       const showResults = voted || !auth.user;
-      $('#pollQ').textContent = p.question;
+      $('#pollQ').textContent = t(p.question);
       $('#pollBody').innerHTML = p.options.map((o, i) => {
         const pct = p.total ? Math.round((p.counts[i] / p.total) * 100) : 0;
         return showResults
-          ? `<div class="poll-row${p.mine === i ? ' mine' : ''}"><span class="poll-label">${esc(o)}${p.mine === i ? ' ✓' : ''}</span><span class="poll-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b></div>`
-          : `<button type="button" class="poll-opt" data-vote="${i}">${esc(o)}</button>`;
+          ? `<div class="poll-row${p.mine === i ? ' mine' : ''}"><span class="poll-label">${esc(t(o))}${p.mine === i ? ' ✓' : ''}</span><span class="poll-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b></div>`
+          : `<button type="button" class="poll-opt" data-vote="${i}">${esc(t(o))}</button>`;
       }).join('');
+      const votes = tn(p.total, '{n} vote', '{n} votes');
       $('#pollFoot').innerHTML = !auth.user
-        ? `${p.total} vote${p.total === 1 ? '' : 's'} · <button type="button" class="linkish" data-action="signin">Sign in</button> to vote`
-        : voted ? `${p.total} vote${p.total === 1 ? '' : 's'} today · new question tomorrow 🗳️` : 'Tap your hot take!';
+        ? `${votes} · <button type="button" class="linkish" data-action="signin">${t('Sign in')}</button> ${t('to vote')}`
+        : voted ? `${votes} · ${t('new question tomorrow 🗳️')}` : t('Tap your hot take!');
     } catch { box.hidden = true; }
   }
   $('#pollWidget').addEventListener('click', async (e) => {
@@ -267,45 +270,67 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
       sfx.ding();
       if (r.firstVote) onVote?.();
       loadPoll();
-    } catch (err) { toast(err.message, { emoji: '😵' }); }
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
   });
 
   // ---------------- profile cards ----------------
+  const PLACE = ['🥇', '🥈', '🥉'];
   async function showProfile(username) {
     const dlg = $('#userCard');
     const body = $('#userCardBody');
-    body.innerHTML = '<div class="auth-mascot spin">🍿</div><p class="muted">Loading…</p>';
+    body.innerHTML = `<div class="auth-mascot spin">🍿</div><p class="muted">${t('Loading…')}</p>`;
     if (!dlg.open) dlg.showModal();
     try {
-      const u = await auth.api(`/api/users/${encodeURIComponent(username)}`);
+      const u = await auth.api(`/api/users/${encodeURIComponent(username)}`, { auth: true });
       const badges = u.badges.map(badgeInfo).filter(Boolean);
+      const trophies = u.trophies || [];
       body.innerHTML = `
-        <div class="uc-ava">${esc(u.avatar)}</div>
-        <h2>${esc(u.nickname)}</h2>
-        <p class="muted">@${esc(u.username)} · joined ${new Date(u.joined).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</p>
-        <p class="uc-rank">${esc(u.rank)} ${esc(rankTitle(u.xp))}</p>
+        <div class="uc-ava">${lookHTML(u, { streak: u.streak })}</div>
+        <h2 dir="auto">${esc(u.nickname)}</h2>
+        <p class="muted">@${esc(u.username)} · ${t('joined {when}', { when: fmtDate(u.joined, { month: 'short', year: 'numeric' }) })}</p>
+        <p class="uc-rank">${esc(u.rank)} ${esc(t(rankTitle(u.xp)))}</p>
         <div class="uc-stats">
           <span><b>${u.xp}</b>XP</span>
-          <span><b>${u.place ? `#${u.place}` : '—'}</b>rank</span>
-          <span><b>🔥${u.streak}</b>streak</span>
-          <span><b>${u.messages}</b>chats</span>
+          <span><b>${u.place ? `#${u.place}` : '—'}</b>${t('rank')}</span>
+          <span><b>🔥${u.streak}</b>${t('streak')}</span>
+          <span><b>${u.followers ?? 0}</b>${t('followers')}</span>
+          <span><b>${u.following ?? 0}</b>${t('following')}</span>
+          <span><b>${u.messages}</b>${t('chats')}</span>
         </div>
-        ${badges.length ? `<p class="uc-badges" aria-label="Achievements">${badges.map((b) => `<span title="${esc(b.name)}">${b.emoji}</span>`).join('')}</p>` : '<p class="muted small">No achievements yet — still warming up 🌽</p>'}
-        ${u.topics.length ? `<p class="uc-topics">${u.topics.map((t) => `<span class="chip chip-cat" style="--cat-h:${catById(t).hue}">${catById(t).emoji} ${esc(catById(t).label)}</span>`).join(' ')}</p>` : ''}
-        ${u.kidsStars ? `<p class="muted small">🧸 ${u.kidsStars} kerNEl Kids stars</p>` : ''}
-        ${auth.user && u.username.toLowerCase() !== myName() ? `<button type="button" class="btn btn-primary" data-mention="${esc(u.username)}">💬 Mention in chat</button>` : ''}`;
+        ${trophies.length ? `<p class="uc-trophies" title="${esc(t('Real or Fake? tournament trophies'))}">${trophies.slice(0, 12).map((x) => `<span title="${esc(t('Week of {date}', { date: fmtDate(Date.parse(x.week)) }))}">${PLACE[x.place - 1] || '🏆'}</span>`).join('')} <small>${tn(trophies.length, '{n} trophy', '{n} trophies')}</small></p>` : ''}
+        ${badges.length ? `<p class="uc-badges" aria-label="${t('Achievements')}">${badges.map((b) => `<span title="${esc(t(b.name))}">${b.emoji}</span>`).join('')}</p>` : `<p class="muted small">${t('No achievements yet — still warming up 🌽')}</p>`}
+        ${u.topics.length ? `<p class="uc-topics">${u.topics.map((x) => `<span class="chip chip-cat" style="--cat-h:${catById(x).hue}">${catById(x).emoji} ${esc(t(catById(x).label))}</span>`).join(' ')}</p>` : ''}
+        ${u.kidsStars ? `<p class="muted small">🧸 ${t('{n} kerNEl Kids stars', { n: u.kidsStars })}</p>` : ''}
+        <div class="uc-actions">
+          ${auth.user && !u.me ? `<button type="button" class="btn ${u.isFollowing ? 'btn-ghost' : 'btn-primary'}" data-follow="${esc(u.username)}" data-on="${u.isFollowing ? 1 : 0}">${u.isFollowing ? t('✓ Following') : t('➕ Follow')}</button>` : ''}
+          ${!auth.user ? `<button type="button" class="btn btn-primary" data-action="signup">${t('➕ Sign up to follow')}</button>` : ''}
+          ${auth.user && !u.me ? `<button type="button" class="btn btn-ghost" data-mention="${esc(u.username)}">💬 ${t('Mention in chat')}</button>` : ''}
+        </div>`;
     } catch (err) {
-      body.innerHTML = `<div class="auth-mascot">🤷</div><p>${esc(err.message)}</p>`;
+      body.innerHTML = `<div class="auth-mascot">🤷</div><p>${esc(tServer(err.message))}</p>`;
     }
   }
-  $('#userCard').addEventListener('click', (e) => {
+  $('#userCard').addEventListener('click', async (e) => {
     if (e.target === e.currentTarget) e.currentTarget.close();
-    const b = e.target instanceof Element && e.target.closest('[data-mention]');
+    const el = e.target instanceof Element ? e.target : null;
+    const b = el?.closest('[data-mention]');
     if (b) {
       $('#userCard').close();
       open();
       input.value = `@${b.dataset.mention} ${input.value}`;
       input.focus();
+      return;
+    }
+    const f = el?.closest('[data-follow]');
+    if (f) {
+      const on = f.dataset.on !== '1';
+      f.disabled = true;
+      try {
+        await auth.api('/api/follow', { method: 'POST', body: { username: f.dataset.follow, follow: on } });
+        if (on) { burstFrom(f, { emojis: ['👯', '💛', '🍿'], count: 10 }); sfx.ding(); toast(t('You’re following @{name}! You’ll see their wins in 👯 Friends.', { name: f.dataset.follow }), { emoji: '👯' }); }
+        onFollow?.(on);
+        showProfile(f.dataset.follow);
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); f.disabled = false; }
     }
   });
   document.addEventListener('click', (e) => {
@@ -328,7 +353,7 @@ export function initCommunity({ openAuth, onSent, onVote, badgeInfo, rankTitle }
     },
     close,
     toggle: () => (isOpen() ? close() : open()),
-    share: (item) => (auth.user ? open(item) : (toast('Sign in to share stories in kerNEl Chat!', { emoji: '💬' }), openAuth('signin'))),
+    share: (item) => (auth.user ? open(item) : (toast(t('Sign in to share stories in kerNEl Chat!'), { emoji: '💬' }), openAuth('signin'))),
     refreshPoll: loadPoll,
     showProfile,
   };

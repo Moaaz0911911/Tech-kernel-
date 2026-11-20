@@ -213,7 +213,7 @@ export function cleanProfile(p, prev = {}) {
   return { ...prev, nickname, avatar, topics, leaderboard, lang };
 }
 
-const COUNTERS = new Set(['quizPlayed', 'quizPerfect', 'battleVotes', 'comments', 'explains', 'briefings', 'swipes', 'timeTravels', 'tourneys', 'wrapped']);
+const COUNTERS = new Set(['quizPlayed', 'quizPerfect', 'battleVotes', 'comments', 'explains', 'briefings', 'swipes', 'timeTravels', 'tourneys', 'wrapped', 'follows', 'langs']);
 /** Kids' minutes per day (for the grown-ups' dashboard): keep the bigger number for each day, last 30 days. */
 function mergeMinutes(prev = {}, next = {}) {
   const out = { ...prev };

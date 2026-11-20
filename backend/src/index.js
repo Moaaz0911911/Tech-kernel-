@@ -71,7 +71,10 @@ async function route(request, env, ctx) {
     return json({ ok: true });
   }
 
-  if (path === '/api/me' && m === 'GET') return json({ user: publicUser(await requireUser(request, env)) });
+  if (path === '/api/me' && m === 'GET') {
+    const user = await requireUser(request, env);
+    return json({ user: { ...publicUser(user), trophies: await trophyCount(env, user.id) } });
+  }
   if (path === '/api/me/password' && m === 'POST') {
     const user = await requireUser(request, env);
     await rateLimit(env, `pw:${user.id}`, 10, 3600_000);
@@ -287,7 +290,8 @@ export default {
         env.DB.prepare('DELETE FROM comment_reports WHERE comment_id NOT IN (SELECT id FROM comments)'),
         // old games and caches: explanations go with their story; quizzes, battles and picks after a while
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'x:%' AND substr(k, 3) NOT IN (SELECT key FROM stories)"),
-        env.DB.prepare("DELETE FROM kv WHERE (k LIKE 'quiz:%' OR k LIKE 'battle:%' OR k LIKE 'kidsnews:%') AND substr(k, instr(k, ':') + 1) < ?").bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare("DELETE FROM kv WHERE (k LIKE 'quiz:%' OR k LIKE 'battle:%') AND substr(k, instr(k, ':') + 1) < ?").bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare("DELETE FROM kv WHERE k LIKE 'kidsnews:%' AND substr(k, -10) < ?").bind(new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'tm:%' AND k NOT LIKE ?").bind(`tm:${new Date().getUTCFullYear()}:%`),
         env.DB.prepare('DELETE FROM quiz_scores WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),

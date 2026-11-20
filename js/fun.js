@@ -151,5 +151,6 @@ export function describeScroll(px) {
   const [size, name, emoji] = THINGS.find(([s]) => m >= s) || THINGS[THINGS.length - 1];
   const n = m / size;
   const meters = m < 1 ? `${Math.round(m * 100)} cm` : `${m.toFixed(1)} m`;
-  return { meters, emoji, text: `${n < 10 ? n.toFixed(1) : Math.round(n)} ${name}` };
+  const count = n < 10 ? n.toFixed(1) : String(Math.round(n));
+  return { meters, emoji, count, name, text: `${count} ${name}` };
 }

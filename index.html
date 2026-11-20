@@ -41,7 +41,7 @@
           <path d="M12 28h40l-5 30H17z" fill="#fff" stroke="#1a1209" stroke-width="2.5" stroke-linejoin="round"/>
           <path d="M23 28.5l2.2 29M32 28.5v29M41 28.5l-2.2 29" stroke="#ff2d3d" stroke-width="4.5"/>
         </svg>
-        <span class="logo-text">ker<span class="logo-ne">NE</span>l</span>
+        <span class="logo-text" data-no-i18n>ker<span class="logo-ne">NE</span>l</span>
       </a>
 
       <nav class="cat-nav" id="catNav" aria-label="News categories"></nav>
@@ -59,7 +59,7 @@
             <circle cx="22" cy="22" r="18" class="ring" id="popperRing"/>
           </svg>
           <span class="popper-icon" aria-hidden="true"><span class="k-unpopped">🌽</span><span class="k-popped">🍿</span></span>
-          <span class="popper-count" id="countdown">30s</span>
+          <span class="popper-count" id="countdown" data-no-i18n>30s</span>
         </button>
         <button type="button" class="icon-btn hdr-btn" id="themeBtn" data-action="theme" aria-label="Toggle light or dark mode">🌙</button>
         <button type="button" class="icon-btn hdr-btn hide-sm" id="soundBtn" data-action="sound" aria-label="Toggle sound effects" aria-pressed="false">🔇</button>
@@ -71,6 +71,10 @@
             <button type="button" class="bell-cta" id="bellCta" hidden>📲 Turn on push notifications for this device</button>
             <div class="bell-list" id="bellList"></div>
           </div>
+        </div>
+        <div class="lang-wrap">
+          <button type="button" class="icon-btn hdr-btn" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Language" title="Language">🌐</button>
+          <div class="lang-menu menu" id="langMenu" role="menu" hidden></div>
         </div>
         <div class="auth-slot" id="authSlot"></div>
       </div>
@@ -93,6 +97,10 @@
         <div class="feed-head">
           <h2 id="feedTitle">Fresh out the microwave 🍿</h2>
           <span class="feed-count" id="feedCount"></span>
+          <div class="feed-tools">
+            <button type="button" class="btn btn-ghost btn-sm" data-action="briefing" title="Listen to today’s top stories">🎧 Briefing</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="swipe" title="One story at a time, swipe like a pro">📱 Swipe mode</button>
+          </div>
           <div class="sort-tabs" id="sortTabs" role="group" aria-label="Sort stories">
             <button type="button" data-sort="newest" aria-pressed="true">🆕 Newest</button>
             <button type="button" data-sort="hot" aria-pressed="false">🔥 Hottest</button>
@@ -114,9 +122,19 @@
       <aside class="sidebar" aria-label="Extras">
         <a class="widget kids-promo" href="kids.html">
           <span class="kp-emoji" aria-hidden="true">🧸</span>
-          <span><b>kerNEl Kids</b><br>Binary bulbs, robot coding, pixel art & more — learn how tech works with Poppy! 🍿</span>
+          <span data-i18n><b>kerNEl Kids</b><br>Binary bulbs, robot coding, pixel art & more — learn how tech works with Poppy! 🍿</span>
           <span class="kp-go" aria-hidden="true">→</span>
         </a>
+
+        <section class="widget widget-quiz" id="quizWidget" aria-labelledby="quizTitle" hidden>
+          <h3 id="quizTitle" class="widget-title">🧠 Daily Kernel Quiz</h3>
+          <div id="quizSide"></div>
+        </section>
+
+        <section class="widget widget-battle" id="battleWidget" aria-labelledby="battleTitle" hidden>
+          <h3 id="battleTitle" class="widget-title">🍿 Popcorn Battle</h3>
+          <div id="battleBody"></div>
+        </section>
 
         <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
           <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
@@ -129,6 +147,15 @@
           <h3 id="gameTitle" class="widget-title">🕵️ Real or Fake?</h3>
           <p>Five headlines. Some are real stories from today… some were invented by codme. Can you spot the fakes?</p>
           <button type="button" class="btn btn-primary btn-block" data-action="game">Play (+XP)</button>
+          <div class="tourney-promo" id="tourneyPromo" hidden>
+            <p><b>🏆 Weekly tournament</b><br><span id="tourneyLine">8 headlines, one go each. The top 3 win trophies!</span></p>
+            <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
+          </div>
+        </section>
+
+        <section class="widget widget-friends" id="friendsWidget" aria-labelledby="friendsTitle" hidden>
+          <h3 id="friendsTitle" class="widget-title">👯 Friends</h3>
+          <div id="friendsBody"></div>
         </section>
 
         <section class="widget" aria-labelledby="pwTitle">
@@ -153,9 +180,16 @@
           <p class="muted small" id="boardMe"></p>
         </section>
 
+        <section class="widget widget-tm" id="tmWidget" aria-labelledby="tmTitle" hidden>
+          <h3 id="tmTitle" class="widget-title">📼 Tech Time Machine</h3>
+          <p class="muted small" id="tmSub">The biggest tech story on this day, every year.</p>
+          <div class="tm-years" id="tmYears"></div>
+          <div id="tmStory"></div>
+        </section>
+
         <section class="widget widget-codme">
           <h3 class="widget-title">🤖 Meet codme</h3>
-          <p>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
+          <p data-i18n>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
           <button type="button" class="btn btn-primary btn-block" data-action="codme">Chat with codme</button>
         </section>
 
@@ -174,7 +208,7 @@
         <section class="widget" aria-labelledby="srcTitle">
           <h3 id="srcTitle" class="widget-title">📡 Source health</h3>
           <ul class="source-list" id="sourceList"></ul>
-          <p class="muted small">News refreshes every <span id="refreshEvery">30</span> seconds while this tab is open.</p>
+          <p class="muted small" data-i18n>News refreshes every <span id="refreshEvery">30</span> seconds while this tab is open.</p>
         </section>
 
         <section class="widget widget-scroll" aria-labelledby="scrollTitle">
@@ -188,7 +222,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
-        <span class="logo-text small">ker<span class="logo-ne">NE</span>l</span>
+        <span class="logo-text small" data-no-i18n>ker<span class="logo-ne">NE</span>l</span>
         <p>Tech news, freshly popped every 30 seconds. Headlines link to their original publishers.</p>
       </div>
       <div class="footer-links">
@@ -197,6 +231,7 @@
         <a href="https://hn.algolia.com/api" target="_blank" rel="noopener noreferrer">News: Hacker News (Algolia)</a>
         <a href="https://developers.forem.com/api" target="_blank" rel="noopener noreferrer">DEV Community API</a>
       </div>
+      <p class="footer-langs" id="footerLangs"></p>
       <p class="tiny">Shortcuts: <kbd>/</kbd> search · <kbd>r</kbd> refresh · <kbd>c</kbd> codme · <kbd>t</kbd> chat · psst, try the Konami code 🎮 · © <span id="year"></span> kerNEl</p>
     </div>
   </footer>
@@ -212,7 +247,7 @@
       </div>
       <h2 id="authTitle">Welcome back, kernel! 🍿</h2>
       <p id="authSub" class="muted">Sign in with your kerNEl username.</p>
-      <p id="authOff" class="auth-warn" hidden>🛠️ Accounts need the kerNEl server, and it isn’t switched on yet. Site owner: follow <code>backend/README.md</code>, then put the server address in <code>apiBase</code>.</p>
+      <p id="authOff" class="auth-warn" hidden data-i18n>🛠️ Accounts need the kerNEl server, and it isn’t switched on yet. Site owner: follow <code>backend/README.md</code>, then put the server address in <code>apiBase</code>.</p>
 
       <!-- sign in -->
       <form class="auth-form" id="signinForm" data-view="signin" novalidate>
@@ -244,7 +279,7 @@
 
       <!-- forgot password -->
       <form class="auth-form" id="recoverForm" data-view="recover" novalidate hidden>
-        <p class="muted small">Enter your username and the <b>recovery code</b> you saved when you signed up. You’ll get a new code afterwards.</p>
+        <p class="muted small" data-i18n>Enter your username and the <b>recovery code</b> you saved when you signed up. You’ll get a new code afterwards.</p>
         <label class="field"><span>Username</span><input name="username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" required></label>
         <label class="field"><span>Recovery code</span><input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" maxlength="40" required></label>
         <label class="field"><span>New password</span>
@@ -257,7 +292,7 @@
 
       <!-- recovery code (shown after sign-up / reset) -->
       <div class="auth-form" id="codeView" data-view="code" hidden>
-        <p><b>Save this recovery code somewhere safe.</b> It’s the only way back into your account if you forget your password, and we can’t show it again.</p>
+        <p data-i18n><b>Save this recovery code somewhere safe.</b> It’s the only way back into your account if you forget your password, and we can’t show it again.</p>
         <div class="recovery-code" id="recoveryCode" tabindex="0"></div>
         <div class="code-actions">
           <button type="button" class="btn btn-ghost btn-sm" data-code="copy">📋 Copy</button>
@@ -287,6 +322,14 @@
       <fieldset class="pick">
         <legend>What makes your kernel pop? <small>(builds your ⭐ For You feed)</small></legend>
         <div class="topic-grid" id="topicPick"></div>
+      </fieldset>
+      <fieldset class="pick">
+        <legend>🎩 Hat <small>(unlock more with XP)</small></legend>
+        <div class="style-grid" id="hatPick"></div>
+      </fieldset>
+      <fieldset class="pick">
+        <legend>🖼️ Frame</legend>
+        <div class="style-grid" id="framePick"></div>
       </fieldset>
       <label class="check"><input type="checkbox" name="leaderboard"> Show me on the 🏆 leaderboard</label>
       <button class="btn btn-primary btn-block btn-big" id="profileSave" value="save">Pop me in! 🍿</button>
@@ -329,10 +372,10 @@
       <h2 id="notifyTitle">Notifications</h2>
       <p class="ns-state" id="nsState"></p>
       <ol class="ns-ios" id="nsIOS" hidden>
-        <li>Tap the <b>Share</b> button <span class="ios-share" aria-hidden="true">⬆️</span> at the bottom of Safari.</li>
-        <li>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
-        <li>Open <b>kerNEl</b> from your Home Screen (the popcorn icon 🍿).</li>
-        <li>Come back here: 👤 menu → <b>🔔 Notifications</b> → turn them on.</li>
+        <li data-i18n>Tap the <b>Share</b> button <span class="ios-share" aria-hidden="true">⬆️</span> at the bottom of Safari.</li>
+        <li data-i18n>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
+        <li data-i18n>Open <b>kerNEl</b> from your Home Screen (the popcorn icon 🍿).</li>
+        <li data-i18n>Come back here: 👤 menu → <b>🔔 Notifications</b> → turn them on.</li>
       </ol>
       <button type="button" class="btn btn-primary btn-block btn-big" id="nsOn" hidden>🔔 Turn on notifications</button>
       <fieldset class="pick ns-kinds">
@@ -340,6 +383,7 @@
         <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
         <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
         <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
+        <label class="check"><input type="checkbox" name="friends" checked> 👯 someone follows me, or a friend ranks up or wins a trophy</label>
       </fieldset>
       <p class="muted small" id="nsDevices"></p>
       <div class="ns-actions">
@@ -359,6 +403,100 @@
       <div id="gameBody"></div>
     </div>
   </dialog>
+
+  <!-- ===== Daily Kernel Quiz ===== -->
+  <dialog id="quizDialog" class="modal game-modal" aria-labelledby="quizDlgTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2 id="quizDlgTitle">🧠 Daily Kernel Quiz</h2>
+      <div id="quizBody"></div>
+    </div>
+  </dialog>
+
+  <!-- ===== Weekly tournament ===== -->
+  <dialog id="tourneyDialog" class="modal game-modal" aria-labelledby="tourneyTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2 id="tourneyTitle">🏆 Real or Fake? Tournament</h2>
+      <div id="tourneyBody"></div>
+    </div>
+  </dialog>
+
+  <!-- ===== Story comments ===== -->
+  <dialog id="commentsDialog" class="modal comments-modal" aria-labelledby="commentsTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2 id="commentsTitle">🗨️ Comments</h2>
+      <p class="cmt-story" id="commentsStory" dir="auto"></p>
+      <div class="cmt-list" id="commentsList" aria-live="polite"></div>
+      <form class="cmt-form" id="commentForm" hidden>
+        <label class="sr-only" for="commentInput">Your comment</label>
+        <textarea id="commentInput" maxlength="400" rows="2" placeholder="Add your hot take… (be kind)"></textarea>
+        <button type="submit" class="btn btn-primary">Post</button>
+      </form>
+      <p class="muted small" id="commentGuest" hidden data-i18n><button type="button" class="linkish" data-action="signin">Sign in</button> to join the conversation.</p>
+    </div>
+  </dialog>
+
+  <!-- ===== Explain / TL;DR ===== -->
+  <dialog id="explainDialog" class="modal" aria-labelledby="explainTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2 id="explainTitle">🧠 What’s this about?</h2>
+      <p class="cmt-story" id="explainStory" dir="auto"></p>
+      <div class="auth-tabs" role="tablist" aria-label="Explanation style">
+        <button type="button" class="auth-tab" role="tab" data-xmode="eli10" aria-selected="true">🧒 Explain like I’m 10</button>
+        <button type="button" class="auth-tab" role="tab" data-xmode="tldr" aria-selected="false">⚡ TL;DR</button>
+      </div>
+      <div class="explain-text" id="explainText" aria-live="polite"></div>
+      <div class="code-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="explainSpeak">🔊 Read it to me</button>
+        <a class="btn btn-ghost btn-sm" id="explainTranslate" target="_blank" rel="noopener noreferrer" hidden>🌐 Read the article in my language</a>
+        <a class="btn btn-ghost btn-sm" id="explainOpen" target="_blank" rel="noopener noreferrer">📰 Open the article</a>
+      </div>
+      <p class="auth-fine" id="explainFine"></p>
+    </div>
+  </dialog>
+
+  <!-- ===== kerNEl Wrapped ===== -->
+  <dialog id="wrappedDialog" class="modal wrapped-modal" aria-labelledby="wrappedTitle">
+    <form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="Close">✕</button></form>
+    <div class="modal-body">
+      <h2 id="wrappedTitle">🎁 Your kerNEl Wrapped</h2>
+      <canvas id="wrappedCanvas" width="1080" height="1350" aria-label="Your kerNEl stats card"></canvas>
+      <div class="code-actions">
+        <button type="button" class="btn btn-primary" id="wrappedShare">📤 Share</button>
+        <button type="button" class="btn btn-ghost" id="wrappedDownload">⬇️ Download</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Swipe mode ===== -->
+  <div class="swipe" id="swipeMode" role="dialog" aria-label="Swipe mode" hidden>
+    <div class="swipe-top">
+      <span class="swipe-count" id="swipeCount"></span>
+      <span class="swipe-hint" id="swipeHint">⬆️ next · ⬇️ back · ➡️ save · ⬅️ skip · double-tap 🔥</span>
+      <button type="button" class="icon-btn" data-swipe="close" aria-label="Close swipe mode">✕</button>
+    </div>
+    <div class="swipe-stage" id="swipeStage"></div>
+    <div class="swipe-bar">
+      <button type="button" class="swipe-btn" data-swipe="prev" aria-label="Previous story">⬇️</button>
+      <button type="button" class="swipe-btn" data-swipe="skip" aria-label="Skip">⬅️</button>
+      <button type="button" class="swipe-btn big" data-swipe="fire" aria-label="This is fire">🔥</button>
+      <button type="button" class="swipe-btn" data-swipe="save" aria-label="Save">🔖</button>
+      <button type="button" class="swipe-btn" data-swipe="explain" aria-label="Explain">🧠</button>
+      <button type="button" class="swipe-btn" data-swipe="next" aria-label="Next story">⬆️</button>
+    </div>
+  </div>
+
+  <!-- ===== Daily briefing player ===== -->
+  <div class="briefing" id="briefing" role="region" aria-label="Daily briefing" hidden>
+    <span class="br-icon" aria-hidden="true">🎧</span>
+    <div class="br-text"><b id="brTitle">Daily briefing</b><small id="brNow" dir="auto"></small><span class="br-dots" id="brDots"></span></div>
+    <button type="button" class="icon-btn" id="brPause" aria-label="Pause">⏸️</button>
+    <button type="button" class="icon-btn" id="brNext" aria-label="Next story">⏭️</button>
+    <button type="button" class="icon-btn" id="brStop" aria-label="Stop">⏹️</button>
+  </div>
 
   <!-- ===== kerNEl Chat ===== -->
   <aside class="chat-drawer" id="chatDrawer" role="dialog" aria-label="kerNEl Chat" hidden>
@@ -390,7 +528,7 @@
   </dialog>
 
   <!-- ===== codme chat robot ===== -->
-  <div class="codme-teaser" id="codmeTeaser" hidden>Psst… I can find <b>any</b> tech news. Try me! 👀</div>
+  <div class="codme-teaser" id="codmeTeaser" hidden data-i18n>Psst… I can find <b>any</b> tech news. Try me! 👀</div>
   <button type="button" class="codme-launcher" id="codmeLauncher" aria-controls="codmePanel" aria-expanded="false" aria-label="Chat with codme, the news robot">
     <svg class="codme-face" viewBox="0 0 64 64" aria-hidden="true">
       <line x1="32" y1="5" x2="32" y2="13" class="antenna-stick"/>

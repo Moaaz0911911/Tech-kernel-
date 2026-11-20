@@ -121,7 +121,15 @@ class Auth extends EventTarget {
   saveProfile(p) {
     store.set(`profile:${this.profileKey()}`, p);
     if (this.user?.apiToken) {
-      this.api('/api/me/profile', { method: 'PUT', body: { nickname: p.nickname, avatar: p.avatar, topics: p.topics, leaderboard: p.leaderboard !== false } }).catch(() => {});
+      const body = { nickname: p.nickname, avatar: p.avatar, topics: p.topics, leaderboard: p.leaderboard !== false, hat: p.hat || 'none', frame: p.frame || 'none', ...(p.lang ? { lang: p.lang } : {}) };
+      this.api('/api/me/profile', { method: 'PUT', body })
+        .then((r) => { // the server double-checks hats and frames against your XP
+          if (r?.profile && (r.profile.hat !== body.hat || r.profile.frame !== body.frame)) {
+            store.set(`profile:${this.profileKey()}`, { ...this.getProfile(), hat: r.profile.hat, frame: r.profile.frame });
+            this.dispatchEvent(new CustomEvent('profile', { detail: this.getProfile() }));
+          }
+        })
+        .catch(() => {});
     }
     this.dispatchEvent(new CustomEvent('profile', { detail: p }));
   }

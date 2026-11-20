@@ -2,6 +2,10 @@
 import { $, $$, esc, pick, store, toast, sleep } from './utils.js';
 import { sfx, burst, burstFrom, rain } from './fun.js';
 import { auth } from './auth.js';
+import { t, tn, lang, langInfo, translatePage, loadLangFonts, langMenuHTML, setLang, fmtDate } from './i18n.js';
+import { KIDS_STRINGS } from './i18n-kids.js';
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 // ---------- saving progress to the kerNEl account (when signed in on the main page) ----------
 let syncTimer = 0;
@@ -10,7 +14,7 @@ function syncKids() {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     auth.api('/api/me/data', { method: 'PATCH', body: {
-      kids: { stars: store.get('kids:stars', {}), robotLevel: store.get('kids:robotLevel', 0), name: store.get('kids:name', '') },
+      kids: { stars: store.get('kids:stars', {}), robotLevel: store.get('kids:robotLevel', 0), name: store.get('kids:name', ''), minutes: store.get('kids:minutes', {}), last: store.get('kids:last', 0) },
       settings: { kidsRead: !!store.get('kids:read', false) },
     } }).catch(() => {});
   }, 1200);
@@ -19,10 +23,10 @@ function syncKids() {
 async function pullKids() {
   const el = $('#kidsSync');
   if (!auth.user) {
-    if (auth.ready) el.innerHTML = '💾 <a href="index.html">Sign in</a> to save your stars';
+    if (auth.ready) el.innerHTML = `💾 <a href="index.html">${t('Sign in')}</a> ${t('to save your stars')}`;
     return;
   }
-  el.textContent = `☁️ Saved to @${auth.user.username}`;
+  el.textContent = t('☁️ Saved to @{name}', { name: auth.user.username });
   try {
     const { user } = await auth.api('/api/me');
     const k = user.data?.kids;
@@ -33,10 +37,14 @@ async function pullKids() {
       stars = local;
       store.set('kids:robotLevel', Math.max(store.get('kids:robotLevel', 0), k.robotLevel || 0));
       if (k.name && !store.get('kids:name', '')) store.set('kids:name', k.name);
+      const mins = store.get('kids:minutes', {});
+      for (const [d, n] of Object.entries(k.minutes || {})) mins[d] = Math.max(mins[d] || 0, n);
+      store.set('kids:minutes', mins);
+      store.set('kids:last', Math.max(store.get('kids:last', 0), k.last || 0));
       paintStars();
     }
     syncKids(); // send anything earned on this device before signing in
-  } catch { el.textContent = '📡 Offline — stars are saved on this device'; }
+  } catch { el.textContent = t('📡 Offline — stars are saved on this device'); }
 }
 
 const LESSONS = [
@@ -71,10 +79,10 @@ function award(id, n, where) {
   const lesson = LESSONS.find((l) => l.id === id);
   if (where) burstFrom(where, { emojis: ['⭐', '🌟', '✨'], count: 18 });
   sfx.win();
-  toast(gotBadge ? `New badge: ${lesson.badge}! ${'⭐'.repeat(n)}` : `${lesson.title}: now ${'⭐'.repeat(n)}`, { emoji: gotBadge ? '🏅' : '⭐' });
+  toast(gotBadge ? t('New badge: {badge}! {stars}', { badge: t(lesson.badge), stars: '⭐'.repeat(n) }) : t('{lesson}: now {stars}', { lesson: t(lesson.title), stars: '⭐'.repeat(n) }), { emoji: gotBadge ? '🏅' : '⭐' });
   if (LESSONS.every((l) => getStars(l.id) > 0) && !store.get('kids:allDone', false)) {
     store.set('kids:allDone', true);
-    setTimeout(() => { rain(['⭐', '🍿', '🎉', '🏅'], 90); toast('You finished EVERY adventure! Grab your certificate at the bottom! 🎓', { emoji: '🎓', ms: 7000 }); }, 600);
+    setTimeout(() => { rain(['⭐', '🍿', '🎉', '🏅'], 90); toast(t('You finished EVERY adventure! Grab your certificate at the bottom! 🎓'), { emoji: '🎓', ms: 7000 }); }, 600);
   }
   return true;
 }
@@ -83,24 +91,28 @@ const starStr = (n) => '⭐'.repeat(n) + '☆'.repeat(3 - n);
 function paintStars() {
   const total = LESSONS.reduce((s, l) => s + getStars(l.id), 0);
   $('#starCount').textContent = `⭐ ${total}/${LESSONS.length * 3}`;
-  $$('[data-stars]').forEach((el) => { el.textContent = starStr(getStars(el.dataset.stars)); el.setAttribute('aria-label', `${getStars(el.dataset.stars)} of 3 stars`); });
+  $$('[data-stars]').forEach((el) => { el.textContent = starStr(getStars(el.dataset.stars)); el.setAttribute('aria-label', t('{n} of 3 stars', { n: getStars(el.dataset.stars) })); });
   $('#mapGrid').innerHTML = LESSONS.map((l, i) => `
     <a class="map-tile${getStars(l.id) ? ' done' : ''}" href="#${l.id}" style="--c:${l.color}">
       <span class="mt-num">${i + 1}</span><span class="mt-emoji" aria-hidden="true">${l.emoji}</span>
-      <span class="mt-title">${esc(l.title)}</span><span class="mt-stars" aria-label="${getStars(l.id)} of 3 stars">${starStr(getStars(l.id))}</span>
+      <span class="mt-title">${esc(t(l.title))}</span><span class="mt-stars" aria-label="${esc(t('{n} of 3 stars', { n: getStars(l.id) }))}">${starStr(getStars(l.id))}</span>
     </a>`).join('');
   $('#badgeShelf').innerHTML = LESSONS.map((l) => {
     const got = getStars(l.id) > 0;
-    return `<div class="badge${got ? ' got' : ''}" style="--c:${l.color}"><span class="b-emoji" aria-hidden="true">${got ? l.emoji : '🔒'}</span><b>${esc(l.badge)}</b><small>${got ? starStr(getStars(l.id)) : 'Not yet!'}</small></div>`;
+    return `<div class="badge${got ? ' got' : ''}" style="--c:${l.color}"><span class="b-emoji" aria-hidden="true">${got ? l.emoji : '🔒'}</span><b>${esc(t(l.badge))}</b><small>${got ? starStr(getStars(l.id)) : t('Not yet!')}</small></div>`;
   }).join('');
   $('#certCta').hidden = !LESSONS.every((l) => getStars(l.id) > 0);
 }
 
 function speak(text, force = false) {
   if (!force && !readAloud) return;
-  if (!('speechSynthesis' in window)) { if (force) toast('Sorry, this browser can’t read out loud.', { emoji: '🙊' }); return; }
+  if (!('speechSynthesis' in window)) { if (force) toast(t('Sorry, this browser can’t read out loud.'), { emoji: '🙊' }); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(String(text).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ''));
+  const base = langInfo.speech.split('-')[0];
+  const voice = speechSynthesis.getVoices().find((v) => v.lang === langInfo.speech) || speechSynthesis.getVoices().find((v) => v.lang?.startsWith(base));
+  if (voice) u.voice = voice;
+  u.lang = voice?.lang || langInfo.speech;
   u.rate = 0.95;
   u.pitch = 1.15;
   speechSynthesis.speak(u);
@@ -123,17 +135,18 @@ const PARTS = [
   { id: 'printer', emoji: '🖨️', name: 'Printer', kind: 'output', text: 'A printer is an OUTPUT. It puts the computer’s work onto paper.' },
 ];
 const KIND = { input: '👂 INPUT', inside: '🧠 INSIDE', output: '📢 OUTPUT' };
+const KIND_WORD = { input: 'an input', inside: 'inside', output: 'an output' };
 
 function initComputer() {
-  $('#partsGrid').innerHTML = PARTS.map((p) => `<button type="button" class="part" data-part="${p.id}"><span aria-hidden="true">${p.emoji}</span>${esc(p.name)}</button>`).join('');
+  $('#partsGrid').innerHTML = PARTS.map((p) => `<button type="button" class="part" data-part="${p.id}"><span aria-hidden="true">${p.emoji}</span>${esc(t(p.name))}</button>`).join('');
   $('#partsGrid').addEventListener('click', (e) => {
     const b = e.target.closest('[data-part]');
     if (!b) return;
     const p = PARTS.find((x) => x.id === b.dataset.part);
     $$('.part').forEach((x) => x.classList.toggle('on', x === b));
-    $('#partInfo').innerHTML = `<span class="pi-emoji">${p.emoji}</span><div><span class="kind kind-${p.kind}">${KIND[p.kind]}</span><h4>${esc(p.name)}</h4><p>${esc(p.text)}</p></div>`;
+    $('#partInfo').innerHTML = `<span class="pi-emoji">${p.emoji}</span><div><span class="kind kind-${p.kind}">${t(KIND[p.kind])}</span><h4>${esc(t(p.name))}</h4><p>${esc(t(p.text))}</p></div>`;
     sfx.blip();
-    speak(`${p.name}. ${p.text}`);
+    speak(`${t(p.name)}. ${t(p.text)}`);
   });
 
   let deck = [];
@@ -141,15 +154,15 @@ function initComputer() {
   const next = () => {
     if (!deck.length) {
       const n = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
-      $('#sortCard').innerHTML = `<span class="sc-emoji">🎉</span><b>All sorted!</b><button type="button" class="k-btn k-btn-soft k-btn-sm" id="sortAgain">Play again</button>`;
-      $('#sortMsg').textContent = mistakes ? `Done with ${mistakes} oops${mistakes === 1 ? '' : 'es'}. ${pick(CHEERS)}` : `Perfect score! ${pick(CHEERS)}`;
+      $('#sortCard').innerHTML = `<span class="sc-emoji">🎉</span><b>${t('All sorted!')}</b><button type="button" class="k-btn k-btn-soft k-btn-sm" id="sortAgain">${t('Play again')}</button>`;
+      $('#sortMsg').textContent = mistakes ? `${tn(mistakes, 'Done with {n} oops.', 'Done with {n} oopses.')} ${t(pick(CHEERS))}` : `${t('Perfect score!')} ${t(pick(CHEERS))}`;
       award('computer', n, $('#sortCard'));
       return;
     }
     const p = deck[0];
-    $('#sortCard').innerHTML = `<span class="sc-emoji">${p.emoji}</span><b>${esc(p.name)}</b><small>${deck.length} left</small>`;
+    $('#sortCard').innerHTML = `<span class="sc-emoji">${p.emoji}</span><b>${esc(t(p.name))}</b><small>${t('{n} left', { n: deck.length })}</small>`;
   };
-  const start = () => { deck = shuffle(PARTS).slice(0, 7); mistakes = 0; $('#sortMsg').textContent = 'Where does this part belong?'; next(); };
+  const start = () => { deck = shuffle(PARTS).slice(0, 7); mistakes = 0; $('#sortMsg').textContent = t('Where does this part belong?'); next(); };
   $('.sort-bins').addEventListener('click', (e) => {
     const bin = e.target.closest('[data-bin]');
     if (!bin || !deck.length) return;
@@ -158,14 +171,14 @@ function initComputer() {
       deck.shift();
       sfx.ding();
       burstFrom(bin, { emojis: ['✅', '⭐'], count: 6, spread: 60 });
-      $('#sortMsg').textContent = `${pick(CHEERS)} ${p.name} is ${KIND[p.kind].split(' ')[1].toLowerCase()}.`;
+      $('#sortMsg').textContent = `${t(pick(CHEERS))} ${t(`{name} is ${KIND_WORD[p.kind]}.`, { name: t(p.name) })}`;
       next();
     } else {
       mistakes++;
       sfx.buzz();
       bin.classList.add('nope');
       setTimeout(() => bin.classList.remove('nope'), 400);
-      $('#sortMsg').textContent = `Hmm, not quite! Think: does the ${p.name.toLowerCase()} listen, think, or show?`;
+      $('#sortMsg').textContent = t('Hmm, not quite! Think: does the {name} listen, think, or show?', { name: t(p.name) });
     }
   });
   $('#sortCard').addEventListener('click', (e) => { if (e.target.closest('#sortAgain')) start(); });
@@ -180,7 +193,7 @@ function initBinary() {
   const on = VALUES.map(() => false);
   let target = 0;
   let solved = 0;
-  $('#bulbs').innerHTML = VALUES.map((v, i) => `<button type="button" class="bulb" data-i="${i}" aria-pressed="false" aria-label="Bulb worth ${v}"><span class="glass">💡</span><b>${v}</b><small class="bit">0</small></button>`).join('');
+  $('#bulbs').innerHTML = VALUES.map((v, i) => `<button type="button" class="bulb" data-i="${i}" aria-pressed="false" aria-label="${esc(t('Bulb worth {n}', { n: v }))}"><span class="glass">💡</span><b>${v}</b><small class="bit">0</small></button>`).join('');
   const newTarget = () => {
     let t;
     do { t = 1 + Math.floor(Math.random() * 31); } while (t === target);
@@ -197,7 +210,7 @@ function initBinary() {
     $('#binDigits').textContent = on.map((x) => (x ? '1' : '0')).join('');
     $('#binSum').textContent = sum;
     const parts = VALUES.filter((v, i) => on[i]);
-    $('#binMath').textContent = parts.length ? `${parts.join(' + ')} = ${sum}` : 'All the lights are off. That’s zero!';
+    $('#binMath').textContent = parts.length ? `${parts.join(' + ')} = ${sum}` : t('All the lights are off. That’s zero!');
     return sum;
   };
   $('#bulbs').addEventListener('click', (e) => {
@@ -209,18 +222,18 @@ function initBinary() {
     const sum = paint();
     if (sum === target) {
       solved++;
-      $('#binMsg').textContent = `🎉 YES! ${target} in binary is ${on.map((x) => (x ? '1' : '0')).join('')}. ${pick(CHEERS)} Here’s a new number…`;
-      speak(`Yes! You made ${target}!`);
+      $('#binMsg').textContent = `🎉 ${t('YES! {n} in binary is {bits}.', { n: target, bits: on.map((x) => (x ? '1' : '0')).join('') })} ${t(pick(CHEERS))} ${t('Here’s a new number…')}`;
+      speak(t('Yes! You made {n}!', { n: target }));
       award('binary', Math.min(3, solved), $('#binTarget'));
       burstFrom($('#binSum'), { emojis: ['💡', '✨', '🎉'], count: 14 });
       setTimeout(() => { on.fill(false); paint(); newTarget(); }, 1600);
     } else if (sum > target) {
-      $('#binMsg').textContent = `Too big! ${sum} is more than ${target}. Turn a bulb off.`;
+      $('#binMsg').textContent = t('Too big! {sum} is more than {n}. Turn a bulb off.', { sum, n: target });
     } else {
-      $('#binMsg').textContent = sum ? `${sum} so far — you need ${target - sum} more.` : 'Turn on the right bulbs. Hint: start with the biggest bulb that fits!';
+      $('#binMsg').textContent = sum ? t('{sum} so far — you need {more} more.', { sum, more: target - sum }) : t('Turn on the right bulbs. Hint: start with the biggest bulb that fits!');
     }
   });
-  $('#binSkip').addEventListener('click', () => { on.fill(false); paint(); newTarget(); $('#binMsg').textContent = 'New number! You can do it 💪'; });
+  $('#binSkip').addEventListener('click', () => { on.fill(false); paint(); newTarget(); $('#binMsg').textContent = t('New number! You can do it 💪'); });
   newTarget();
   paint();
 
@@ -242,13 +255,33 @@ const LEVELS = [
   { start: [4, 0], goal: [4, 3], rocks: [] },
   { start: [4, 0], goal: [1, 3], rocks: [[3, 0], [3, 1], [2, 3], [4, 3]] },
   { start: [0, 0], goal: [4, 4], rocks: [[0, 2], [1, 1], [1, 3], [2, 3], [3, 1], [3, 3]] },
+  // loops! 🔁 repeats the next arrow, and there's a limit on how many blocks you may use
+  { start: [4, 0], goal: [4, 4], rocks: [[3, 1], [3, 3]], maxBlocks: 2, repeat: true, tip: 'New block: 🔁 Repeat! Put 🔁×4 before an arrow and the robot does that step 4 times. You only have 2 blocks!' },
+  { start: [4, 0], goal: [0, 4], rocks: [[1, 1], [1, 3], [2, 2], [3, 1], [3, 3]], maxBlocks: 4, repeat: true, tip: 'Only 4 blocks this time. Can you do it with two loops?' },
+  { start: [4, 0], goal: [0, 4], rocks: [[4, 1], [3, 2], [2, 3], [1, 4], [2, 0], [1, 1], [0, 2]], maxBlocks: 2, repeat: true, loopAll: true, tip: 'Stairs! Write the steps for ONE stair, then use “Repeat my whole program” to climb them all.' },
 ];
 const MOVES = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
 const ARROWS = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
+const robotStars = (level) => (level < 2 ? 1 : level < 4 ? 2 : 3);
+
+/** Turn blocks like ['x4', 'right', 'up'] into single steps, remembering which block each step came from. */
+function expand(program, loops = 1) {
+  const steps = [];
+  for (let k = 0; k < loops; k++) {
+    let times = 1;
+    program.forEach((b, i) => {
+      if (b.startsWith('x')) { times = Number(b.slice(1)); return; }
+      for (let n = 0; n < times; n++) steps.push({ move: b, block: i });
+      times = 1;
+    });
+  }
+  return steps;
+}
 
 function initRobot() {
   let level = Math.min(store.get('kids:robotLevel', 0), LEVELS.length - 1);
   let program = [];
+  let loops = 1;
   let running = false;
   let pos;
   const grid = $('#robotGrid');
@@ -263,62 +296,86 @@ function initRobot() {
         if (pos[0] === r && pos[1] === c) content = '<span class="bot">🤖</span>';
         else if (L.goal[0] === r && L.goal[1] === c) content = '🔋';
         else if (isRock(r, c)) content = '🪨';
-        const t = trail.some(([a, b]) => a === r && b === c) ? ' trail' : '';
-        html += `<div class="cell${t}">${content}</div>`;
+        const tr = trail.some(([a, b]) => a === r && b === c) ? ' trail' : '';
+        html += `<div class="cell${tr}">${content}</div>`;
       }
     }
     grid.innerHTML = html;
-    $('#robotLevel').textContent = `Level ${level + 1} of ${LEVELS.length}`;
+    $('#robotLevel').textContent = t('Level {n} of {total}', { n: level + 1, total: LEVELS.length });
+  };
+  const paintTools = () => {
+    const L = LEVELS[level];
+    $('#repeatPad').hidden = !L.repeat;
+    $('#loopAll').hidden = !L.loopAll;
+    $('#loopCount').textContent = `×${loops}`;
+    $('#robotTip').hidden = !L.tip;
+    if (L.tip) $('#robotTip').textContent = `💡 ${t(L.tip)}`;
+    $('#blockLimit').textContent = L.maxBlocks ? t('Blocks: {n} of {max}', { n: program.length, max: L.maxBlocks }) : '';
   };
   const drawProgram = () => {
     const el = $('#program');
     el.innerHTML = program.length
-      ? program.map((c, i) => `<span class="step" data-step="${i}">${ARROWS[c]}</span>`).join('')
-      : '<span class="program-empty">Your program is empty. Add some steps! 👇</span>';
+      ? program.map((c, i) => `<span class="step${c.startsWith('x') ? ' loop' : ''}" data-step="${i}">${c.startsWith('x') ? `🔁×${c.slice(1)}` : ARROWS[c]}</span>`).join('')
+      : `<span class="program-empty">${t('Your program is empty. Add some steps! 👇')}</span>`;
+    paintTools();
   };
   const reset = () => { pos = [...LEVELS[level].start]; draw(); };
 
-  $('.arrow-pad').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-cmd]');
-    if (!b || running) return;
-    if (program.length >= 14) { $('#robotMsg').textContent = 'That’s a long program! Try running it first.'; return; }
-    program.push(b.dataset.cmd);
+  const add = (cmd) => {
+    if (running) return;
+    const L = LEVELS[level];
+    if (L.maxBlocks && program.length >= L.maxBlocks) { $('#robotMsg').textContent = t('Only {max} blocks allowed on this level — use a 🔁 loop!', { max: L.maxBlocks }); sfx.buzz(); return; }
+    if (program.length >= 14) { $('#robotMsg').textContent = t('That’s a long program! Try running it first.'); return; }
+    if (cmd.startsWith('x') && program.at(-1)?.startsWith('x')) program.pop(); // two repeats in a row: keep the newest
+    program.push(cmd);
     sfx.blip();
     drawProgram();
+  };
+  $('.arrow-pad').addEventListener('click', (e) => { const b = e.target.closest('[data-cmd]'); if (b) add(b.dataset.cmd); });
+  $('#repeatPad').addEventListener('click', (e) => { const b = e.target.closest('[data-repeat]'); if (b) add(`x${b.dataset.repeat}`); });
+  $('#loopAll').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-loop]');
+    if (!b || running) return;
+    loops = Math.max(1, Math.min(6, loops + Number(b.dataset.loop)));
+    sfx.blip();
+    paintTools();
   });
   $('#robotUndo').addEventListener('click', () => { if (!running) { program.pop(); drawProgram(); } });
-  $('#robotClear').addEventListener('click', () => { if (!running) { program = []; drawProgram(); reset(); $('#robotMsg').textContent = ''; } });
+  $('#robotClear').addEventListener('click', () => { if (!running) { program = []; loops = 1; drawProgram(); reset(); $('#robotMsg').textContent = ''; } });
   $('#robotNext').addEventListener('click', () => {
     level = Math.min(level + 1, LEVELS.length - 1);
-    store.set('kids:robotLevel', level);
+    store.set('kids:robotLevel', Math.max(level, store.get('kids:robotLevel', 0)));
     syncKids();
     program = [];
+    loops = 1;
     drawProgram();
     reset();
     $('#robotNext').hidden = true;
-    $('#robotMsg').textContent = 'New maze! Plan your steps carefully. 🧠';
+    $('#robotMsg').textContent = LEVELS[level].repeat ? t('New maze — and a new trick! 🔁') : t('New maze! Plan your steps carefully. 🧠');
   });
   $('#robotRun').addEventListener('click', async () => {
     if (running) return;
-    if (!program.length) { $('#robotMsg').textContent = 'Add some arrow steps first! 👇'; sfx.buzz(); return; }
+    const steps = expand(program, LEVELS[level].loopAll ? loops : 1);
+    if (!steps.length) { $('#robotMsg').textContent = t('Add some arrow steps first! 👇'); sfx.buzz(); return; }
     running = true;
     reset();
     const trail = [[...pos]];
-    $('#robotMsg').textContent = 'Running your program… 🏃';
-    const steps = $$('.step');
-    for (let i = 0; i < program.length; i++) {
-      steps.forEach((s, j) => s.classList.toggle('now', j === i));
-      await sleep(420);
-      const [dr, dc] = MOVES[program[i]];
+    $('#robotMsg').textContent = t('Running your program… 🏃');
+    const blocks = $$('.step');
+    for (let i = 0; i < steps.length && i < 60; i++) {
+      blocks.forEach((s, j) => s.classList.toggle('now', j === steps[i].block || (j === steps[i].block - 1 && program[j]?.startsWith('x'))));
+      await sleep(steps.length > 12 ? 300 : 420);
+      const [dr, dc] = MOVES[steps[i].move];
       const nr = pos[0] + dr;
       const nc = pos[1] + dc;
       if (nr < 0 || nr > 4 || nc < 0 || nc > 4 || isRock(nr, nc)) {
         sfx.buzz();
         grid.classList.add('bonk');
         setTimeout(() => grid.classList.remove('bonk'), 500);
-        steps[i]?.classList.add('bug');
-        $('#robotMsg').innerHTML = `💥 Bonk! Step ${i + 1} ran into ${nr < 0 || nr > 4 || nc < 0 || nc > 4 ? 'a wall' : 'a rock'}. That’s a <b>bug</b> 🐛 — fix your program and try again!`;
-        speak('Bonk! That is a bug. Fix your program and try again!');
+        blocks[steps[i].block]?.classList.add('bug');
+        const what = nr < 0 || nr > 4 || nc < 0 || nc > 4 ? t('a wall') : t('a rock');
+        $('#robotMsg').innerHTML = `💥 ${t('Bonk! Step {n} ran into {what}. That’s a <b>bug</b> 🐛 — fix your program and try again!', { n: i + 1, what })}`;
+        speak(t('Bonk! That is a bug. Fix your program and try again!'));
         running = false;
         return;
       }
@@ -328,16 +385,17 @@ function initRobot() {
       draw(trail);
       const g = LEVELS[level].goal;
       if (pos[0] === g[0] && pos[1] === g[1]) {
-        $('#robotMsg').textContent = `⚡ Bolt is charged! ${pick(CHEERS)} You wrote a program with ${i + 1} steps.`;
-        speak('Bolt is charged! You are a great programmer!');
-        award('robot', level + 1, grid);
+        const usedLoop = program.some((b) => b.startsWith('x')) || loops > 1;
+        $('#robotMsg').textContent = `⚡ ${t('Bolt is charged!')} ${t(pick(CHEERS))} ${usedLoop ? t('Your {b} blocks made the robot take {n} steps — that’s the power of loops! 🔁', { b: program.length, n: i + 1 }) : t('You wrote a program with {n} steps.', { n: i + 1 })}`;
+        speak(t('Bolt is charged! You are a great programmer!'));
+        award('robot', robotStars(level), grid);
         if (level < LEVELS.length - 1) $('#robotNext').hidden = false;
-        else { $('#robotMsg').textContent += ' You beat every level — Robot Boss! 👑'; rain(['🤖', '🔋', '⚡'], 40); }
+        else { $('#robotMsg').textContent += ` ${t('You beat every level — Robot Boss! 👑')}`; rain(['🤖', '🔋', '⚡', '🔁'], 40); }
         running = false;
         return;
       }
     }
-    $('#robotMsg').textContent = 'Bolt ran out of steps before reaching the battery. Add more steps! 🔋';
+    $('#robotMsg').textContent = t('Bolt ran out of steps before reaching the battery. Add more steps! 🔋');
     sfx.buzz();
     running = false;
   });
@@ -362,13 +420,13 @@ function initPixels() {
   const grid = $('#pixelGrid');
   grid.innerHTML = cells.map((_, i) => `<div class="px" data-i="${i}"></div>`).join('');
   const pxEls = $$('.px', grid);
-  $('#palette').innerHTML = Object.entries(COLORS).map(([k, c]) => `<button type="button" class="swatch${k === color ? ' on' : ''}" data-color="${k}" style="--sw:${c}" role="radio" aria-checked="${k === color}" aria-label="Colour ${k}"></button>`).join('')
-    + '<button type="button" class="swatch eraser" data-color="" role="radio" aria-checked="false" aria-label="Eraser">🧽</button>';
+  $('#palette').innerHTML = Object.entries(COLORS).map(([k, c]) => `<button type="button" class="swatch${k === color ? ' on' : ''}" data-color="${k}" style="--sw:${c}" role="radio" aria-checked="${k === color}" aria-label="${esc(t('Colour {c}', { c: k }))}"></button>`).join('')
+    + `<button type="button" class="swatch eraser" data-color="" role="radio" aria-checked="false" aria-label="${t('Eraser')}">🧽</button>`;
   const ctx = $('#pixelPreview').getContext('2d');
   const update = () => {
     const filled = cells.filter(Boolean).length;
     const used = new Set(cells.filter(Boolean)).size;
-    $('#pixelCount').textContent = `${filled} of ${N * N} pixels coloured · ${used} colour${used === 1 ? '' : 's'}`;
+    $('#pixelCount').textContent = `${t('{a} of {b} pixels coloured', { a: filled, b: N * N })} · ${tn(used, '{n} colour', '{n} colours')}`;
     ctx.clearRect(0, 0, N, N);
     cells.forEach((c, i) => { if (c) { ctx.fillStyle = COLORS[c]; ctx.fillRect(i % N, Math.floor(i / N), 1, 1); } });
     if (filled >= 60 && used >= 3) award('pixels', 3, grid);
@@ -426,7 +484,7 @@ function initInternet() {
     const chunks = msg.match(/.{1,4}/g);
     busy = true;
     $('#arrived').textContent = '…';
-    $('#assembled').innerHTML = `✂️ Chopped “${esc(msg)}” into <b>${chunks.length}</b> packets. Off they go!`;
+    $('#assembled').innerHTML = t('✂️ Chopped “{msg}” into <b>{n}</b> packets. Off they go!', { msg: esc(msg), n: chunks.length });
     sfx.pop();
     const arrived = [];
     await Promise.all(chunks.map((text, i) => new Promise((resolve) => {
@@ -452,10 +510,10 @@ function initInternet() {
     const ordered = [...arrived].sort((a, b) => a.i - b.i).map((a) => a.text).join('');
     const outOfOrder = arrived.some((a, k) => a.i !== k);
     sends++;
-    const more = sends < 3 ? `<p class="tiny-note">Send ${3 - sends} more message${sends === 2 ? '' : 's'} to earn all 3 stars ⭐</p>` : '';
-    $('#assembled').innerHTML = `${outOfOrder ? '🔀 The packets arrived mixed up, so the computer sorted them by number…' : '📦 All packets arrived in order!'}<div class="final-msg">💌 ${esc(ordered)}</div>${more}`;
+    const more = sends < 3 ? `<p class="tiny-note">${tn(3 - sends, 'Send {n} more message to earn all 3 stars ⭐', 'Send {n} more messages to earn all 3 stars ⭐')}</p>` : '';
+    $('#assembled').innerHTML = `${outOfOrder ? t('🔀 The packets arrived mixed up, so the computer sorted them by number…') : t('📦 All packets arrived in order!')}<div class="final-msg" dir="auto">💌 ${esc(ordered)}</div>${more}`;
     award('internet', Math.min(3, sends), stage);
-    speak(`Message delivered! ${outOfOrder ? 'The packets arrived mixed up, but the computer put them back in order.' : ''}`);
+    speak(`${t('Message delivered!')} ${outOfOrder ? t('The packets arrived mixed up, but the computer put them back in order.') : ''}`);
     busy = false;
   });
 }
@@ -491,12 +549,12 @@ function initPasswords() {
     const results = rules.map(([id, label, fn]) => [id, label, fn(s)]);
     const isCommon = s && COMMON.includes(s.toLowerCase());
     const score = isCommon ? 0 : results.filter((r) => r[2]).length;
-    $('#pwChecks').innerHTML = results.map(([, label, ok]) => `<li class="${ok ? 'ok' : ''}">${ok ? '✅' : '⬜'} ${esc(label)}</li>`).join('');
+    $('#pwChecks').innerHTML = results.map(([, label, ok]) => `<li class="${ok ? 'ok' : ''}">${ok ? '✅' : '⬜'} ${esc(t(label))}</li>`).join('');
     const [emoji, say] = isCommon ? ['😱', 'Oh no! Hackers try that one FIRST. Pick something else!'] : STAGES[score];
     const m = $('#monster');
     if (m.textContent !== emoji) { m.textContent = emoji; m.classList.remove('grow'); void m.offsetWidth; m.classList.add('grow'); if (s) sfx.pop(); }
     m.style.setProperty('--size', `${1 + score * 0.18}`);
-    $('#monsterSay').textContent = s ? say : 'I’m just an egg… feed me a password!';
+    $('#monsterSay').textContent = s ? t(say) : t('I’m just an egg… feed me a password!');
     $('#pwBar').style.width = `${(score / 7) * 100}%`;
     $('#pwBar').style.background = score >= 6 ? '#2ee6a6' : score >= 4 ? '#ffd23f' : '#ff4d5e';
     if (score >= 7) award('passwords', 3, m);
@@ -507,7 +565,7 @@ function initPasswords() {
   $('#pwSilly').addEventListener('click', () => {
     input.value = `${pick(SILLY.a)}-${pick(SILLY.n)}-${pick(SILLY.v)}-${10 + Math.floor(Math.random() * 90)}-${pick(SILLY.f)}${pick(['!', '?', '#', '*'])}`;
     check();
-    speak('Here is a silly but super strong password idea!');
+    speak(t('Here is a silly but super strong password idea!'));
   });
   check();
 }
@@ -522,20 +580,20 @@ function runQuiz(box, questions, { lessonId, onScore, finishText }) {
   const show = () => {
     if (i >= questions.length) {
       const n = onScore(correct, questions.length);
-      box.innerHTML = `<div class="quiz-end"><span class="qe-emoji">${n === 3 ? '🏆' : n === 2 ? '🥈' : '🌟'}</span><h3>${esc(finishText(correct, questions.length))}</h3><p>${'⭐'.repeat(n)}</p><button type="button" class="k-btn k-btn-go" data-restart>Play again 🔄</button></div>`;
+      box.innerHTML = `<div class="quiz-end"><span class="qe-emoji">${n === 3 ? '🏆' : n === 2 ? '🥈' : '🌟'}</span><h3>${esc(finishText(correct, questions.length))}</h3><p>${'⭐'.repeat(n)}</p><button type="button" class="k-btn k-btn-go" data-restart>${t('Play again 🔄')}</button></div>`;
       award(lessonId, n, box);
       if (n === 3) rain(['⭐', '🎉', '🍿'], 40);
       return;
     }
     const q = questions[i];
-    const opts = shuffle(q.options.map((text, idx) => ({ text, right: idx === q.answer })));
+    const opts = shuffle(q.options.map((text, idx) => ({ text: t(text), right: idx === q.answer })));
     firstTry = true;
-    box.innerHTML = `<div class="q-progress"><span>Question ${i + 1} of ${questions.length}</span><span>✅ ${correct}</span></div>
+    box.innerHTML = `<div class="q-progress"><span>${t('Question {i} of {n}', { i: i + 1, n: questions.length })}</span><span>✅ ${correct}</span></div>
       <div class="q-bar"><i style="width:${(i / questions.length) * 100}%"></i></div>
-      <h3 class="q-text">${q.emoji ? `<span aria-hidden="true">${q.emoji}</span> ` : ''}${esc(q.q)}</h3>
+      <h3 class="q-text">${q.emoji ? `<span aria-hidden="true">${q.emoji}</span> ` : ''}${esc(t(q.q))}</h3>
       <div class="q-opts">${opts.map((o, k) => `<button type="button" class="q-opt" data-right="${o.right}" data-k="${k}">${esc(o.text)}</button>`).join('')}</div>
       <p class="q-feedback" aria-live="polite"></p>`;
-    speak(`${q.q} ${opts.map((o) => o.text).join('. Or, ')}`);
+    speak(`${t(q.q)} ${opts.map((o) => o.text).join(`. ${t('Or,')} `)}`);
   };
   box.addEventListener('click', (e) => {
     if (e.target.closest('[data-restart]')) { i = 0; correct = 0; show(); return; }
@@ -549,15 +607,15 @@ function runQuiz(box, questions, { lessonId, onScore, finishText }) {
       b.classList.add('right');
       sfx.ding();
       burstFrom(b, { emojis: ['✅', '⭐', '🎉'], count: 10, spread: 80 });
-      $('.q-feedback', box).innerHTML = `${firstTry ? pick(CHEERS) : 'You got there!'} ${q.why ? esc(q.why) : ''} <button type="button" class="k-btn k-btn-go k-btn-sm" data-next>Next ➡️</button>`;
-      speak(`${firstTry ? 'Correct!' : 'You got there!'} ${q.why || ''}`);
+      $('.q-feedback', box).innerHTML = `${firstTry ? t(pick(CHEERS)) : t('You got there!')} ${q.why ? esc(t(q.why)) : ''} <button type="button" class="k-btn k-btn-go k-btn-sm" data-next>${t('Next ➡️')}</button>`;
+      speak(`${firstTry ? t('Correct!') : t('You got there!')} ${q.why ? t(q.why) : ''}`);
       $('[data-next]', box).focus();
     } else {
       firstTry = false;
       b.classList.add('wrong');
       b.disabled = true;
       sfx.buzz();
-      $('.q-feedback', box).textContent = 'Not that one — try again! 💪';
+      $('.q-feedback', box).textContent = t('Not that one — try again! 💪');
     }
   });
   return show;
@@ -594,7 +652,7 @@ function initSafety() {
   const start = runQuiz($('#safetyBox'), SAFETY, {
     lessonId: 'safety',
     onScore: (c, n) => (c === n ? 3 : c >= n - 2 ? 2 : 1),
-    finishText: (c, n) => `You’re an Internet Superhero! ${c}/${n} on the first try.`,
+    finishText: (c, n) => t('You’re an Internet Superhero! {c}/{n} on the first try.', { c, n }),
   });
   start();
 }
@@ -604,7 +662,7 @@ function initQuiz() {
   const start = runQuiz(box, questions, {
     lessonId: 'quiz',
     onScore: (c) => (c >= 7 ? 3 : c >= 5 ? 2 : 1),
-    finishText: (c, n) => `You scored ${c} out of ${n}!`,
+    finishText: (c, n) => t('You scored {c} out of {n}!', { c, n }),
   });
   // new random questions every replay
   box.addEventListener('click', (e) => {
@@ -633,9 +691,9 @@ const WORDS = [
 function initWords() {
   const flipped = new Set();
   $('#flipGrid').innerHTML = WORDS.map(([e, w, d], i) => `
-    <button type="button" class="flip" data-i="${i}" aria-pressed="false" aria-label="${esc(w)} — tap to flip">
-      <span class="flip-inner"><span class="flip-front"><span class="ff-emoji">${e}</span><b>${esc(w)}</b><small>tap me!</small></span>
-      <span class="flip-back"><b>${esc(w)}</b>${esc(d)}</span></span>
+    <button type="button" class="flip" data-i="${i}" aria-pressed="false" aria-label="${esc(t(w))} — ${esc(t('tap to flip'))}">
+      <span class="flip-inner"><span class="flip-front"><span class="ff-emoji">${e}</span><b>${esc(t(w))}</b><small>${t('tap me!')}</small></span>
+      <span class="flip-back"><b>${esc(t(w))}</b>${esc(t(d))}</span></span>
     </button>`).join('');
   $('#flipGrid').addEventListener('click', (e) => {
     const card = e.target.closest('.flip');
@@ -645,9 +703,9 @@ function initWords() {
     card.setAttribute('aria-pressed', String(on));
     sfx.boing();
     if (on) {
-      speak(`${WORDS[i][1]}. ${WORDS[i][2]}`);
+      speak(`${t(WORDS[i][1])}. ${t(WORDS[i][2])}`);
       flipped.add(i);
-      $('#flipMsg').textContent = `${flipped.size} of ${WORDS.length} words discovered!`;
+      $('#flipMsg').textContent = t('{a} of {b} words discovered!', { a: flipped.size, b: WORDS.length });
       if (flipped.size === WORDS.length) award('words', 3, card);
       else if (flipped.size >= 8) award('words', 2, card);
       else if (flipped.size >= 4) award('words', 1, card);
@@ -662,8 +720,8 @@ function initCertificate() {
   const dlg = $('#certDialog');
   $('#certBtn').addEventListener('click', () => {
     const total = LESSONS.reduce((s, l) => s + getStars(l.id), 0);
-    $('#certStars').textContent = `⭐ ${total} stars earned ⭐`;
-    $('#certDate').textContent = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    $('#certStars').textContent = `⭐ ${t('{n} stars earned', { n: total })} ⭐`;
+    $('#certDate').textContent = fmtDate(Date.now(), { year: 'numeric', month: 'long', day: 'numeric' });
     $('#certName').value = store.get('kids:name', '');
     dlg.showModal();
     rain(['🎓', '⭐', '🍿'], 40);
@@ -671,6 +729,153 @@ function initCertificate() {
   $('#certName').addEventListener('input', (e) => { store.set('kids:name', e.target.value); syncKids(); });
   $('#certPrint').addEventListener('click', () => window.print());
   $('#certClose').addEventListener('click', () => dlg.close());
+}
+
+// ====================================================================================
+// 📰 Kid news: three upbeat stories from this week (picked by the kerNEl server)
+// ====================================================================================
+const KID_BLURB = {
+  space: '🚀 Space news! People are building rockets and exploring planets and stars.',
+  science: '🔬 Science news! Scientists found out something new about our world.',
+  gadgets: '📱 Gadget news! Someone made a new device or invention.',
+  gaming: '🎮 Game news! Something new is happening in video games.',
+  ai: '🤖 AI news! Computer programs that learn from examples are doing something new.',
+  dev: '💻 Coding news! Programmers built something new.',
+};
+const CAT_EMOJI = { space: '🚀', science: '🔬', gadgets: '📱', gaming: '🎮', ai: '🤖', dev: '💻' };
+async function initKidNews() {
+  const box = $('#kidNews');
+  if (!auth.ready) return;
+  try {
+    const r = await auth.api('/api/kids/news', { auth: false });
+    if (!r.items?.length) return;
+    let explain = false;
+    try { explain = !!(await auth.api('/api/health', { auth: false })).features?.explainAI; } catch { /* no explain button */ }
+    $('#kidNewsGrid').innerHTML = r.items.map((s) => `
+      <article class="kn-card" data-key="${esc(s.key)}">
+        <span class="kn-emoji" aria-hidden="true">${CAT_EMOJI[s.cat] || '✨'}</span>
+        <p class="kn-blurb">${esc(t(KID_BLURB[s.cat] || KID_BLURB.dev))}</p>
+        <p class="kn-title" dir="ltr" lang="en">${lang === 'en' ? '' : `<small>${t('The headline (in English):')}</small> `}“${esc(s.title)}”</p>
+        <div class="kn-btns">
+          ${explain ? `<button type="button" class="k-btn k-btn-go k-btn-sm" data-kexplain>🧠 ${t('Explain it to me')}</button>` : ''}
+          <button type="button" class="k-btn k-btn-soft k-btn-sm" data-kread>🔊 ${t('Read to me')}</button>
+          <a class="k-btn k-btn-soft k-btn-sm" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">🔗 ${t('Open with a grown-up')}</a>
+        </div>
+        <p class="kn-explain" aria-live="polite"></p>
+      </article>`).join('');
+    box.hidden = false;
+    $('#kidNewsGrid').addEventListener('click', async (e) => {
+      const card = e.target.closest('.kn-card');
+      if (!card) return;
+      const item = r.items.find((x) => x.key === card.dataset.key);
+      if (e.target.closest('[data-kread]')) speak(`${t(KID_BLURB[item.cat] || KID_BLURB.dev)} ${item.title}`, true);
+      const b = e.target.closest('[data-kexplain]');
+      if (b) {
+        b.disabled = true;
+        const out = card.querySelector('.kn-explain');
+        out.textContent = t('Poppy is thinking… 🍿');
+        try {
+          const x = await auth.api('/api/explain', { method: 'POST', body: { key: item.key, mode: 'eli10', lang }, auth: false });
+          out.textContent = x.text;
+          speak(x.text);
+        } catch { out.textContent = t('Poppy couldn’t explain this one right now. Ask a grown-up to read it with you! 📖'); }
+        b.disabled = false;
+      }
+    });
+  } catch { /* no kid news today */ }
+}
+
+// ====================================================================================
+// 👪 Grown-ups' dashboard (behind a little grown-up question)
+// ====================================================================================
+const TALK = [
+  'Ask: “What’s inside a computer, and which parts are inputs?”',
+  'Ask: “Can you show me how to write 5 in binary with your fingers?”',
+  'Ask: “Why does a robot need a program?” Then give each other step-by-step instructions to cross the room!',
+  'Ask: “What’s a pixel? How many do you think are on our TV?”',
+  'Ask: “What should you do if a stranger messages you online?”',
+  'Make up a silly strong password together — but don’t use it anywhere!',
+];
+function initParents() {
+  const dlg = $('#parentDialog');
+  let a = 0;
+  let b = 0;
+  const open = () => {
+    a = 6 + Math.floor(Math.random() * 4);
+    b = 6 + Math.floor(Math.random() * 4);
+    $('#gateQ').textContent = t('What is {a} × {b}?', { a, b });
+    $('#gateA').value = '';
+    $('#gateMsg').textContent = '';
+    $('#parentGate').hidden = false;
+    $('#parentDash').hidden = true;
+    $('#parentPrint').hidden = true;
+    dlg.showModal();
+    setTimeout(() => $('#gateA').focus(), 50);
+  };
+  const dash = () => {
+    const total = LESSONS.reduce((s, l) => s + getStars(l.id), 0);
+    const done = LESSONS.filter((l) => getStars(l.id) > 0).length;
+    const robot = store.get('kids:robotLevel', 0);
+    const mins = store.get('kids:minutes', {});
+    const days = [...Array(7)].map((_, i) => new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10));
+    const week = days.reduce((s, d) => s + (mins[d] || 0), 0);
+    const max = Math.max(10, ...days.map((d) => mins[d] || 0));
+    const last = store.get('kids:last', 0);
+    const nextUp = LESSONS.find((l) => !getStars(l.id));
+    const name = store.get('kids:name', '');
+    $('#parentDash').innerHTML = `
+      <p class="pd-hi">${name ? t('Progress for <b>{name}</b>', { name: esc(name) }) : t('Progress on this device')}${auth.user ? ` · ${t('☁️ Saved to @{name}', { name: esc(auth.user.username) })}` : ''}</p>
+      <div class="pd-stats">
+        <span><b>⭐ ${total}/${LESSONS.length * 3}</b>${t('stars')}</span>
+        <span><b>🏅 ${done}/${LESSONS.length}</b>${t('adventures done')}</span>
+        <span><b>🤖 ${robot + 1}/${LEVELS.length}</b>${t('robot level')}</span>
+        <span><b>⏱️ ${week}</b>${t('minutes this week')}</span>
+      </div>
+      <div class="pd-week" aria-label="${esc(t('Minutes per day this week'))}">${days.map((d) => `<div><i style="height:${Math.round(((mins[d] || 0) / max) * 100)}%"></i><small>${fmtDate(Date.parse(d), { weekday: 'short' })}</small><b>${mins[d] || 0}</b></div>`).join('')}</div>
+      <table class="pd-table"><thead><tr><th>${t('Adventure')}</th><th>${t('Stars')}</th></tr></thead><tbody>
+        ${LESSONS.map((l) => `<tr><td>${l.emoji} ${esc(t(l.title))}</td><td>${getStars(l.id) ? '⭐'.repeat(getStars(l.id)) : `<span class="pd-todo">${t('not yet')}</span>`}</td></tr>`).join('')}
+      </tbody></table>
+      ${robot >= 3 ? `<p class="pd-note">🔁 ${t('Your child has started using <b>loops</b> in the robot game — a real programming idea!')}</p>` : ''}
+      <p class="pd-note">${nextUp ? `👉 ${t('Next up: {lesson}', { lesson: `${nextUp.emoji} ${esc(t(nextUp.title))}` })}` : `🎓 ${t('Every adventure is done — print the certificate together!')}`}</p>
+      <p class="pd-note">💬 ${t('Talk about it:')} ${esc(t(pick(TALK)))}</p>
+      <p class="pd-last">${last ? t('Last played: {when}', { when: fmtDate(last, { weekday: 'long', day: 'numeric', month: 'long' }) }) : ''}</p>
+      <p class="tiny-note">${t('kerNEl Kids has no ads, no chat and no tracking. Time is counted only while this page is open.')}</p>`;
+    $('#parentGate').hidden = true;
+    $('#parentDash').hidden = false;
+    $('#parentPrint').hidden = false;
+  };
+  $('#parentBtn').addEventListener('click', open);
+  $('#parentGate').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (Number($('#gateA').value) === a * b) { dash(); sfx.ding(); } else { $('#gateMsg').textContent = t('Not quite — grown-ups only! 😉'); sfx.buzz(); }
+  });
+  $('#parentPrint').addEventListener('click', () => { document.documentElement.classList.add('print-parent'); window.print(); setTimeout(() => document.documentElement.classList.remove('print-parent'), 500); });
+  $('#parentClose').addEventListener('click', () => dlg.close());
+}
+
+/** Count minutes while the kids page is open and visible (for the grown-ups' dashboard). */
+function trackMinutes() {
+  let ticks = 0;
+  setInterval(() => {
+    if (document.hidden) return;
+    const mins = store.get('kids:minutes', {});
+    mins[today()] = (mins[today()] || 0) + 1;
+    store.set('kids:minutes', Object.fromEntries(Object.entries(mins).sort().slice(-30)));
+    store.set('kids:last', Date.now());
+    if (++ticks % 5 === 0) syncKids();
+  }, 60_000);
+}
+
+function initLangs() {
+  const menu = $('#kLangMenu');
+  menu.innerHTML = langMenuHTML();
+  $('#kFooterLangs').innerHTML = `🌐 ${langMenuHTML()}`;
+  $('#kLangBtn').addEventListener('click', () => { menu.hidden = !menu.hidden; $('#kLangBtn').setAttribute('aria-expanded', String(!menu.hidden)); });
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]');
+    if (b) { setLang(b.dataset.lang); return; }
+    if (!e.target.closest('.k-lang')) menu.hidden = true;
+  });
 }
 
 // ====================================================================================
@@ -686,6 +891,10 @@ function paintToggles() {
 }
 
 function boot() {
+  translatePage();
+  loadLangFonts('Baloo+Bhaijaan+2:wght@400;600;700');
+  initLangs();
+  store.set('kids:last', Date.now());
   paintStars();
   pullKids();
   paintToggles();
@@ -699,13 +908,16 @@ function boot() {
   initWords();
   initQuiz();
   initCertificate();
+  initKidNews();
+  initParents();
+  trackMinutes();
 
   $('#readToggle').addEventListener('click', () => {
     readAloud = !readAloud;
     store.set('kids:read', readAloud);
     syncKids();
     paintToggles();
-    if (readAloud) speak('Okay! I will read things out loud for you.', true);
+    if (readAloud) speak(t('Okay! I will read things out loud for you.'), true);
     else if ('speechSynthesis' in window) speechSynthesis.cancel();
   });
   $('#soundToggle').addEventListener('click', () => { sfx.toggle(); paintToggles(); });

@@ -8,7 +8,13 @@ import { initCodme } from './codme.js';
 import { initCommunity } from './community.js';
 import { initNotify } from './notify.js';
 import { initGame } from './game.js';
-import { JOKES, FACTS, LOADING_LINES, emojify } from './content.js';
+import { JOKES, FACTS, LOADING_LINES } from './content.js';
+import { t, tn, tServer, lang, setLang, chosenLang, translatePage, loadLangFonts, langMenuHTML, LANGS } from './i18n.js';
+import { lookHTML } from './look.js';
+import { HATS, FRAMES, unlocked } from './cosmetics.js';
+import { initPlay } from './play.js';
+import { initSocial } from './social.js';
+import { initExtras } from './extras.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
 const PAGE = 24;
@@ -40,11 +46,15 @@ let codme = null;
 let community = null;
 let notifier = null;
 let game = null;
+let play = null;
+let social = null;
+let extras = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
 // ====================================================================================
-const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, gamesPlayed: 0, factPerfect: false, streak: 0, bestStreak: 0 });
+const blankData = () => ({ xp: 0, read: [], saved: [], reactions: {}, konami: false, badges: {}, codmeAsks: 0, chatSent: 0, pollVotes: 0, gamesPlayed: 0, factPerfect: false, streak: 0, bestStreak: 0, catReads: {}, counts: {} });
+const maxMerge = (a = {}, b = {}) => { const o = { ...a }; for (const [k, v] of Object.entries(b)) o[k] = Math.max(o[k] || 0, v || 0); return o; };
 const getData = () => ({ ...blankData(), ...store.get(`data:${auth.profileKey()}`, {}) });
 let syncTimer = 0;
 const setData = (d) => {
@@ -76,7 +86,17 @@ function mergeData(local, server) {
     pollVotes: Math.max(local.pollVotes || 0, server.pollVotes || 0),
     gamesPlayed: Math.max(local.gamesPlayed || 0, server.gamesPlayed || 0),
     factPerfect: !!(local.factPerfect || server.factPerfect),
+    catReads: maxMerge(local.catReads, server.catReads),
+    counts: maxMerge(local.counts, server.counts),
   };
+}
+
+/** Count something for achievements + kerNEl Wrapped (quizzes played, battles voted, …). */
+function bump(name, n = 1) {
+  const d = getData();
+  d.counts = { ...(d.counts || {}), [name]: (d.counts?.[name] || 0) + n };
+  setData(d);
+  checkAchievements();
 }
 
 /** Things the account remembers outside the news data: settings and kids' progress. */
@@ -126,6 +146,16 @@ const ACHIEVEMENTS = [
   { id: 'streak_7', emoji: '🗓️', name: 'Week Warrior', desc: 'Visit 7 days in a row', test: (d) => (d.bestStreak || 0) >= 7 },
   { id: 'overlord', emoji: '👑', name: 'Popcorn Overlord', desc: 'Reach 1,000 XP', test: (d) => d.xp >= 1000 },
   { id: 'kid_grad', emoji: '🎓', name: 'Tech Explorer', desc: 'Finish every kerNEl Kids adventure', test: () => KID_LESSONS.every((l) => (store.get('kids:stars', {})[l] || 0) > 0) },
+  { id: 'quiz_whiz', emoji: '🧠', name: 'Quiz Whiz', desc: 'Get 5/5 in the Daily Kernel Quiz', test: (d) => (d.counts?.quizPerfect || 0) >= 1 },
+  { id: 'battle_judge', emoji: '🥊', name: 'Battle Judge', desc: 'Vote in 5 Popcorn Battles', test: (d) => (d.counts?.battleVotes || 0) >= 5 },
+  { id: 'hot_takes', emoji: '🗨️', name: 'Hot Takes Only', desc: 'Post 5 story comments', test: (d) => (d.counts?.comments || 0) >= 5 },
+  { id: 'squad', emoji: '👯', name: 'Squad Goals', desc: 'Follow 3 kernels', test: (d) => (d.counts?.follows || 0) >= 3 },
+  { id: 'contender', emoji: '🏆', name: 'Contender', desc: 'Play a weekly Real or Fake? tournament', test: (d) => (d.counts?.tourneys || 0) >= 1 },
+  { id: 'big_brain', emoji: '🧒', name: 'Explain It Like I’m 10', desc: 'Get codme to explain 5 stories', test: (d) => (d.counts?.explains || 0) >= 5 },
+  { id: 'podcast_pal', emoji: '🎧', name: 'Podcast Pal', desc: 'Listen to a daily briefing', test: (d) => (d.counts?.briefings || 0) >= 1 },
+  { id: 'swipe_lord', emoji: '📱', name: 'Swipe Lord', desc: 'Swipe through 30 stories', test: (d) => (d.counts?.swipes || 0) >= 30 },
+  { id: 'time_traveler', emoji: '📼', name: 'Time Traveler', desc: 'Visit 5 years in the Time Machine', test: (d) => (d.counts?.timeTravels || 0) >= 5 },
+  { id: 'polyglot', emoji: '🌐', name: 'Polyglot', desc: 'Read kerNEl in another language', test: (d) => (d.counts?.langs || 0) >= 1 || lang !== 'en' },
 ];
 
 function checkAchievements(extra = {}) {
@@ -136,7 +166,7 @@ function checkAchievements(extra = {}) {
   d.xp += 20 * fresh.length;
   setData(d);
   fresh.forEach((a, i) => setTimeout(() => {
-    toast(`Achievement unlocked: ${a.name} ${a.emoji} (+20 XP)`, { emoji: '🏅', ms: 5000 });
+    toast(t('Achievement unlocked: {name} {emoji} (+20 XP)', { name: t(a.name), emoji: a.emoji }), { emoji: '🏅', ms: 5000 });
     rain([a.emoji, '✨', '🏅'], 30);
     sfx.win();
   }, i * 900));
@@ -147,10 +177,11 @@ function checkAchievements(extra = {}) {
 function renderAchievements() {
   const d = getData();
   const got = ACHIEVEMENTS.filter((a) => d.badges[a.id]).length;
-  $('#achList').innerHTML = `<p class="muted small">${got} of ${ACHIEVEMENTS.length} unlocked${auth.user ? '' : ' · sign up to keep them forever'}</p>`
+  $('#achList').innerHTML = `<p class="muted small">${t('{got} of {n} unlocked', { got, n: ACHIEVEMENTS.length })}${auth.user ? '' : ` · ${t('sign up to keep them forever')}`}</p>`
     + ACHIEVEMENTS.map((a) => {
       const on = !!d.badges[a.id];
-      return `<span class="ach${on ? ' on' : ''}" title="${esc(a.name)} — ${esc(a.desc)}${on ? ' ✓' : ''}" aria-label="${esc(a.name)}: ${esc(a.desc)}${on ? ', unlocked' : ', locked'}">${on ? a.emoji : '🔒'}</span>`;
+      const label = `${t(a.name)} — ${t(a.desc)}`;
+      return `<span class="ach${on ? ' on' : ''}" title="${esc(label)}${on ? ' ✓' : ''}" aria-label="${esc(label)}${on ? ` (${t('unlocked')})` : ` (${t('locked')})`}">${on ? a.emoji : '🔒'}</span>`;
     }).join('');
 }
 
@@ -168,17 +199,17 @@ async function loadLeaderboard() {
     const { top, me } = await auth.leaderboard();
     const medal = ['🥇', '🥈', '🥉'];
     $('#boardList').innerHTML = top.length
-      ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}" data-user="${esc(u.username)}" title="See ${esc(u.nickname)}'s profile">
-          <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava" aria-hidden="true">${esc(u.avatar)}</span>
-          <span class="b-name"><b>${esc(u.nickname)}</b><small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
+      ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}" data-user="${esc(u.username)}" title="${esc(t('{name}’s profile', { name: u.nickname }))}">
+          <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava">${lookHTML(u)}</span>
+          <span class="b-name"><b dir="auto">${esc(u.nickname)}</b><small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
           <span class="b-xp">${compact(u.xp)}<small>XP</small></span></li>`).join('')
-      : '<li class="muted small">Nobody yet — be the first kernel to pop! 🍿</li>';
+      : `<li class="muted small">${t('Nobody yet — be the first kernel to pop! 🍿')}</li>`;
     $('#boardMe').innerHTML = !auth.user
-      ? '<button type="button" class="linkish" data-action="signup">Sign up</button> to get on the board.'
-      : me?.onBoard === false ? 'You’re hidden from the leaderboard (change it in your name tag).'
-        : me?.place ? `You’re <b>#${me.place}</b> with ${me.xp} XP. Keep popping!` : '';
+      ? `<button type="button" class="linkish" data-action="signup">${t('Sign up')}</button> ${t('to get on the board.')}`
+      : me?.onBoard === false ? t('You’re hidden from the leaderboard (change it in your name tag).')
+        : me?.place ? t('You’re <b>#{place}</b> with {xp} XP. Keep popping!', { place: me.place, xp: me.xp }) : '';
   } catch {
-    $('#boardList').innerHTML = '<li class="muted small">Leaderboard is napping — back soon. 😴</li>';
+    $('#boardList').innerHTML = `<li class="muted small">${t('Leaderboard is napping — back soon. 😴')}</li>`;
   }
 }
 
@@ -191,7 +222,7 @@ async function dailyCheckin() {
     d.bestStreak = Math.max(d.bestStreak || 0, r.bestStreak || 0);
     store.set(`data:${auth.profileKey()}`, d);
     if (!r.already && r.bonusXp) {
-      toast(r.streak > 1 ? `${r.streak}-day streak! +${r.bonusXp} XP` : `Daily visit bonus: +${r.bonusXp} XP`, { emoji: '🔥', ms: 4500 });
+      toast(r.streak > 1 ? t('{n}-day streak! +{xp} XP', { n: r.streak, xp: r.bonusXp }) : t('Daily visit bonus: +{xp} XP', { xp: r.bonusXp }), { emoji: '🔥', ms: 4500 });
       addXp(r.bonusXp);
     }
     renderProfileWidget();
@@ -212,7 +243,7 @@ function addXp(n) {
   setData(d);
   const after = rankFor(d.xp);
   if (after.i > before.i) {
-    toast(`RANK UP! You are now a ${after.title} ${after.emoji}`, { emoji: '🏅', ms: 5000 });
+    toast(t('RANK UP! You are now a {rank} {emoji}', { rank: t(after.title), emoji: after.emoji }), { emoji: '🏅', ms: 5000 });
     rain([after.emoji, '🍿', '✨'], 40);
     sfx.win();
   }
@@ -251,23 +282,23 @@ function thumbHTML(it, c) {
 function badgeList(it) {
   const b = [];
   const now = Date.now();
-  if (it.popped && now - it.popped < 15 * 60e3) b.push(['pop', '🍿 JUST POPPED']);
-  else if (now - it.time < 60 * 60e3) b.push(['new', '🆕 FRESH']);
-  if ((it.points || 0) >= 300) b.push(['hot', '🔥 HOT']);
-  if ((it.comments || 0) >= 150) b.push(['spicy', '🌶️ SPICY']);
+  if (it.popped && now - it.popped < 15 * 60e3) b.push(['pop', t('🍿 JUST POPPED')]);
+  else if (now - it.time < 60 * 60e3) b.push(['new', t('🆕 FRESH')]);
+  if ((it.points || 0) >= 300) b.push(['hot', t('🔥 HOT')]);
+  if ((it.comments || 0) >= 150) b.push(['spicy', t('🌶️ SPICY')]);
   return b.slice(0, 2);
 }
 const badgesHTML = (list) => (list.length ? `<div class="badges">${list.map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>` : '');
 
 function reactsHTML(it, mine) {
-  return `<span class="reacts" role="group" aria-label="Reactions">${REACTS.map((r) => {
+  return `<span class="reacts" role="group" aria-label="${t('Reactions')}">${REACTS.map((r) => {
     const n = it.reactions?.[r.id] || 0;
-    return `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${r.label}${n ? ` · ${n}` : ''}" aria-pressed="${mine === r.id}">${r.emoji}${n ? `<small class="react-n">${compact(n)}</small>` : ''}</button>`;
+    return `<button type="button" class="react${mine === r.id ? ' on' : ''}" data-react="${r.id}" title="${esc(t(r.label))}${n ? ` · ${n}` : ''}" aria-pressed="${mine === r.id}">${r.emoji}${n ? `<small class="react-n">${compact(n)}</small>` : ''}</button>`;
   }).join('')}</span>`;
 }
 
 function sig(it, d) {
-  return [JSON.stringify(it.reactions || {}), it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
+  return [JSON.stringify(it.reactions || {}), it.commentCount || 0, it.points, it.comments, it.image ? 1 : 0, d.saved.some((s) => s.key === it.key) ? 1 : 0, d.reactions[it.key] || '', d.read.includes(it.key) ? 1 : 0, badgeList(it).map((b) => b[0]).join('')].join('|');
 }
 
 function cardHTML(it, variant, d) {
@@ -282,34 +313,35 @@ function cardHTML(it, variant, d) {
     <a class="card-thumb" href="${url}" target="_blank" rel="noopener noreferrer" data-open tabindex="-1" aria-hidden="true">${thumbHTML(it, c)}${badgesHTML(badgeList(it))}</a>
     <div class="card-body">
       <div class="card-meta">
-        <button type="button" class="chip chip-cat" data-cat="${c.id}" title="More ${esc(c.label)} news">${c.emoji} ${esc(c.label)}</button>
+        <button type="button" class="chip chip-cat" data-cat="${c.id}" title="${esc(t('More {cat} news', { cat: t(c.label) }))}">${c.emoji} ${esc(t(c.label))}</button>
         <span class="src">${esc(it.sourceEmoji || '')} ${esc(it.source)}</span>
         <time datetime="${isoTime}" data-time="${it.time}">${timeAgo(it.time)}</time>
       </div>
-      <h3 class="card-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open>${esc(it.title)}</a></h3>
-      ${it.summary && variant !== 'mini' ? `<p class="card-summary">${esc(it.summary)}</p>` : ''}
+      <h3 class="card-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open dir="ltr" lang="en">${esc(it.title)}</a></h3>
+      ${it.summary && variant !== 'mini' ? `<p class="card-summary" dir="auto">${esc(it.summary)}</p>` : ''}
       <div class="card-foot">
-        ${it.points ? `<span class="stat" title="Upvotes / reactions">▲ ${compact(it.points)}</span>` : ''}
-        ${it.commentsUrl ? `<a class="stat" href="${esc(safeUrl(it.commentsUrl))}" target="_blank" rel="noopener noreferrer" title="Comments">💬 ${compact(it.comments)}</a>` : ''}
+        ${it.points ? `<span class="stat" title="${t('Upvotes / reactions')}">▲ ${compact(it.points)}</span>` : ''}
+        ${it.commentsUrl ? `<a class="stat" href="${esc(safeUrl(it.commentsUrl))}" target="_blank" rel="noopener noreferrer" title="${t('Comments on the original site')}">💬 ${compact(it.comments)}</a>` : ''}
         <span class="domain">${esc(it.domain)}</span>
         <span class="spacer"></span>
         ${reactsHTML(it, mine)}
-        <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? 'Remove from your bucket' : 'Save to your popcorn bucket'}">${saved ? '🔖' : '📑'}</button>
-        <button type="button" class="icon-btn" data-chatshare title="Share to kerNEl Chat">💬</button>
-        <button type="button" class="icon-btn" data-emojify title="Emoji TL;DR">🪄</button>
-        <button type="button" class="icon-btn" data-share title="Share">🔗</button>
+        ${auth.ready ? `<button type="button" class="icon-btn cmt" data-comments title="${t('kerNEl comments')}">🗨️${it.commentCount ? `<small>${compact(it.commentCount)}</small>` : ''}</button>` : ''}
+        <button type="button" class="icon-btn" data-explain title="${t('Explain like I’m 10 / TL;DR')}">🧠</button>
+        <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${saved ? '🔖' : '📑'}</button>
+        <button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">💬</button>
+        <button type="button" class="icon-btn" data-share title="${t('Share')}">🔗</button>
       </div>
     </div>
   </article>`;
 }
 
 function htmlToEl(html) {
-  const t = document.createElement('template');
-  t.innerHTML = html.trim();
-  return t.content.firstElementChild;
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html.trim();
+  return tpl.content.firstElementChild;
 }
 
-const updateTimes = () => $$('time[data-time]').forEach((t) => { t.textContent = timeAgo(Number(t.dataset.time)); });
+const updateTimes = () => $$('time[data-time]').forEach((el) => { el.textContent = timeAgo(Number(el.dataset.time)); });
 
 // ====================================================================================
 // Feed + hero + ticker + widgets
@@ -339,29 +371,29 @@ function getVisible() {
 }
 
 function feedTitle() {
-  if (state.query) return `🔎 Results for “${esc(state.query)}”`;
-  if (state.cat === 'saved') return '🔖 Your popcorn bucket';
-  if (state.cat === 'foryou') return '⭐ For You';
-  if (state.cat !== 'all') { const c = catById(state.cat); return `${c.emoji} ${esc(c.label)} kernels`; }
-  return 'Fresh out the microwave 🍿';
+  if (state.query) return t('🔎 Results for “{q}”', { q: esc(state.query) });
+  if (state.cat === 'saved') return t('🔖 Your popcorn bucket');
+  if (state.cat === 'foryou') return t('⭐ For You');
+  if (state.cat !== 'all') { const c = catById(state.cat); return `${c.emoji} ${esc(t('{cat} kernels', { cat: t(c.label) }))}`; }
+  return t('Fresh out the microwave 🍿');
 }
 
 function emptyMessage() {
-  if (state.query) return `<div class="empty-emoji">🕵️</div><p>No stories in the live feed match “${esc(state.query)}”.</p><button class="btn btn-primary" data-action="ask-codme">🤖 Ask codme to dig the archives</button>`;
-  if (state.cat === 'saved') return '<div class="empty-emoji">🪣</div><p>Your popcorn bucket is empty. Tap 📑 on any story to save it for later.</p>';
+  if (state.query) return `<div class="empty-emoji">🕵️</div><p>${t('No stories in the live feed match “{q}”.', { q: esc(state.query) })}</p><button class="btn btn-primary" data-action="ask-codme">${t('🤖 Ask codme to dig the archives')}</button>`;
+  if (state.cat === 'saved') return `<div class="empty-emoji">🪣</div><p>${t('Your popcorn bucket is empty. Tap 📑 on any story to save it for later.')}</p>`;
   if (state.cat === 'foryou') {
     return auth.getProfile().topics?.length
-      ? '<div class="empty-emoji">⭐</div><p>Nothing in your favourite topics yet — they’re still in the bag. Check back in a minute!</p>'
-      : '<div class="empty-emoji">⭐</div><p>Pick your favourite topics to build your For You feed.</p><button class="btn btn-primary" data-action="edit-profile">✏️ Choose topics</button>';
+      ? `<div class="empty-emoji">⭐</div><p>${t('Nothing in your favourite topics yet — they’re still in the bag. Check back in a minute!')}</p>`
+      : `<div class="empty-emoji">⭐</div><p>${t('Pick your favourite topics to build your For You feed.')}</p><button class="btn btn-primary" data-action="edit-profile">${t('✏️ Choose topics')}</button>`;
   }
   if (!feed.size) {
     const allFailed = Object.values(feed.status).length && Object.values(feed.status).every((s) => !s.ok);
     return allFailed
-      ? `<div class="empty-emoji">📡</div><p>The internet tubes are clogged — couldn’t reach any news source. Retrying in ${REFRESH} seconds…</p><button class="btn btn-primary" data-action="refresh">🔄 Try again now</button>`
-      : `<div class="empty-emoji spin">🍿</div><p>${esc(pick(LOADING_LINES))}</p>`;
+      ? `<div class="empty-emoji">📡</div><p>${t('The internet tubes are clogged — couldn’t reach any news source. Retrying in {n} seconds…', { n: REFRESH })}</p><button class="btn btn-primary" data-action="refresh">${t('🔄 Try again now')}</button>`
+      : `<div class="empty-emoji spin">🍿</div><p>${esc(t(pick(LOADING_LINES)))}</p>`;
   }
   const c = catById(state.cat);
-  return `<div class="empty-emoji">${c.emoji}</div><p>No ${esc(c.label)} kernels have popped yet. They’re probably still in the bag.</p>`;
+  return `<div class="empty-emoji">${c.emoji}</div><p>${t('No {cat} kernels have popped yet. They’re probably still in the bag.', { cat: esc(t(c.label)) })}</p>`;
 }
 
 function renderFeed() {
@@ -402,7 +434,7 @@ function renderFeed() {
   }
 
   $('#feedTitle').innerHTML = feedTitle();
-  $('#feedCount').textContent = list.length ? `${shown.length} of ${list.length}` : '';
+  $('#feedCount').textContent = list.length ? t('{a} of {b}', { a: shown.length, b: list.length }) : '';
   const empty = $('#feedEmpty');
   empty.hidden = list.length > 0;
   if (!list.length) empty.innerHTML = emptyMessage();
@@ -417,7 +449,7 @@ function renderHero() {
   const items = feed.all();
   if (!items.length) {
     if (Object.values(feed.status).length && Object.values(feed.status).every((s) => !s.ok)) {
-      hero.innerHTML = '<div class="hero-error"><div class="empty-emoji">🔌</div><h2>Our news antenna is taking a nap</h2><p>We couldn’t reach any news source just now. Check your connection — we’ll keep trying every 30 seconds.</p><button class="btn btn-primary" data-action="refresh">🔄 Wake it up</button></div>';
+      hero.innerHTML = `<div class="hero-error"><div class="empty-emoji">🔌</div><h2>${t('Our news antenna is taking a nap')}</h2><p>${t('We couldn’t reach any news source just now. Check your connection — we’ll keep trying every 30 seconds.')}</p><button class="btn btn-primary" data-action="refresh">${t('🔄 Wake it up')}</button></div>`;
       heroSig = '';
     }
     return;
@@ -437,26 +469,28 @@ function renderHero() {
     <article class="card hero-main" data-key="${esc(main.key)}" style="--cat-h:${c.hue}">
       <a class="hero-media card-thumb" href="${url}" target="_blank" rel="noopener noreferrer" data-open tabindex="-1" aria-hidden="true">${thumbHTML(main, c)}</a>
       <div class="hero-overlay">
-        <div class="hero-stickers"><span class="sticker">🏆 TOP KERNEL</span>${badgeList(main).map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>
+        <div class="hero-stickers"><span class="sticker">${t('🏆 TOP KERNEL')}</span>${badgeList(main).map(([k, t]) => `<span class="badge badge-${k}">${t}</span>`).join('')}</div>
         <div class="card-meta">
-          <button type="button" class="chip chip-cat" data-cat="${c.id}">${c.emoji} ${esc(c.label)}</button>
+          <button type="button" class="chip chip-cat" data-cat="${c.id}">${c.emoji} ${esc(t(c.label))}</button>
           <span class="src">${esc(main.sourceEmoji || '')} ${esc(main.source)}</span>
           <time datetime="${new Date(main.time).toISOString()}" data-time="${main.time}">${timeAgo(main.time)}</time>
         </div>
-        <h2 class="hero-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open>${esc(main.title)}</a></h2>
+        <h2 class="hero-title"><a href="${url}" target="_blank" rel="noopener noreferrer" data-open dir="ltr" lang="en">${esc(main.title)}</a></h2>
         <div class="card-foot">
           ${main.points ? `<span class="stat">▲ ${compact(main.points)}</span>` : ''}
           ${main.commentsUrl ? `<a class="stat" href="${esc(safeUrl(main.commentsUrl))}" target="_blank" rel="noopener noreferrer">💬 ${compact(main.comments)}</a>` : ''}
           <span class="domain">${esc(main.domain)}</span>
           <span class="spacer"></span>
           ${reactsHTML(main, mine)}
-          <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="Save">${saved ? '🔖' : '📑'}</button>
-          <button type="button" class="icon-btn" data-share title="Share">🔗</button>
+          ${auth.ready ? `<button type="button" class="icon-btn cmt" data-comments title="${t('kerNEl comments')}">🗨️${main.commentCount ? `<small>${compact(main.commentCount)}</small>` : ''}</button>` : ''}
+          <button type="button" class="icon-btn" data-explain title="${t('Explain like I’m 10 / TL;DR')}">🧠</button>
+          <button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${t('Save')}">${saved ? '🔖' : '📑'}</button>
+          <button type="button" class="icon-btn" data-share title="${t('Share')}">🔗</button>
         </div>
       </div>
     </article>
     <div class="hero-side">
-      <h2 class="side-title">Also popping <span aria-hidden="true">🍿</span></h2>
+      <h2 class="side-title">${t('Also popping')} <span aria-hidden="true">🍿</span></h2>
       ${side.map((it) => cardHTML(it, 'mini', d)).join('')}
     </div>`;
 }
@@ -477,21 +511,21 @@ function renderTicker() {
 function renderTrends() {
   const list = trends(feed.all(), 16);
   const box = $('#trendList');
-  if (!list.length) { box.innerHTML = '<p class="muted">Warming up the hype detector… 🌡️</p>'; return; }
+  if (!list.length) { box.innerHTML = `<p class="muted">${t('Warming up the hype detector… 🌡️')}</p>`; return; }
   const max = list[0][1];
   box.innerHTML = list.map(([w, n]) => {
     const lvl = Math.ceil((n / max) * 4);
-    return `<button type="button" class="trend t${lvl}" data-trend="${esc(w)}" title="${n} headlines">${esc(w)} <small>${n}</small></button>`;
+    return `<button type="button" class="trend t${lvl}" data-trend="${esc(w)}" title="${esc(tn(n, '{n} headline', '{n} headlines'))}">${esc(w)} <small>${n}</small></button>`;
   }).join('');
 }
 
 function renderSources() {
   const box = $('#sourceList');
   box.innerHTML = feed.sourceRows().map((s) => {
-    const [dot, mood] = !s.known ? ['⚪', 'warming up'] : s.ok ? ['🟢', `vibing · ${s.count}`] : ['🔴', 'napping'];
+    const [dot, mood] = !s.known ? ['⚪', t('warming up')] : s.ok ? ['🟢', `${t('vibing')} · ${s.count}`] : ['🔴', t('napping')];
     const tip = s.error ? ` title="${esc(s.error)}"` : '';
     return `<li${tip}><span>${esc(s.emoji)} ${esc(s.name)}</span><span class="src-mood">${dot} ${esc(mood)}</span></li>`;
-  }).join('') + (feed.usingApi() ? '<li class="via-api"><span>⚡ Served by the kerNEl server</span></li>' : '');
+  }).join('') + (feed.usingApi() ? `<li class="via-api"><span>${t('⚡ Served by the kerNEl server')}</span></li>` : '');
 }
 
 function sourceCounts() {
@@ -504,20 +538,20 @@ function updateStatusLine() {
   if (!el) return;
   const { ok, total } = sourceCounts();
   if (!feed.lastRefresh) {
-    el.textContent = feed.hadCache ? `🍿 Showing ${feed.size} cached stories from ${timeAgo(feed.cacheTime)} while fresh ones pop…` : `🍿 ${pick(LOADING_LINES)}`;
+    el.textContent = feed.hadCache ? t('🍿 Showing {n} cached stories from {when} while fresh ones pop…', { n: feed.size, when: timeAgo(feed.cacheTime) }) : `🍿 ${t(pick(LOADING_LINES))}`;
     return;
   }
   if (!ok) {
     el.textContent = feed.size
-      ? `📡 Can’t reach the news sources right now — showing ${feed.size} saved stories. Retrying every ${REFRESH}s…`
-      : `📡 Can’t reach the news sources right now. Retrying every ${REFRESH}s…`;
+      ? t('📡 Can’t reach the news sources right now — showing {n} saved stories. Retrying every {s}s…', { n: feed.size, s: REFRESH })
+      : t('📡 Can’t reach the news sources right now. Retrying every {s}s…', { s: REFRESH });
     return;
   }
-  el.textContent = `🍿 ${feed.size} stories · last pop ${timeAgo(feed.lastSuccess || feed.lastRefresh)} · ${ok}/${total} sources vibing`;
+  el.textContent = t('🍿 {n} stories · last pop {when} · {ok}/{total} sources vibing', { n: feed.size, when: timeAgo(feed.lastSuccess || feed.lastRefresh), ok, total });
 }
 
-function avatarHTML(profile, cls = '') {
-  return `<span class="avatar avatar-emoji ${cls}" aria-hidden="true">${esc(profile.avatar || '🍿')}</span>`;
+function avatarHTML(profile, cls = '', streak = 0) {
+  return lookHTML(profile, { cls: `avatar avatar-emoji ${cls}`, streak });
 }
 
 function renderProfileWidget() {
@@ -527,31 +561,34 @@ function renderProfileWidget() {
   const r = rankFor(d.xp);
   const pct = r.next ? Math.round(((d.xp - r.min) / (r.next - r.min)) * 100) : 100;
   box.innerHTML = `
-    <div class="pw-head">${avatarHTML(p, 'avatar-lg')}<div><b>${esc(p.nickname)}</b><span class="rank">${r.emoji} ${esc(r.title)}</span></div></div>
-    <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Progress to next rank"><i style="width:${pct}%"></i></div>
-    <p class="xp-note">${d.xp} XP${r.next ? ` · ${r.next - d.xp} to next rank` : ' · max rank, legend!'}</p>
-    <div class="pw-stats"><span><b>${d.read.length}</b> read</span><span><b>${d.saved.length}</b> saved</span><span><b>${Object.keys(d.reactions).length}</b> reactions</span>${auth.user ? `<span title="Visit every day to grow your streak"><b>🔥${d.streak || 0}</b> streak</span>` : ''}</div>
-    ${auth.user ? `<p class="muted small synced">☁️ Saved to @${esc(auth.user.username)}</p>` : '<button type="button" class="btn btn-primary btn-block" data-action="signup">Save your progress — sign up free</button>'}`;
+    <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div><b dir="auto">${esc(p.nickname)}</b><span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
+    <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${t('Progress to next rank')}"><i style="width:${pct}%"></i></div>
+    <p class="xp-note">${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}</p>
+    <div class="pw-stats"><span><b>${d.read.length}</b> ${t('read')}</span><span><b>${d.saved.length}</b> ${t('saved')}</span><span><b>${Object.keys(d.reactions).length}</b> ${t('reactions')}</span>${auth.user ? `<span title="${t('Visit every day to grow your streak')}"><b>🔥${d.streak || 0}</b> ${t('streak')}</span>` : ''}</div>
+    <div class="pw-actions"><button type="button" class="btn btn-ghost btn-sm" data-action="wrapped">${t('🎁 My Wrapped')}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit-profile">${t('🎩 Style')}</button></div>
+    ${auth.user ? `<p class="muted small synced">${t('☁️ Saved to @{name}', { name: esc(auth.user.username) })}</p>` : `<button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Save your progress — sign up free')}</button>`}`;
 }
 
 function renderAuthSlot() {
   const slot = $('#authSlot');
   if (!auth.user) {
-    slot.innerHTML = '<button type="button" class="btn btn-ghost" data-action="signin">Sign in</button><button type="button" class="btn btn-primary hide-sm" data-action="signup">Sign up</button>';
+    slot.innerHTML = `<button type="button" class="btn btn-ghost" data-action="signin">${t('Sign in')}</button><button type="button" class="btn btn-primary hide-sm" data-action="signup">${t('Sign up')}</button>`;
     return;
   }
   const p = auth.getProfile();
   slot.innerHTML = `<div class="user-menu">
     <button type="button" class="avatar-btn" data-action="menu" aria-haspopup="menu" aria-expanded="false">${avatarHTML(p)}<span class="nick hide-sm">${esc(p.nickname)}</span><span aria-hidden="true">▾</span></button>
     <div class="menu" role="menu" hidden>
-      <div class="menu-head">${avatarHTML(p, 'avatar-lg')}<div><b>${esc(p.nickname)}</b><small>@${esc(auth.user.username)}</small><span class="provider">☁️ progress saved to your account</span></div></div>
-      <button type="button" role="menuitem" data-action="edit-profile">✏️ Edit name tag</button>
-      <button type="button" role="menuitem" data-action="show-foryou">⭐ For You feed</button>
-      <button type="button" role="menuitem" data-action="show-saved">🔖 My popcorn bucket</button>
-      <button type="button" role="menuitem" data-action="show-board">🏆 Leaderboard</button>
-      <button type="button" role="menuitem" data-action="notify">🔔 Notifications</button>
-      <button type="button" role="menuitem" data-action="account">🔑 Account &amp; security</button>
-      <button type="button" role="menuitem" data-action="signout">🚪 Sign out</button>
+      <div class="menu-head">${avatarHTML(p, 'avatar-lg')}<div><b dir="auto">${esc(p.nickname)}</b><small>@${esc(auth.user.username)}</small><span class="provider">${t('☁️ progress saved to your account')}</span></div></div>
+      <button type="button" role="menuitem" data-action="edit-profile">${t('✏️ Edit name tag & style')}</button>
+      <button type="button" role="menuitem" data-action="wrapped">${t('🎁 My kerNEl Wrapped')}</button>
+      <button type="button" role="menuitem" data-action="show-friends">${t('👯 Friends')}</button>
+      <button type="button" role="menuitem" data-action="show-foryou">${t('⭐ For You feed')}</button>
+      <button type="button" role="menuitem" data-action="show-saved">${t('🔖 My popcorn bucket')}</button>
+      <button type="button" role="menuitem" data-action="show-board">${t('🏆 Leaderboard')}</button>
+      <button type="button" role="menuitem" data-action="notify">${t('🔔 Notifications')}</button>
+      <button type="button" role="menuitem" data-action="account">${t('🔑 Account & security')}</button>
+      <button type="button" role="menuitem" data-action="signout">${t('🚪 Sign out')}</button>
     </div></div>`;
 }
 
@@ -563,9 +600,9 @@ function renderNav() {
     ...CATEGORIES,
     { id: 'saved', label: 'Saved', emoji: '🔖' },
   ];
-  nav.innerHTML = tabs.map((t) => `<button type="button" class="nav-btn" data-cat="${t.id}" aria-pressed="${state.cat === t.id}"><span aria-hidden="true">${t.emoji}</span> ${esc(t.label)}</button>`).join('')
-    + (auth.ready ? '<button type="button" class="nav-btn nav-chat" data-action="chat"><span aria-hidden="true">💬</span> Chat<span class="chat-dot" hidden></span></button>' : '')
-    + '<a class="nav-btn nav-kids" href="kids.html"><span aria-hidden="true">🧸</span> Kids</a>';
+  nav.innerHTML = tabs.map((x) => `<button type="button" class="nav-btn" data-cat="${x.id}" aria-pressed="${state.cat === x.id}"><span aria-hidden="true">${x.emoji}</span> ${esc(t(x.label))}</button>`).join('')
+    + (auth.ready ? `<button type="button" class="nav-btn nav-chat" data-action="chat"><span aria-hidden="true">💬</span> ${t('Chat')}<span class="chat-dot" hidden></span></button>` : '')
+    + `<a class="nav-btn nav-kids" href="kids.html"><span aria-hidden="true">🧸</span> ${t('Kids')}</a>`;
 }
 
 function renderAll() {
@@ -607,7 +644,7 @@ function syncCards(key) {
       b.classList.toggle('on', saved);
       b.setAttribute('aria-pressed', String(saved));
       b.textContent = saved ? '🔖' : '📑';
-      b.title = saved ? 'Remove from your bucket' : 'Save to your popcorn bucket';
+      b.title = saved ? t('Remove from your bucket') : t('Save to your popcorn bucket');
     });
     card.querySelectorAll('[data-react]').forEach((b) => {
       const on = b.dataset.react === mine;
@@ -627,14 +664,14 @@ function toggleSave(key, btn) {
   if (idx >= 0) {
     d.saved.splice(idx, 1);
     setData(d);
-    toast('Removed from your popcorn bucket', { emoji: '🪣' });
+    toast(t('Removed from your popcorn bucket'), { emoji: '🪣' });
   } else {
     const it = findItem(key);
     if (!it) return;
     d.saved.unshift(snapshot(it));
     d.saved = d.saved.slice(0, 200);
     setData(d);
-    toast(auth.user ? 'Saved to your popcorn bucket!' : 'Saved! Sign up to keep it under your own name tag.', { emoji: '🔖' });
+    toast(auth.user ? t('Saved to your popcorn bucket!') : t('Saved! Sign up to keep it under your own name tag.'), { emoji: '🔖' });
     burstFrom(btn, { emojis: ['🔖', '🍿', '⭐'], count: 8, spread: 70 });
     sfx.pop();
     addXp(2);
@@ -669,7 +706,7 @@ function react(key, btn) {
       .catch(() => {});
   } else if (feed.usingApi() && !auth.user && !reactHintShown) {
     reactHintShown = true;
-    toast('Sign in to add your reaction to the public count!', { emoji: '🔥' });
+    toast(t('Sign in to add your reaction to the public count!'), { emoji: '🔥' });
   }
   syncCards(key);
   refreshReactButtons(key);
@@ -692,6 +729,8 @@ function markRead(key, e) {
   if (d.read.includes(key)) return;
   d.read.push(key);
   d.read = d.read.slice(-600);
+  const cat = findItem(key)?.cat;
+  if (cat) d.catReads = { ...(d.catReads || {}), [cat]: (d.catReads?.[cat] || 0) + 1 };
   setData(d);
   if (e?.clientX) burst(e.clientX, e.clientY, { emojis: ['✨', '+5'], count: 5, spread: 50 });
   addXp(5);
@@ -710,19 +749,10 @@ async function share(key) {
       return;
     }
     await navigator.clipboard.writeText(url);
-    toast('Link copied to your clipboard', { emoji: '📋' });
+    toast(t('Link copied to your clipboard'), { emoji: '📋' });
   } catch (err) {
-    if (err?.name !== 'AbortError') toast('Couldn’t share that one — try long-pressing the headline instead.', { emoji: '🤷' });
+    if (err?.name !== 'AbortError') toast(t('Couldn’t share that one — try long-pressing the headline instead.'), { emoji: '🤷' });
   }
-}
-
-function emojifyCard(key, btn) {
-  const it = findItem(key);
-  if (!it) return;
-  const e = emojify(it.title);
-  toast(`Emoji TL;DR: ${e}`, { emoji: '🪄', ms: 5200 });
-  burstFrom(btn, { emojis: e.split(' '), count: 8, spread: 80 });
-  sfx.boing();
 }
 
 // ---------- sign in / sign up / forgot password ----------
@@ -745,8 +775,8 @@ function setAuthMode(mode) {
   authMode = mode;
   $$('.auth-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
   $('.auth-tabs').hidden = mode === 'code';
-  $('#authTitle').textContent = AUTH_TEXT[mode][0];
-  $('#authSub').textContent = AUTH_TEXT[mode][1];
+  $('#authTitle').textContent = t(AUTH_TEXT[mode][0]);
+  $('#authSub').textContent = t(AUTH_TEXT[mode][1]);
   $('#authOff').hidden = auth.ready;
   $('#authFine').hidden = mode === 'code';
   $$('#authDialog [data-view]').forEach((f) => { f.hidden = f.dataset.view !== mode; });
@@ -773,7 +803,7 @@ async function runAuthForm(form, fn) {
   try {
     await fn(form.elements);
   } catch (e) {
-    err.textContent = `😵 ${e.message}`;
+    err.textContent = `😵 ${tServer(e.message)}`;
     sfx.buzz();
     form.classList.remove('shake');
     void form.offsetWidth;
@@ -793,12 +823,12 @@ function paintStrength(form) {
     meter.style.background = ['#ff4d5e', '#ff4d5e', '#ffb02e', '#ffd23f', '#2ee6a6'][st.score];
   }
   const label = form.querySelector('.pw-label');
-  if (label) label.textContent = `${st.emoji} ${st.label}`;
+  if (label) label.textContent = `${st.emoji} ${t(st.label)}`;
 }
 
 function openAccount() {
   const dlg = $('#accountDialog');
-  $('#accountWho').textContent = `Signed in as @${auth.user.username}`;
+  $('#accountWho').textContent = t('Signed in as @{name}', { name: auth.user.username });
   $$('#accountDialog form.auth-form').forEach((f) => { f.reset(); f.querySelector('.auth-error').textContent = ''; });
   if (!dlg.open) dlg.showModal();
 }
@@ -808,13 +838,24 @@ function openProfile(isNew = false) {
   const dlg = $('#profileDialog');
   const form = $('#profileForm');
   const p = auth.getProfile();
-  $('#profileTitle').textContent = isNew ? 'Make your name tag 🏷️' : 'Edit your name tag ✏️';
-  $('#profileSave').textContent = isNew ? 'Pop me in! 🍿' : 'Save changes ✅';
+  $('#profileTitle').textContent = isNew ? t('Make your name tag 🏷️') : t('Edit your name tag ✏️');
+  $('#profileSave').textContent = isNew ? t('Pop me in! 🍿') : t('Save changes ✅');
   form.elements.nickname.value = p.nickname || '';
   $('#avatarPick').innerHTML = AVATARS.map((a) => `<label class="pick-avatar"><input type="radio" name="avatar" value="${esc(a)}" ${p.avatar === a ? 'checked' : ''}><span>${a}</span></label>`).join('');
   form.elements.leaderboard.checked = p.leaderboard !== false;
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
-  $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(c.label)}</span></label>`).join('');
+  $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(t(c.label))}</span></label>`).join('');
+  // hats and frames: unlocked with XP (and tournament trophies)
+  const stats = { xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0) };
+  const styleOpt = (kind, item, look) => {
+    const open = unlocked(item, stats);
+    const checked = (p[kind] || 'none') === item.id;
+    const need = item.trophy ? t('win a trophy') : t('{n} XP', { n: item.xp });
+    return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
+      <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
+  };
+  $('#hatPick').innerHTML = HATS.map((h) => styleOpt('hat', h, { avatar: p.avatar, hat: h.id, frame: p.frame })).join('');
+  $('#framePick').innerHTML = FRAMES.map((f) => styleOpt('frame', f, { avatar: p.avatar, hat: p.hat, frame: f.id })).join('');
   if (!dlg.open) dlg.showModal();
 }
 
@@ -833,7 +874,7 @@ function migrateGuest() {
   setData(d);
   store.del('data:guest');
   const n = guest.saved?.length || 0;
-  toast(`Brought your guest stuff along: ${guest.xp || 0} XP and ${n} saved stor${n === 1 ? 'y' : 'ies'} 🧳`, { emoji: '🎒', ms: 5000 });
+  toast(tn(n, 'Brought your guest stuff along: {xp} XP and {n} saved story 🧳', 'Brought your guest stuff along: {xp} XP and {n} saved stories 🧳', { xp: guest.xp || 0 }), { emoji: '🎒', ms: 5000 });
 }
 
 // ---------- theme / sound / chaos ----------
@@ -841,13 +882,13 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const btn = $('#themeBtn');
   btn.textContent = theme === 'dark' ? '🌙' : '☀️';
-  btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  btn.title = theme === 'dark' ? t('Switch to light mode') : t('Switch to dark mode');
 }
 function paintSoundBtn() {
   const b = $('#soundBtn');
   b.textContent = sfx.enabled ? '🔊' : '🔇';
   b.setAttribute('aria-pressed', String(sfx.enabled));
-  b.title = sfx.enabled ? 'Sound effects on' : 'Sound effects off';
+  b.title = sfx.enabled ? t('Sound effects on') : t('Sound effects off');
 }
 
 function handleAction(action, el) {
@@ -871,11 +912,17 @@ function handleAction(action, el) {
     case 'refresh': refreshNow(true); break;
     case 'more': state.limit += PAGE; renderFeed(); break;
     case 'joke': $('#jokeText').textContent = pick(JOKES); sfx.boing(); burstFrom(el, { emojis: ['😂', '🤣', '😆'], count: 8 }); break;
-    case 'fact': $('#factText').textContent = pick(FACTS); sfx.blip(); break;
+    case 'fact': $('#factText').textContent = t(pick(FACTS)); sfx.blip(); break;
     case 'codme': codme?.open(); break;
     case 'chat': community?.toggle(); break;
     case 'notify': closeMenus(); notifier?.openSettings(); break;
     case 'game': game?.start(); break;
+    case 'quiz': play?.openQuiz(); break;
+    case 'tournament': play?.openTourney(); break;
+    case 'briefing': extras?.briefing(); break;
+    case 'swipe': extras?.openSwipe(); break;
+    case 'wrapped': closeMenus(); extras?.openWrapped(); break;
+    case 'show-friends': closeMenus(); $('#friendsWidget').hidden = false; $('#friendsWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }); social?.loadFriends(); break;
     case 'ask-codme': codme?.open(state.query ? `news about ${state.query}` : undefined); break;
     case 'clear-search': setQuery(''); $('#search').focus(); break;
     case 'theme': {
@@ -890,8 +937,8 @@ function handleAction(action, el) {
     case 'chaos': {
       const on = document.documentElement.classList.toggle('chaos');
       el.setAttribute('aria-pressed', String(on));
-      if (on) { rain(['🌀', '🍿', '🤪', '💥'], 40); sfx.boing(); toast('CHAOS MODE: everything is wobbly now. You asked for this. 🌀', { emoji: '🤪' }); checkAchievements({ chaos: true }); }
-      else toast('Order restored. Boring, but readable. 😌', { emoji: '🧘' });
+      if (on) { rain(['🌀', '🍿', '🤪', '💥'], 40); sfx.boing(); toast(t('CHAOS MODE: everything is wobbly now. You asked for this. 🌀'), { emoji: '🤪' }); checkAchievements({ chaos: true }); }
+      else toast(t('Order restored. Boring, but readable. 😌'), { emoji: '🧘' });
       break;
     }
     case 'home': {
@@ -921,7 +968,7 @@ function updatePopper() {
   $('#countdown').textContent = feed.loading ? '…' : `${left}s`;
   popper.classList.toggle('heating', left <= 5 && !feed.loading);
   popper.classList.toggle('loading', feed.loading);
-  popper.title = feed.loading ? 'Popping fresh news…' : `Next refresh in ${left}s — click to pop now`;
+  popper.title = feed.loading ? t('Popping fresh news…') : t('Next refresh in {n}s — click to pop now', { n: left });
 }
 
 function refreshNow(force = false) {
@@ -930,6 +977,7 @@ function refreshNow(force = false) {
   feed.refresh(force);
 }
 
+let deepLinked = false;
 feed.addEventListener('loading', updatePopper);
 feed.addEventListener('update', (e) => {
   const { fresh, anyOk, firstOfSession } = e.detail;
@@ -938,29 +986,70 @@ feed.addEventListener('update', (e) => {
   popper.classList.remove('popped');
   void popper.offsetWidth; // restart the animation
   popper.classList.add('popped');
-  $('#factText').textContent = pick(FACTS);
+  $('#factText').textContent = t(pick(FACTS));
   renderAll();
+  if (!deepLinked && fresh.length && location.hash.length > 1) { deepLinked = true; openDeepLink(); }
   if (!anyOk) return;
   if (!firstOfSession && fresh.length) {
-    toast(`${fresh.length} fresh kernel${fresh.length === 1 ? '' : 's'} just popped!`, { emoji: '🍿' });
+    toast(tn(fresh.length, '{n} fresh kernel just popped!', '{n} fresh kernels just popped!'), { emoji: '🍿' });
     burstFrom(popper, { count: 10, spread: 90 });
     sfx.pop();
     codme?.notify(fresh);
   } else if (firstOfSession && feed.hadCache && fresh.length) {
-    toast(`Welcome back! ${fresh.length} new stor${fresh.length === 1 ? 'y' : 'ies'} popped since your last visit.`, { emoji: '👋' });
+    toast(tn(fresh.length, 'Welcome back! {n} new story popped since your last visit.', 'Welcome back! {n} new stories popped since your last visit.'), { emoji: '👋' });
   }
 });
 
 // ====================================================================================
 // Boot
 // ====================================================================================
+/** A signed-in account remembers its language: use it here too, unless this browser picked one. Returns true if the page reloads. */
+function adoptLang(profile) {
+  const want = profile?.lang;
+  if (!want || want === lang || chosenLang()) return false;
+  setLang(want);
+  return true;
+}
+
+function paintLangs() {
+  $('#langMenu').innerHTML = langMenuHTML();
+  $('#footerLangs').innerHTML = `<span aria-hidden="true">🌐</span> ${LANGS.map((l) => `<button type="button" data-lang="${l.id}" aria-pressed="${l.id === lang}" lang="${l.html}">${l.flag} ${l.name}</button>`).join('')}`;
+}
+
+function switchLang(id) {
+  if (id === lang) return;
+  const d = getData();
+  d.counts = { ...(d.counts || {}), langs: (d.counts?.langs || 0) + 1 };
+  store.set(`data:${auth.profileKey()}`, d);
+  if (auth.user) {
+    auth.saveProfile({ ...auth.getProfile(), lang: id });
+    const { streak, bestStreak, ...rest } = d;
+    auth.api('/api/me/data', { method: 'PATCH', body: { counts: rest.counts } }).catch(() => {});
+  }
+  document.body.style.opacity = '.4';
+  setTimeout(() => setLang(id), auth.user ? 450 : 0); // give the server a moment to save it
+}
+
+/** Links like #story=<key> (from a comment notification) and #user=<name> (from a follow notification). */
+function openDeepLink() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h.startsWith('story=')) {
+    const it = findItem(h.slice(6));
+    if (it) social?.openComments(it);
+    else if (feed.size) toast(t('That story has left the feed — it was more than a few days old.'), { emoji: '🕰️' });
+  } else if (h.startsWith('user=')) community?.showProfile(h.slice(5));
+}
+
 function boot() {
+  translatePage();
+  loadLangFonts();
+  paintLangs();
   // theme: saved choice, else follow the system
   applyTheme(store.get('theme', null) || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
   paintSoundBtn();
   $('#year').textContent = new Date().getFullYear();
   $('#jokeText').textContent = pick(JOKES);
-  $('#factText').textContent = pick(FACTS);
+  $('#factText').textContent = t(pick(FACTS));
   $('#popperRing').style.strokeDasharray = String(RING);
   $('#refreshEvery').textContent = REFRESH;
 
@@ -987,8 +1076,35 @@ function boot() {
     openAuth,
     onSent: () => { const d = getData(); d.chatSent = (d.chatSent || 0) + 1; setData(d); addXp(2); },
     onVote: () => { const d = getData(); d.pollVotes = (d.pollVotes || 0) + 1; setData(d); addXp(5); },
+    onFollow: (on) => { if (on) bump('follows'); social?.loadFriends(); },
     badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
     rankTitle: (xp) => rankFor(xp).title,
+  });
+
+  play = initPlay({
+    openAuth,
+    onQuiz: (score, total) => { const d = getData(); d.counts = { ...(d.counts || {}), quizPlayed: (d.counts?.quizPlayed || 0) + 1, quizPerfect: (d.counts?.quizPerfect || 0) + (score === total ? 1 : 0) }; setData(d); addXp(score * 4 + (score === total ? 10 : 0)); },
+    onBattle: () => { bump('battleVotes'); addXp(3); },
+    onTourney: (score) => { bump('tourneys'); addXp(score * 2); },
+  });
+  social = initSocial({
+    openAuth,
+    onComment: () => { bump('comments'); addXp(2); },
+    onCount: (key, n) => { const it = findItem(key); if (it && it.commentCount !== n) { it.commentCount = n; heroSig = ''; renderHero(); renderFeed(); } },
+    rankInfo: (i) => ({ emoji: RANKS[i]?.[2] || '🍿', title: RANKS[i]?.[1] || '' }),
+    badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
+  });
+  extras = initExtras({
+    getItems: () => feed.all(),
+    getVisible,
+    findItem,
+    getData,
+    profile: () => auth.getProfile(),
+    rankFor,
+    onSave: (key) => toggleSave(key, $('#swipeStage')),
+    onReact: (key, id) => { if (getData().reactions[key] !== id) react(key, Object.assign(document.createElement('button'), { dataset: { react: id } })); },
+    onRead: (key, e) => markRead(key, e),
+    bump,
   });
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
@@ -1005,37 +1121,38 @@ function boot() {
 
   // ---- global click delegation ----
   document.addEventListener('click', (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    const actionEl = t.closest('[data-action]');
+    const el = e.target;
+    if (!(el instanceof Element)) return;
+    const actionEl = el.closest('[data-action]');
     if (actionEl) {
       if (actionEl.tagName === 'A') e.preventDefault();
       handleAction(actionEl.dataset.action, actionEl);
     }
-    if (!t.closest('.user-menu')) closeMenus();
-    const catBtn = t.closest('[data-cat]');
+    if (!el.closest('.user-menu')) closeMenus();
+    const catBtn = el.closest('[data-cat]');
     if (catBtn) setCat(catBtn.dataset.cat);
-    const trend = t.closest('[data-trend]');
+    const trend = el.closest('[data-trend]');
     if (trend) setQuery(trend.dataset.trend);
-    const sortBtn = t.closest('[data-sort]');
+    const sortBtn = el.closest('[data-sort]');
     if (sortBtn) {
       if (sortBtn.dataset.sort === 'chaos') { state.chaosSeed = Math.random(); sfx.boing(); burstFrom(sortBtn, { emojis: ['🎲', '🌀'], count: 8 }); }
       state.sort = sortBtn.dataset.sort;
       store.set('sort', state.sort === 'chaos' ? 'newest' : state.sort);
       renderFeed();
     }
-    const tickerLink = t.closest('[data-read-key]');
+    const tickerLink = el.closest('[data-read-key]');
     if (tickerLink && tickerLink.dataset.readKey) markRead(tickerLink.dataset.readKey, e);
-    const card = t.closest('[data-key]');
+    const card = el.closest('[data-key]');
     if (card) {
       const key = card.dataset.key;
       let b;
-      if ((b = t.closest('[data-save]'))) toggleSave(key, b);
-      else if ((b = t.closest('[data-react]'))) react(key, b);
-      else if ((b = t.closest('[data-emojify]'))) emojifyCard(key, b);
-      else if (t.closest('[data-share]')) share(key);
-      else if (t.closest('[data-chatshare]')) { const it = findItem(key); if (it && community) community.share(it); else if (!community) toast('Chat needs the kerNEl server.', { emoji: '💬' }); }
-      else if (t.closest('[data-open]')) markRead(key, e);
+      if ((b = el.closest('[data-save]'))) toggleSave(key, b);
+      else if ((b = el.closest('[data-react]'))) react(key, b);
+      else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) extras?.explain(it); }
+      else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) social?.openComments(it); }
+      else if (el.closest('[data-share]')) share(key);
+      else if (el.closest('[data-chatshare]')) { const it = findItem(key); if (it && community) community.share(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' }); }
+      else if (el.closest('[data-open]')) markRead(key, e);
     }
   });
   document.addEventListener('auxclick', (e) => {
@@ -1058,13 +1175,13 @@ function boot() {
   });
 
   // ---- sign in / sign up / forgot password ----
-  $$('.auth-tab, .auth-link').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
+  $$('#authDialog .auth-tab, #authDialog .auth-link').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
   $$('#authDialog .pw-eye').forEach((eye) => eye.addEventListener('click', () => {
     const input = eye.previousElementSibling;
     const show = input.type === 'password';
     input.type = show ? 'text' : 'password';
     eye.textContent = show ? '🙈' : '👁️';
-    eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    eye.setAttribute('aria-label', show ? t('Hide password') : t('Show password'));
   }));
   $('#authDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget && authMode !== 'code') e.currentTarget.close(); });
   $('#authDialog').addEventListener('cancel', (e) => { if (authMode === 'code') e.preventDefault(); }); // don't lose the code by pressing Esc
@@ -1076,11 +1193,11 @@ function boot() {
   const checkName = debounce(async () => {
     const name = signupForm.elements.username.value.trim();
     if (!name) { nameCheck.textContent = ''; return; }
-    if (!USERNAME_RE.test(name)) { nameCheck.textContent = '✗ 3–20 letters, numbers or _'; nameCheck.className = 'name-check bad'; return; }
+    if (!USERNAME_RE.test(name)) { nameCheck.textContent = `✗ ${t('3–20 letters, numbers or _')}`; nameCheck.className = 'name-check bad'; return; }
     try {
       const r = await auth.checkUsername(name);
       if (signupForm.elements.username.value.trim() !== name) return;
-      nameCheck.textContent = r.available ? `✓ @${name} is free!` : `✗ ${r.reason || 'Taken'}`;
+      nameCheck.textContent = r.available ? `✓ ${t('@{name} is free!', { name })}` : `✗ ${tServer(r.reason || 'Taken')}`;
       nameCheck.className = `name-check ${r.available ? 'good' : 'bad'}`;
     } catch { nameCheck.textContent = ''; }
   }, 350);
@@ -1122,10 +1239,10 @@ function boot() {
   $$('[data-code]').forEach((b) => b.addEventListener('click', async () => {
     const code = $('#recoveryCode').textContent;
     if (b.dataset.code === 'copy') {
-      try { await navigator.clipboard.writeText(code); toast('Recovery code copied — paste it somewhere safe!', { emoji: '📋' }); }
-      catch { toast('Couldn’t copy — select the code and copy it by hand.', { emoji: '✍️' }); }
+      try { await navigator.clipboard.writeText(code); toast(t('Recovery code copied — paste it somewhere safe!'), { emoji: '📋' }); }
+      catch { toast(t('Couldn’t copy — select the code and copy it by hand.'), { emoji: '✍️' }); }
     } else {
-      const text = `kerNEl recovery code for @${auth.user?.username || ''}\n\n${code}\n\nUse it on the “Forgot your password?” screen if you ever forget your password.\n`;
+      const text = `${t('kerNEl recovery code for @{name}', { name: auth.user?.username || '' })}\n\n${code}\n\n${t('Use it on the “Forgot your password?” screen if you ever forget your password.')}\n`;
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
       a.download = `kernel-recovery-code-${auth.user?.username || 'account'}.txt`;
@@ -1143,7 +1260,7 @@ function boot() {
       if (f.password.value.length < 8) throw new Error('New passwords need at least 8 characters');
       await auth.changePassword(f.current.value, f.password.value);
       e.target.reset();
-      toast('Password changed! Other devices were signed out.', { emoji: '🔑' });
+      toast(t('Password changed! Other devices were signed out.'), { emoji: '🔑' });
       sfx.ding();
     });
   });
@@ -1152,19 +1269,19 @@ function boot() {
     runAuthForm(e.currentTarget, async (f) => {
       const { recoveryCode } = await auth.newRecoveryCode(f.password.value);
       $('#accountDialog').close();
-      showRecoveryCode(recoveryCode, () => toast('New recovery code saved. The old one no longer works.', { emoji: '🛟' }));
+      showRecoveryCode(recoveryCode, () => toast(t('New recovery code saved. The old one no longer works.'), { emoji: '🛟' }));
     });
   });
   $('#deleteAccount').addEventListener('click', async () => {
     const name = auth.user?.username;
-    const typed = prompt(`This deletes @${name} and ALL its progress forever.\n\nType your username to confirm:`);
+    const typed = prompt(`${t('This deletes @{name} and ALL its progress forever.', { name })}\n\n${t('Type your username to confirm:')}`);
     if (typed === null) return;
-    if (typed.trim().toLowerCase() !== String(name).toLowerCase()) { toast('Username didn’t match — nothing was deleted.', { emoji: '😅' }); return; }
+    if (typed.trim().toLowerCase() !== String(name).toLowerCase()) { toast(t('Username didn’t match — nothing was deleted.'), { emoji: '😅' }); return; }
     try {
       await auth.deleteAccount();
       $('#accountDialog').close();
-      toast('Account deleted. Thanks for popping by. 🍿', { emoji: '👋', ms: 6000 });
-    } catch (err) { toast(err.message, { emoji: '😵', type: 'error' }); }
+      toast(t('Account deleted. Thanks for popping by. 🍿'), { emoji: '👋', ms: 6000 });
+    } catch (err) { toast(tServer(err.message), { emoji: '😵', type: 'error' }); }
   });
 
   auth.addEventListener('signin', (e) => {
@@ -1172,6 +1289,7 @@ function boot() {
     if (isNew) migrateGuest();
     if (serverData) setData(mergeData(getData(), serverData));
     applyServerExtras({ data: serverData, streak: e.detail.streak });
+    if (adoptLang(profile)) return;
     if (isNew) setData(getData()); // push guest progress + settings to the new account
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderAchievements(); renderHero(); renderFeed();
@@ -1180,10 +1298,11 @@ function boot() {
     sfx.win();
     const welcome = () => {
       if (isNew) {
-        toast(`Account created — welcome to the kerNEl, @${user.username}!`, { emoji: '🎉', ms: 5000 });
+        toast(t('Account created — welcome to the kerNEl, @{name}!', { name: user.username }), { emoji: '🎉', ms: 5000 });
+        if (lang !== 'en') auth.saveProfile({ ...auth.getProfile(), lang });
         setTimeout(() => openProfile(true), 300);
       } else {
-        toast(`Welcome back, ${profile.nickname}!`, { emoji: '👋' });
+        toast(t('Welcome back, {name}!', { name: profile.nickname }), { emoji: '👋' });
       }
       dailyCheckin();
     };
@@ -1195,14 +1314,16 @@ function boot() {
     heroSig = '';
     renderAuthSlot(); renderNav(); renderProfileWidget(); renderAchievements(); renderHero(); renderFeed();
     loadLeaderboard();
-    if (!e.detail?.quiet) toast('Signed out. The kernel misses you already 🥲', { emoji: '👋' });
+    if (!e.detail?.quiet) toast(t('Signed out. The kernel misses you already 🥲'), { emoji: '👋' });
   });
-  auth.addEventListener('expired', () => toast('Your session expired — please sign in again.', { emoji: '⏰', ms: 6000 }));
+  auth.addEventListener('expired', () => toast(t('Your session expired — please sign in again.'), { emoji: '⏰', ms: 6000 }));
   // A saved session: check it's still valid, pull progress from other devices, count today's visit.
   if (auth.user?.apiToken) {
     auth.refreshFromServer()
       .then((u) => {
         if (!u) return;
+        if (adoptLang(u.profile)) return;
+        store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
         setData(mergeData(getData(), u.data));
         applyServerExtras(u);
         renderProfileWidget(); renderAchievements(); renderFeed();
@@ -1221,11 +1342,13 @@ function boot() {
     p.nickname = String(fd.get('nickname') || '').trim().slice(0, 24) || p.nickname;
     p.avatar = String(fd.get('avatar') || p.avatar);
     p.topics = fd.getAll('topics').map(String);
+    p.hat = String(fd.get('hat') || p.hat || 'none');
+    p.frame = String(fd.get('frame') || p.frame || 'none');
     if (auth.user) p.leaderboard = fd.get('leaderboard') === 'on';
     auth.saveProfile(p);
     setTimeout(loadLeaderboard, 800);
     renderNav();
-    toast('Name tag updated — looking sharp!', { emoji: '🏷️' });
+    toast(t('Name tag updated — looking sharp!'), { emoji: '🏷️' });
     burst(window.innerWidth / 2, window.innerHeight / 2, { count: 18 });
     sfx.ding();
   });
@@ -1239,6 +1362,8 @@ function boot() {
     else if (e.key === 'r') refreshNow(true);
     else if (e.key === 'c') codme?.toggle();
     else if (e.key === 't') community?.toggle();
+    else if (e.key === 'q') play?.openQuiz();
+    else if (e.key === 's') extras?.openSwipe();
   });
 
   onKonami(() => {
@@ -1249,16 +1374,31 @@ function boot() {
       d.konami = true;
       setData(d);
       addXp(100); // also unlocks the Cheat Coder achievement
-      toast('CHEAT CODE ACCEPTED: +100 XP 🎮', { emoji: '🕹️', ms: 5000 });
+      toast(t('CHEAT CODE ACCEPTED: +100 XP 🎮'), { emoji: '🕹️', ms: 5000 });
     } else {
-      toast('Cheat code still works. Popcorn is infinite. 🍿', { emoji: '🕹️' });
+      toast(t('Cheat code still works. Popcorn is infinite. 🍿'), { emoji: '🕹️' });
     }
   });
 
-  initDoomscroll(({ meters, emoji, text }) => {
+  initDoomscroll(({ meters, emoji, count, name }) => {
     $('#scrollEmoji').textContent = emoji;
-    $('#scrollText').textContent = `You’ve scrolled ${meters} today — that’s ${text}.`;
+    $('#scrollText').textContent = t('You’ve scrolled {m} today — that’s {what}.', { m: meters, what: t(`{n} ${name}`, { n: count }) });
   });
+
+  // ---- languages ----
+  $('#langBtn').addEventListener('click', (e) => {
+    const menu = $('#langMenu');
+    menu.hidden = !menu.hidden;
+    e.currentTarget.setAttribute('aria-expanded', String(!menu.hidden));
+    if (!menu.hidden) menu.querySelector('[aria-checked="true"]')?.focus();
+  });
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const pickLang = el?.closest('[data-lang]');
+    if (pickLang) { switchLang(pickLang.dataset.lang); return; }
+    if (!el?.closest('.lang-wrap')) $('#langMenu').hidden = true;
+  });
+  window.addEventListener('hashchange', openDeepLink);
 
   // ---- the 30-second heartbeat ----
   let ticks = 0;

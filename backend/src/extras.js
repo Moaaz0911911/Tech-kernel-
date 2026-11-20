@@ -64,26 +64,27 @@ export async function explainStory(env, body) {
 // ====================================================================================
 // 🧸 Kid news: three upbeat stories from the last week
 // ====================================================================================
-const KID_CATS = new Set(['space', 'science', 'gadgets', 'gaming', 'ai', 'dev']);
-const NOPE = /\b(death|dead|dies|died|kill|killed|killing|murder|war|weapon|gun|guns|shoot|shooting|bomb|attack|attacks|terror|abuse|assault|sex|sexual|porn|nude|drug|drugs|cocaine|suicide|lawsuit|sued|sues|court|crime|criminal|arrest|arrested|prison|jail|police|scam|fraud|hack|hacked|hackers|breach|leak|leaked|ransomware|malware|layoff|layoffs|fired|bankrupt|crash|crashes|crashed|injur\w*|victim|victims|blood|violence|violent|gambling|casino|bet|betting|alcohol|beer|vape|tobacco|nazi|racist|hate|ban|banned|outage|lawsuit|deepfake|surveillance|spy|spying|military|missile|army|election|politic\w*|trump|biden|crypto|bitcoin|nsfw|onlyfans|dating)\b/i;
+const KID_CATS = new Set(['space', 'science', 'gadgets', 'gaming', 'ai']);
+const NOPE = /\b(death|dead|dies|died|kill|killed|killing|murder|war|weapon|gun|guns|shoot|shooting|bomb|attack|attacks|terror|abuse|assault|sex|sexual|porn|nude|drug|drugs|cocaine|suicide|lawsuit|sued|sues|court|crime|criminal|arrest|arrested|prison|jail|police|scam|fraud|hack|hacked|hackers|breach|leak|leaked|ransomware|malware|layoff|layoffs|fired|bankrupt|crash|crashes|crashed|injur\w*|victim|victims|blood|violence|violent|gambling|casino|bet|betting|alcohol|beer|vape|tobacco|nazi|racist|hate|ban|banned|outage|lawsuit|deepfake|surveillance|spy|spying|military|missile|army|election|politic\w*|trump|biden|crypto|bitcoin|nsfw|onlyfans|dating|never|worst|hate|hates|angry|broke|broken|fail|fails|failed|failure|bad|problem|problems|threat|threatens|warn|warning|danger|dangerous|risk|risks|quit|quits|fired|toxic|addict\w*|regret|lender\w*|collateral|debt|loan\w*|donat\w*|subscri\w*|fundrais\w*|sponsor\w*|please|musk|billionaire\w*|ceo|stocks?|shares|investor\w*|valuation|ipo|tax\w*|tariff\w*|layoff\w*|union)\b/i;
 const YAY = /\b(launch\w*|discover\w*|record|first|new|robot\w*|rocket|moon|mars|planet\w*|star|stars|telescope|space|science|scientists|dinosaur\w*|fossil|ocean|animal\w*|game|games|gaming|nintendo|lego|minecraft|kids|students|school|learn\w*|museum|solar|energy|battery|electric|clean|recycl\w*|invent\w*|build\w*|tiny|smallest|biggest|fastest|art|music|open.source|volunteer\w*|help\w*|saves?|cure|healthy)\b/gi;
 
 export async function kidsNews(env) {
   const day = new Date().toISOString().slice(0, 10);
-  const cached = await kvGet(env, `kidsnews:${day}`);
+  const cached = await kvGet(env, `kidsnews:v3:${day}`);
   if (cached) return cached;
   const { results } = await env.DB.prepare('SELECT * FROM stories WHERE time > ? ORDER BY points DESC LIMIT 400').bind(Date.now() - 7 * 864e5).all();
   const scored = results.map(rowToStory)
     .filter((s) => KID_CATS.has(s.cat) && !NOPE.test(`${s.title} ${s.summary}`) && s.title.length <= 120 && !/^(show|ask|tell) hn\b/i.test(s.title))
-    .map((s) => ({ s, score: (s.title.match(YAY) || []).length * 60 + Math.min(300, s.points || 0) + (['space', 'science'].includes(s.cat) ? 80 : 0) }))
-    .filter((x) => x.score >= 60)
+    .map((s) => ({ s, yay: (s.title.match(YAY) || []).length }))
+    .filter((x) => x.yay >= 1) // needs at least one happy, kid-friendly word
+    .map(({ s, yay }) => ({ s, score: yay * 60 + Math.min(300, s.points || 0) + (['space', 'science'].includes(s.cat) ? 80 : 0) }))
     .sort((a, b) => b.score - a.score);
   const picks = [];
   const cats = new Set();
   for (const { s } of scored) { if (picks.length < 3 && !cats.has(s.cat)) { picks.push(s); cats.add(s.cat); } }
   for (const { s } of scored) { if (picks.length < 3 && !picks.includes(s)) picks.push(s); }
   const out = { day, items: picks.map((s) => ({ key: s.key, title: s.title, url: s.url, source: s.source, cat: s.cat, image: s.image || null, time: s.time })) };
-  if (out.items.length) await kvSet(env, `kidsnews:${day}`, out);
+  if (out.items.length) await kvSet(env, `kidsnews:v3:${day}`, out);
   return out;
 }
 
