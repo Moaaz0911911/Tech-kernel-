@@ -559,11 +559,18 @@ async function paintAuth() {
     ? 'One tap and you’re in: a name tag, a rank, a For You feed and a bucket for saved stories.'
     : 'Pick your portal. We never see your password — Google or Apple handle that part. 🔒';
   $('#appleLabel').textContent = mode === 'signup' ? 'Sign up with Apple' : 'Sign in with Apple';
-  $('#appleBtn').classList.toggle('needs-setup', !auth.appleReady);
+  const g = auth.googleReady;
+  const a = auth.appleReady;
+  $('#appleBtn').classList.toggle('needs-setup', !a);
+  // Once at least one provider is set up, hide the other one instead of showing "setup needed" to visitors.
+  $('#appleBtn').hidden = !a && g;
+  $('#googleSlot').hidden = !g && a;
   $('#authWarn').hidden = auth.originOk;
-  $('#setupHelp').hidden = auth.googleReady && auth.appleReady;
+  $('#setupHelp').hidden = g || a;
+  $('#setupOrigin').textContent = location.protocol.startsWith('http') ? location.origin : '(open the site from its https:// address to see this)';
+  $('#setupReturn').textContent = location.protocol.startsWith('http') ? auth.appleRedirectURI() : '(open the site from its https:// address to see this)';
   const slot = $('#googleSlot');
-  if (!auth.googleReady) {
+  if (!g) {
     slot.innerHTML = `<button type="button" class="gbtn needs-setup" data-setup="google">${GOOGLE_G}<span>${mode === 'signup' ? 'Sign up' : 'Sign in'} with Google</span></button>`;
     return;
   }

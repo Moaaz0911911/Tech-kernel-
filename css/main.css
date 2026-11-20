@@ -498,6 +498,7 @@ a.stat:hover { color: var(--red); }
 .setup-help summary { cursor: pointer; font-weight: 700; }
 .setup-help ol { padding-left: 18px; margin: 10px 0; }
 .setup-help li { margin-bottom: 6px; }
+.setup-values code { user-select: all; word-break: break-all; }
 
 .field { display: flex; flex-direction: column; gap: 6px; text-align: left; font-weight: 700; margin: 14px 0; }
 .field input { height: 46px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 600; }
