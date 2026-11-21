@@ -857,11 +857,28 @@ async function pickProfilePhoto(btn) {
   try {
     await auth.setPhoto(data);
     paintPhotoRow();
+    if ($('#profileDialog').open) repaintStylePicks();
     toast(t('Looking good! Your photo is on. 📷'), { emoji: '📷' });
     burstFrom($('#photoPreview'), { emojis: ['📷', '✨', '🍿'], count: 12 });
     sfx.ding();
   } catch (err) { toast(tServer(err.message), { emoji: '😵', type: 'error' }); }
   finally { btn.disabled = false; }
+}
+
+/** After a new photo: show it in the hat/frame previews, keeping what's picked in the form. */
+function repaintStylePicks() {
+  const url = $('#photoPreview img')?.getAttribute('src');
+  if (!url) return;
+  $$('#hatPick .ava, #framePick .ava').forEach((a) => {
+    const face = a.querySelector('.ava-face');
+    if (!face) return;
+    if (!face.classList.contains('ava-photo')) {
+      face.dataset.emoji = face.textContent;
+      face.classList.add('ava-photo');
+      face.innerHTML = `<img src="${esc(url)}" alt="" referrerpolicy="no-referrer">`;
+      a.classList.add('has-photo');
+    } else face.querySelector('img')?.setAttribute('src', url);
+  });
 }
 
 function openProfile(isNew = false) {
@@ -889,8 +906,9 @@ function openProfile(isNew = false) {
     return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
       <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
   };
-  $('#hatPick').innerHTML = HATS.map((h) => styleOpt('hat', h, { avatar: p.avatar, hat: h.id, frame: p.frame })).join('');
-  $('#framePick').innerHTML = FRAMES.map((f) => styleOpt('frame', f, { avatar: p.avatar, hat: p.hat, frame: f.id })).join('');
+  const me = { avatar: p.avatar, photo: p.photo, username: auth.user?.username }; // previews show your photo too
+  $('#hatPick').innerHTML = HATS.map((h) => styleOpt('hat', h, { ...me, hat: h.id, frame: p.frame })).join('');
+  $('#framePick').innerHTML = FRAMES.map((f) => styleOpt('frame', f, { ...me, hat: p.hat, frame: f.id })).join('');
   if (!dlg.open) dlg.showModal();
 }
 
