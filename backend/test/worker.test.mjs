@@ -1083,6 +1083,87 @@ try {
   ok('deleting accounts removes their wallets, cards and scores', (await db.prepare(`SELECT (SELECT COUNT(*) FROM stock_wallets) + (SELECT COUNT(*) FROM stock_holdings) + (SELECT COUNT(*) FROM user_cards)
     + (SELECT COUNT(*) FROM card_trades) + (SELECT COUNT(*) FROM guess_scores) + (SELECT COUNT(*) FROM bingo_claims) + (SELECT COUNT(*) FROM card_packs) AS n`).first()).n === 0);
 
+  console.log('👥 squads, 🎉 watch parties, ⚖️ debates, 📊 chat polls');
+  const join = async (username, password, ip) => (await api('/api/auth/register', { method: 'POST', body: { username, password }, ip })).data.token;
+  const fiaToken = await join('Fiaaaa', 'Squad-Leader-77', '7.7.7.1');
+  const gusToken = await join('Gussss', 'Team-Player-88', '7.7.7.2');
+  const hanToken = await join('Hannah', 'Debate-Fan-99', '7.7.7.3');
+  r = await api('/api/squad/create', { method: 'POST', token: fiaToken, body: { name: 'Byte Club', emoji: '🚀' } });
+  ok('👥 start a squad', r.status === 200 && r.data.squad.name === 'Byte Club' && r.data.squad.owner === true && r.data.squad.members.length === 1);
+  ok('…one squad at a time', (await api('/api/squad/create', { method: 'POST', token: fiaToken, body: { name: 'Another' } })).status === 409);
+  await api('/api/squad/invite', { method: 'POST', token: fiaToken, body: { username: 'Gussss' } });
+  r = await api('/api/squad', { token: gusToken });
+  ok('invite a friend', r.data.invites[0]?.name === 'Byte Club' && (await api('/api/notifications', { token: gusToken })).data.items.some((n) => n.title.includes('invited you to the squad')));
+  r = await api('/api/squad/answer', { method: 'POST', token: gusToken, body: { squad: r.data.invites[0].squad, accept: true } });
+  ok('…they join, and the squad gets its own group chat', r.data.squad.members.length === 2 && r.data.squad.group > 0 && (await api('/api/dm', { token: gusToken })).data.groups.some((g) => g.name === 'Byte Club'));
+  for (const tk of [fiaToken, gusToken]) await api('/api/me/data', { method: 'PUT', token: tk, body: { xp: 160 } });
+  r = await api('/api/squad', { token: fiaToken });
+  ok('squad XP adds up this week’s XP', r.data.squad.xp === 320 && r.data.squad.goal === 300);
+  ok('…reaching the goal pays everyone a bonus', r.data.squad.goalHit === true && (await meOf(gusToken)).stats.squadGoals === 1 && (await meOf(gusToken)).pendingXp === 40);
+  ok('…and the squad board', r.data.board.some((b) => b.name === 'Byte Club' && b.xp === 320));
+  const squadGroup = r.data.squad.group;
+  r = await api('/api/squad/leave', { method: 'POST', token: gusToken });
+  ok('leave a squad (and its chat)', r.data.squad === null && (await api(`/api/groups/${squadGroup}`, { token: gusToken })).status === 404);
+
+  r = await api('/api/dm', { method: 'POST', token: fiaToken, body: { to: 'Gussss', poll: { q: 'Pizza or tacos?', options: ['🍕 Pizza', '🌮 Tacos'] } } });
+  ok('📊 send a poll in a private chat', r.status === 200 && r.data.message.poll.options.length === 2 && r.data.message.poll.total === 0);
+  const pollId = r.data.message.id;
+  ok('…it needs two different answers', (await api('/api/dm', { method: 'POST', token: fiaToken, body: { to: 'Gussss', poll: { q: 'Hmm?', options: ['Yes'] } } })).status === 400);
+  r = await api('/api/chatpoll', { method: 'POST', token: gusToken, body: { scope: 'd', id: pollId, option: 1 } });
+  ok('…vote', r.data.poll.counts.join() === '0,1' && r.data.poll.mine === 1);
+  r = await api('/api/chatpoll', { method: 'POST', token: gusToken, body: { scope: 'd', id: pollId, option: 1 } });
+  ok('…tap again to take it back', r.data.poll.counts.join() === '0,0' && r.data.poll.mine === null);
+  ok('…strangers can’t vote', (await api('/api/chatpoll', { method: 'POST', token: hanToken, body: { scope: 'd', id: pollId, option: 0 } })).status === 404);
+  const pg = (await api('/api/groups', { method: 'POST', token: fiaToken, body: { name: 'Poll pals', members: ['Hannah'] } })).data.group;
+  r = await api(`/api/groups/${pg}/messages`, { method: 'POST', token: fiaToken, body: { poll: { q: 'Best console?', options: ['Switch', 'PlayStation', 'Xbox'] } } });
+  await api('/api/chatpoll', { method: 'POST', token: hanToken, body: { scope: 'g', id: r.data.message.id, option: 0 } });
+  r = await api(`/api/groups/${pg}`, { token: fiaToken });
+  ok('…and in groups', r.data.messages.find((x) => x.poll)?.poll.counts.join() === '1,0,0');
+
+  r = await api('/api/mod/parties', { method: 'POST', token, body: { title: 'Big Launch Event', emoji: '🚀', starts: Date.now() + 5 * 60_000, minutes: 60 } });
+  ok('🎉 moderators schedule watch parties', r.status === 200 && r.data.phase === 'lobby');
+  const partyId = r.data.id;
+  ok('…nobody else can', (await api('/api/mod/parties', { method: 'POST', token: fiaToken, body: { title: 'Nope', starts: Date.now() } })).status === 403);
+  r = await api(`/api/parties/${partyId}/rsvp`, { method: 'POST', token: fiaToken, body: {} });
+  ok('“remind me”', r.data.parties.find((x) => x.id === partyId).going === true);
+  await worker.scheduled({ cron: '2-59/5 * * * *' });
+  ok('…a reminder just before it starts', (await api('/api/notifications', { token: fiaToken })).data.items.some((n) => n.title.includes('Big Launch Event')));
+  r = await api(`/api/parties/${partyId}/chat`, { method: 'POST', token: fiaToken, body: { text: 'So hyped!' } });
+  ok('party chat', r.data.messages.some((x) => x.text === 'So hyped!' && x.mine));
+  await api(`/api/parties/${partyId}/hype`, { method: 'POST', token: gusToken, body: { emoji: '🔥', n: 3 } });
+  r = await api(`/api/parties/${partyId}?since=0&hype=0`, { token: hanToken });
+  ok('…hype everyone sees', r.data.hype.some((h) => h.emoji === '🔥' && h.n >= 3) && r.data.hypeMinute >= 3 && r.data.viewers >= 1);
+  ok('…only party emojis', (await api(`/api/parties/${partyId}/hype`, { method: 'POST', token: gusToken, body: { emoji: '💩' } })).status === 400);
+  const partyMsg = r.data.messages[0].id;
+  for (const tk of [gusToken, hanToken, token]) await api('/api/parties/report', { method: 'POST', token: tk, body: { id: partyMsg } });
+  ok('…three reports hide a message (moderators see it)', !(await api(`/api/parties/${partyId}?since=0`, { token: hanToken })).data.messages.length && (await api('/api/mod/reports', { token })).data.parties.some((x) => x.id === partyMsg));
+
+  r = await api('/api/debates');
+  ok('⚖️ a daily debate on the biggest story', r.data.debates.some((d) => d.auto && d.question === 'Is this a big deal?'));
+  r = await api('/api/debates', { method: 'POST', token: hanToken, body: { storyKey: story.key, question: 'Will this change gaming?', sideA: 'Yes', sideB: 'No way' } });
+  ok('start a debate on a story', r.status === 200 && r.data.debate.sides.join() === 'Yes,No way');
+  const debId = r.data.debate.id;
+  ok('…pick a side before you argue', (await api('/api/debates/argue', { method: 'POST', token: hanToken, body: { id: debId, text: 'Totally!' } })).status === 409);
+  await api('/api/debates/vote', { method: 'POST', token: hanToken, body: { id: debId, side: 'a' } });
+  r = await api('/api/debates/argue', { method: 'POST', token: hanToken, body: { id: debId, text: 'Faster tools mean better games, simple as that.' } });
+  const hanArg = r.data.arguments[0].id;
+  ok('…post your argument on your side', r.data.arguments[0].side === 'a' && r.data.debate.votes.join() === '1,0');
+  await api('/api/debates/vote', { method: 'POST', token: gusToken, body: { id: debId, side: 'b' } });
+  await api('/api/debates/argue', { method: 'POST', token: gusToken, body: { id: debId, text: 'Games are about ideas, not compilers.' } });
+  await api('/api/debates/vote', { method: 'POST', token: fiaToken, body: { id: debId, side: 'a' } });
+  r = await api('/api/debates/like', { method: 'POST', token: fiaToken, body: { id: hanArg } });
+  ok('❤️ the good arguments', r.data.arguments.find((x) => x.id === hanArg).likes === 1 && r.data.arguments.find((x) => x.id === hanArg).liked);
+  ok('…not your own', (await api('/api/debates/like', { method: 'POST', token: hanToken, body: { id: hanArg } })).status === 400);
+  await db.prepare('UPDATE debates SET closes = ? WHERE id = ?').bind(Date.now() - 1000, debId).run();
+  r = await api(`/api/debates/${debId}`, { token: hanToken });
+  ok('when it closes, the side with more votes wins', r.data.debate.closed && r.data.debate.winner === 'a' && r.data.debate.best === hanArg);
+  ok('…and the best argument on it earns XP', (await meOf(hanToken)).stats.debateWins === 1 && (await meOf(hanToken)).pendingXp === 30);
+  ok('…no more votes after that', (await api('/api/debates/vote', { method: 'POST', token: gusToken, body: { id: debId, side: 'a' } })).status === 409);
+
+  for (const tk of [fiaToken, gusToken, hanToken]) await api('/api/me', { method: 'DELETE', token: tk });
+  ok('deleting accounts removes their squads, votes and arguments', (await db.prepare(`SELECT (SELECT COUNT(*) FROM squads) + (SELECT COUNT(*) FROM squad_members) + (SELECT COUNT(*) FROM debate_args)
+    + (SELECT COUNT(*) FROM debate_votes) + (SELECT COUNT(*) FROM chat_poll_votes) + (SELECT COUNT(*) FROM party_messages) + (SELECT COUNT(*) FROM party_rsvps) AS n`).first()).n === 0);
+
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });
   ok('signed-out token stops working', (await api('/api/me', { token })).status === 401);

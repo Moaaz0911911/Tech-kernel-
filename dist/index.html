@@ -1646,6 +1646,102 @@ a.stat:hover { color: var(--text); }
 .dm-kactions { display: flex; gap: 6px; flex-wrap: wrap; }
 .dm-kstatus { font-weight: 700; }
 
+/* ================= Wave F: 👥 squads · 🎉 watch parties · ⚖️ debates · 📊 chat polls ================= */
+.sq-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.sq-emoji { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; background: var(--card-2); font-size: 1.5rem; }
+.sq-head span:last-child { display: flex; flex-direction: column; }
+.sq-head small { color: var(--muted); font-size: .76rem; }
+.sq-goal { margin: 6px 0 10px; }
+.sq-goal > span { display: block; height: 10px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+.sq-goal i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--text), var(--muted)); transition: width .8s var(--spring); }
+.sq-goal small { display: block; margin-top: 4px; font-size: .76rem; color: var(--muted); }
+.sq-members { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 4px; }
+.sq-members li { display: flex; align-items: center; gap: 6px; }
+.sq-members .person-main { flex: 1; }
+.sq-members li > b { font-size: .8rem; font-variant-numeric: tabular-nums; }
+.sq-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.sq-invite { display: flex; align-items: center; gap: 6px; padding: 8px 10px; margin-bottom: 6px; border-radius: 14px; background: var(--card-2); }
+.sq-invite > span { flex: 1; display: flex; flex-direction: column; font-size: .88rem; }
+.sq-invite small { color: var(--muted); font-size: .72rem; }
+.sq-new input[name="name"] { width: 100%; height: 40px; padding: 0 14px; margin: 4px 0; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text); font-size: .9rem; }
+
+.pt-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.pt-item + .pt-item { border-top: 1px solid var(--line); }
+.pt-emoji { font-size: 1.8rem; }
+.pt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pt-text b { font-size: .92rem; }
+.pt-text small { color: var(--muted); font-size: .76rem; }
+.modal.party-dialog { width: min(560px, calc(100vw - 24px)); }
+.party-dialog .modal-body { text-align: start; display: flex; flex-direction: column; gap: 8px; }
+.party-dialog h2 { text-align: center; }
+.pt-top { display: flex; align-items: center; gap: 10px; font-size: .84rem; font-weight: 700; }
+.pt-phase { padding: 3px 10px; border-radius: 999px; background: var(--card-2); }
+.pt-phase.live { background: #ff3b30; color: #fff; animation: pulse 1.6s infinite; }
+.pt-clock { font-variant-numeric: tabular-nums; }
+.pt-viewers { margin-inline-start: auto; color: var(--muted); }
+.pt-story { display: flex; gap: 6px; align-items: center; width: 100%; padding: 8px 12px; border: 0; border-radius: 14px; background: var(--card-2); color: var(--text); font-size: .84rem; text-align: start; cursor: pointer; }
+.pt-stage { position: relative; height: 120px; border-radius: 18px; overflow: hidden; background: radial-gradient(circle at 50% 120%, var(--card-3), var(--card-2) 70%); pointer-events: none; }
+.pt-float { position: absolute; bottom: -30px; font-size: 1.6rem; animation: ptFloat 2.8s ease-out forwards; }
+@keyframes ptFloat { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--drift, 0), -170px) scale(1.2); opacity: 0; } }
+.pt-meter span { display: block; height: 8px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+.pt-meter i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #ff9f0a, #ff3b30); transition: width .8s var(--ease); }
+.pt-meter small { font-size: .74rem; color: var(--muted); }
+.pt-hype { display: flex; gap: 6px; justify-content: center; }
+.pt-hype button { width: 46px; height: 46px; border: 0; border-radius: 50%; background: var(--card-2); font-size: 1.4rem; cursor: pointer; transition: transform .25s var(--spring); }
+.pt-hype button:active { transform: scale(1.35); }
+.pt-log { height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 16px; background: var(--card-2); }
+.pt-msg { display: flex; align-items: flex-start; gap: 6px; font-size: .86rem; animation: msgIn .3s var(--spring); }
+.pt-msg .ava { width: 24px; height: 24px; flex: none; font-size: .75rem; background: var(--card-3); }
+.pt-msg > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pt-flag { border: 0; background: none; opacity: .35; cursor: pointer; font-size: .75rem; }
+.pt-flag:hover { opacity: 1; }
+.pt-form { padding: 0; border: 0; }
+
+.db-item { width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; margin-bottom: 8px; border: 0; border-radius: 16px; background: var(--card-2); color: var(--text); text-align: start; cursor: pointer; transition: transform .3s var(--spring); }
+.db-item:hover { transform: translateY(-2px); }
+.db-item small { color: var(--muted); font-size: .72rem; }
+.db-story { font-size: .76rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-bar { height: 8px; margin-top: 4px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+.db-bar i { display: block; height: 100%; background: var(--text); transition: width .6s var(--spring); }
+.db-bar-labels { display: flex; justify-content: space-between; font-size: .72rem; }
+.modal.debate-dialog { width: min(720px, calc(100vw - 24px)); }
+.debate-dialog .modal-body { text-align: start; }
+.db-q { font: 800 1.15rem/1.3 var(--font-display); margin: 0 0 6px; text-align: center; }
+.db-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.db-side { padding: 10px; border-radius: 18px; background: var(--card-2); }
+.db-side.mine { box-shadow: 0 0 0 2px var(--text); }
+.db-side h3 { margin: 0 0 6px; font-size: .95rem; }
+.db-args { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.db-arg { padding: 8px 10px; border-radius: 14px; background: var(--card); }
+.db-arg.best { box-shadow: 0 0 0 2px #ff9f0a; }
+.db-best { font-size: .7rem; font-weight: 800; color: #ff9f0a; }
+.db-arg p { margin: 2px 0 6px; font-size: .86rem; overflow-wrap: anywhere; }
+.db-arg-foot { display: flex; align-items: center; gap: 6px; }
+.db-who { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; }
+.db-who .ava { width: 20px; height: 20px; font-size: .65rem; background: var(--card-2); }
+.db-like { padding: 2px 8px; border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--text); font-size: .74rem; cursor: pointer; }
+.db-like.on { background: var(--accent); color: var(--on-accent); }
+.db-form, .db-new { display: flex; flex-direction: column; gap: 6px; }
+.db-form textarea { width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text); font: inherit; resize: vertical; }
+.db-form .btn { align-self: flex-end; }
+.db-new-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 560px) { .db-sides { grid-template-columns: 1fr; } }
+
+.dm-poll { display: flex; flex-direction: column; gap: 6px; min-width: 220px; padding: 6px 4px; }
+.dm-pollopt { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--card); color: var(--text); text-align: start; cursor: pointer; overflow: hidden; }
+.dm-pollopt i { position: absolute; inset: 0 auto 0 0; background: var(--card-3); transition: width .5s var(--spring); }
+[dir="rtl"] .dm-pollopt i { inset: 0 0 0 auto; }
+.dm-pollopt span, .dm-pollopt small { position: relative; }
+.dm-pollopt.on { border-color: var(--text); font-weight: 700; }
+.dm-poll > small { font-size: .72rem; opacity: .8; }
+.dm-pollform { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.dm-pollform[hidden] { display: none; }
+.dm-pollform input { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--card-2); color: var(--text); font-size: .86rem; }
+.dm-pollopts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dm-pollbtns { display: flex; justify-content: flex-end; gap: 6px; }
+.dm-form .dm-pollbtn { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--card-2); font-size: 1rem; }
+.dm-form.has-text .dm-pollbtn { display: none; }
+
 
 /* single-file: kids corner overlay */
 #kidsFrame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1000; background: #8fd3ff; }
@@ -1794,6 +1890,10 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <p class="view-sub">Daily games made from today’s news. New ones every day.</p>
       </header>
       <div class="grid">
+        <section class="widget widget-party" id="partyWidget" aria-labelledby="partyTitle" hidden>
+          <h3 id="partyTitle" class="widget-title">🎉 Watch Parties</h3>
+          <div id="partyBody"></div>
+        </section>
         <section class="widget widget-live" id="liveWidget" aria-labelledby="liveTitle" hidden>
           <h3 id="liveTitle" class="widget-title">📺 kerNEl Live</h3>
           <div id="liveBody"><div class="chat-empty"><span class="spin">📺</span></div></div>
@@ -1826,6 +1926,10 @@ html.kids-open, html.kids-open body { overflow: hidden; }
             <p><b>🏆 Weekly tournament</b><br><span id="tourneyLine">8 headlines, one go each. The top 3 win trophies!</span></p>
             <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
           </div>
+        </section>
+        <section class="widget widget-debate" id="debateWidget" aria-labelledby="debateTitle" hidden>
+          <h3 id="debateTitle" class="widget-title">⚖️ Debate Rooms</h3>
+          <div id="debateBody"></div>
         </section>
         <section class="widget widget-stocks" id="stocksWidget" aria-labelledby="stocksTitle" hidden>
           <h3 id="stocksTitle" class="widget-title">📈 Story Stocks</h3>
@@ -1868,6 +1972,10 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <section class="widget widget-invite" id="inviteWidget" aria-labelledby="inviteTitle" hidden>
           <h3 id="inviteTitle" class="widget-title">🎟️ Invite friends</h3>
           <div id="inviteBody"></div>
+        </section>
+        <section class="widget widget-squad" id="squadWidget" aria-labelledby="squadTitle" hidden>
+          <h3 id="squadTitle" class="widget-title">👥 Your squad</h3>
+          <div id="squadBody"></div>
         </section>
         <section class="widget widget-topics" id="topicsWidget" aria-labelledby="topicsTitle" hidden>
           <h3 id="topicsTitle" class="widget-title">🔔 Topics you follow</h3>
@@ -4405,6 +4513,129 @@ const MAIN_STRINGS = [
   ['🌙 The Moon or Mars', '🌙 القمر أو المريخ', '🌙 Mond oder Mars', '🌙 Ang Buwan o Mars'],
   ['🗣️ Social media drama', '🗣️ دراما السوشيال ميديا', '🗣️ Social-Media-Drama', '🗣️ Drama sa social media'],
   ['🔑 Passwords and logins', '🔑 الباسوردات وتسجيل الدخول', '🔑 Passwörter und Logins', '🔑 Password at login'],
+  // 👥 squads, 🎉 watch parties, ⚖️ debates, 📊 chat polls
+  ['Debate this story', 'اعمل مناقشة على الخبر ده', 'Über diese Story debattieren', 'Pagdebatehan ang balitang ito'],
+  ['Ask a question…', 'اسأل سؤال…', 'Stell eine Frage…', 'Magtanong…'],
+  ['Poll question', 'سؤال التصويت', 'Umfragefrage', 'Tanong ng poll'],
+  ['Answer {n}', 'إجابة {n}', 'Antwort {n}', 'Sagot {n}'],
+  ['optional', 'اختياري', 'optional', 'opsyonal'],
+  ['Send poll', 'ابعت التصويت', 'Umfrage senden', 'Ipadala ang poll'],
+  ['Make a poll', 'اعمل تصويت', 'Umfrage erstellen', 'Gumawa ng poll'],
+  ['Poll', 'تصويت', 'Umfrage', 'Poll'],
+  ['tap to vote', 'دوس عشان تصوّت', 'zum Abstimmen tippen', 'i-tap para bumoto'],
+  ['Write a question and at least two answers', 'اكتب سؤال وإجابتين على الأقل', 'Schreib eine Frage und mindestens zwei Antworten', 'Sumulat ng tanong at hindi bababa sa dalawang sagot'],
+  ['Debate arguments', 'حجج المناقشات', 'Debatten-Argumente', 'Mga argumento sa debate'],
+  ['Watch party chat', 'شات الـ Watch Party', 'Watch-Party-Chat', 'Chat sa watch party'],
+  ['Title', 'العنوان', 'Titel', 'Pamagat'],
+  ['e.g. Big phone launch event', 'زي: حفلة إطلاق موبايل كبير', 'z. B. Großes Handy-Launch-Event', 'hal. Malaking phone launch event'],
+  ['Starts (your time)', 'بيبدأ (بتوقيتك)', 'Beginnt (deine Zeit)', 'Magsisimula (oras mo)'],
+  ['Length', 'المدة', 'Dauer', 'Haba'],
+  ['Schedule party', 'حدد معاد الحفلة', 'Party planen', 'I-schedule ang party'],
+  ['Coming up', 'الجاي', 'Demnächst', 'Paparating'],
+  ['{n} going', '{n} رايحين', '{n} dabei', '{n} pupunta'],
+  ['Cancel party', 'الغي الحفلة', 'Party absagen', 'Kanselahin ang party'],
+  ['Party scheduled! 🎉', 'الحفلة اتحدد معادها! 🎉', 'Party geplant! 🎉', 'Naka-schedule na ang party! 🎉'],
+  ['Cancel this party?', 'تلغي الحفلة دي؟', 'Diese Party absagen?', 'Kanselahin ang party na ito?'],
+  ['Team player', 'لاعب فريق', 'Teamplayer', 'Team player'],
+  ['Debate champ', 'بطل المناقشات', 'Debatten-Champion', 'Kampeon ng debate'],
+  ['reach your squad’s weekly goal 3 times', 'وصّل السكواد بتاعك لهدف الأسبوع 3 مرات', 'erreiche 3-mal das Wochenziel deiner Crew', 'maabot ang lingguhang goal ng squad nang 3 beses'],
+  ['write the winning argument in 3 debates', 'اكتب الحجة الكسبانة في 3 مناقشات', 'schreib in 3 Debatten das Gewinnerargument', 'isulat ang panalong argumento sa 3 debate'],
+  ['👥 Your squad', '👥 السكواد بتاعك', '👥 Deine Crew', '👥 Ang squad mo'],
+  ['🎉 Watch Parties', '🎉 حفلات المشاهدة', '🎉 Watch Partys', '🎉 Watch Parties'],
+  ['⚖️ Debate Rooms', '⚖️ غرف المناقشة', '⚖️ Debattenräume', '⚖️ Debate Rooms'],
+  ['Is this a big deal?', 'هي دي حاجة كبيرة؟', 'Ist das eine große Sache?', 'Malaking bagay ba ito?'],
+  ['🔥 Big deal', '🔥 حاجة كبيرة', '🔥 Große Sache', '🔥 Malaking bagay'],
+  ['🥱 Overhyped', '🥱 مضخّمة', '🥱 Überbewertet', '🥱 Sobrang hype'],
+  ['Top squads this week', 'أحسن سكوادات الأسبوع', 'Top-Crews diese Woche', 'Nangungunang squad ngayong linggo'],
+  ['Team up with up to 4 friends. Earn XP together every week and everyone gets a bonus when you hit the goal!', 'اعمل فريق مع لحد 4 صحاب. اجمعوا XP مع بعض كل أسبوع، ولما توصلوا للهدف الكل ياخد بونص!', 'Tu dich mit bis zu 4 Freunden zusammen. Sammelt jede Woche gemeinsam XP – erreicht ihr das Ziel, bekommen alle einen Bonus!', 'Makipag-team sa hanggang 4 na kaibigan. Mag-ipon ng XP nang sama-sama bawat linggo at may bonus ang lahat kapag naabot ang goal!'],
+  ['Sign up to join a squad', 'اعمل حساب عشان تدخل سكواد', 'Registrieren, um einer Crew beizutreten', 'Mag-sign up para sumali sa squad'],
+  ['Invites', 'الدعوات', 'Einladungen', 'Mga imbitasyon'],
+  ['Join', 'انضم', 'Beitreten', 'Sumali'],
+  ['Squad name', 'اسم السكواد', 'Crew-Name', 'Pangalan ng squad'],
+  ['Start a squad', 'اعمل سكواد', 'Crew gründen', 'Magsimula ng squad'],
+  ['Goal reached! Everyone got +{xp} XP', 'الهدف اتحقق! الكل خد +{xp} XP', 'Ziel erreicht! Alle bekommen +{xp} XP', 'Naabot ang goal! May +{xp} XP ang lahat'],
+  ['{xp} / {goal} XP this week — reach it for +{bonus} XP each', '{xp} / {goal} XP الأسبوع ده — وصّلوه وكل واحد ياخد +{bonus} XP', '{xp} / {goal} XP diese Woche – erreicht es für je +{bonus} XP', '{xp} / {goal} XP ngayong linggo — abutin para sa +{bonus} XP bawat isa'],
+  ['(invited)', '(متعزوم)', '(eingeladen)', '(inimbitahan)'],
+  ['Invite', 'اعزم', 'Einladen', 'Mag-imbita'],
+  ['Squad chat', 'شات السكواد', 'Crew-Chat', 'Chat ng squad'],
+  ['Leave', 'اخرج', 'Verlassen', 'Umalis'],
+  ['Squad started! Now invite your friends 👥', 'السكواد اتعمل! اعزم صحابك دلوقتي 👥', 'Crew gegründet! Lade jetzt deine Freunde ein 👥', 'Nasimulan ang squad! Imbitahan na ang mga kaibigan mo 👥'],
+  ['Welcome to the squad! 🎉', 'أهلًا بيك في السكواد! 🎉', 'Willkommen in der Crew! 🎉', 'Maligayang pagdating sa squad! 🎉'],
+  ['Invite sent to @{name}!', 'الدعوة اتبعتت لـ @{name}!', 'Einladung an @{name} gesendet!', 'Naipadala ang imbitasyon kay @{name}!'],
+  ['Leave your squad?', 'تخرج من السكواد؟', 'Deine Crew verlassen?', 'Umalis sa squad mo?'],
+  ['You left the squad.', 'خرجت من السكواد.', 'Du hast die Crew verlassen.', 'Umalis ka na sa squad.'],
+  ['LIVE NOW', 'لايف دلوقتي', 'JETZT LIVE', 'LIVE NGAYON'],
+  ['Starts in {time}', 'بيبدأ بعد {time}', 'Beginnt in {time}', 'Magsisimula sa loob ng {time}'],
+  ['in {time}', 'بعد {time}', 'in {time}', 'sa loob ng {time}'],
+  ['Going', 'رايح', 'Dabei', 'Pupunta'],
+  ['Remind me', 'فكّرني', 'Erinnern', 'Paalalahanan ako'],
+  ['Join the party', 'ادخل الحفلة', 'Zur Party', 'Sumali sa party'],
+  ['Party’s over', 'الحفلة خلصت', 'Die Party ist vorbei', 'Tapos na ang party'],
+  ['Starting soon', 'هيبدأ قريب', 'Beginnt gleich', 'Malapit nang magsimula'],
+  ['Send {emoji}', 'ابعت {emoji}', '{emoji} senden', 'Ipadala ang {emoji}'],
+  ['Say something…', 'قول حاجة…', 'Sag etwas…', 'Magsabi ng kahit ano…'],
+  ['Sign up to chat and hype', 'اعمل حساب عشان تشات وتشجّع', 'Registrieren zum Chatten und Anfeuern', 'Mag-sign up para mag-chat at mag-hype'],
+  ['Be the first to say hi! 👋', 'خليك أول واحد يقول أهلًا! 👋', 'Sag als Erster Hallo! 👋', 'Maunang mag-hi! 👋'],
+  ['🔥 The hype is unreal!', '🔥 الحماس مش طبيعي!', '🔥 Die Stimmung ist unglaublich!', '🔥 Grabe ang hype!'],
+  ['🍿 Things are heating up', '🍿 الدنيا بتسخن', '🍿 Es wird heiß', '🍿 Umiinit na'],
+  ['Tap the emojis to hype it up!', 'دوس على الإيموجي عشان تشجّع!', 'Tippe auf die Emojis für mehr Stimmung!', 'I-tap ang emoji para mag-hype!'],
+  ['That party is over', 'الحفلة دي خلصت', 'Diese Party ist vorbei', 'Tapos na ang party na iyan'],
+  ['We’ll remind you when it starts 🔔', 'هنفكّرك لما تبدأ 🔔', 'Wir erinnern dich, wenn es losgeht 🔔', 'Paaalalahanan ka namin kapag nagsimula 🔔'],
+  ['Debate', 'مناقشة', 'Debatte', 'Debate'],
+  ['Today’s big debate', 'مناقشة النهارده الكبيرة', 'Die große Debatte des Tages', 'Malaking debate ngayon'],
+  ['Open debate', 'مناقشة مفتوحة', 'Offene Debatte', 'Bukas na debate'],
+  ['No open debates yet — start one from any story ⚖️', 'مفيش مناقشات مفتوحة لسه — ابدأ واحدة من أي خبر ⚖️', 'Noch keine offenen Debatten – starte eine bei jeder Story ⚖️', 'Wala pang bukas na debate — magsimula ng isa mula sa kahit anong balita ⚖️'],
+  ['Open a story and tap ⚖️ to start your own debate.', 'افتح أي خبر ودوس ⚖️ عشان تبدأ مناقشة.', 'Öffne eine Story und tippe auf ⚖️, um deine eigene Debatte zu starten.', 'Magbukas ng balita at i-tap ang ⚖️ para magsimula ng sariling debate.'],
+  ['Your side', 'صفّك', 'Deine Seite', 'Panig mo'],
+  ['Pick this side', 'اختار الصف ده', 'Diese Seite wählen', 'Piliin ang panig na ito'],
+  ['Best argument', 'أحسن حجة', 'Bestes Argument', 'Pinakamahusay na argumento'],
+  ['Like this argument', 'عجبتني الحجة دي', 'Dieses Argument mögen', 'I-like ang argumentong ito'],
+  ['No arguments yet.', 'مفيش حجج لسه.', 'Noch keine Argumente.', 'Wala pang argumento.'],
+  ['It’s a tie!', 'تعادل!', 'Unentschieden!', 'Tabla!'],
+  ['Closed — “{side}” won!', 'اتقفلت — «{side}» كسب!', 'Geschlossen – „{side}“ hat gewonnen!', 'Sarado na — nanalo ang “{side}”!'],
+  ['Closes in {time}', 'بتقفل بعد {time}', 'Endet in {time}', 'Magsasara sa loob ng {time}'],
+  ['Your best argument for “{side}”…', 'أحسن حجة عندك لـ «{side}»…', 'Dein bestes Argument für „{side}“…', 'Ang pinakamahusay mong argumento para sa “{side}”…'],
+  ['Pick a side to post an argument.', 'اختار صف عشان تكتب حجة.', 'Wähle eine Seite, um ein Argument zu posten.', 'Pumili ng panig para mag-post ng argumento.'],
+  ['Sign up to join the debate', 'اعمل حساب عشان تدخل المناقشة', 'Registrieren, um mitzudiskutieren', 'Mag-sign up para sumali sa debate'],
+  ['The side with more votes wins, and the best-liked argument on it earns XP.', 'الصف اللي عنده أصوات أكتر بيكسب، والحجة اللي خدت لايكات أكتر فيه بتكسب XP.', 'Die Seite mit mehr Stimmen gewinnt, und das beliebteste Argument darauf bringt XP.', 'Panalo ang panig na may mas maraming boto, at may XP ang pinakagustong argumento roon.'],
+  ['Sign in to start a debate ⚖️', 'سجّل دخول عشان تبدأ مناقشة ⚖️', 'Melde dich an, um eine Debatte zu starten ⚖️', 'Mag-sign in para magsimula ng debate ⚖️'],
+  ['Debates on this story', 'مناقشات على الخبر ده', 'Debatten zu dieser Story', 'Mga debate sa balitang ito'],
+  ['Start a debate', 'ابدأ مناقشة', 'Debatte starten', 'Magsimula ng debate'],
+  ['e.g. Is this good news for gamers?', 'زي: هل ده خبر حلو للجيمرز؟', 'z. B. Sind das gute News für Gamer?', 'hal. Magandang balita ba ito para sa gamers?'],
+  ['Side 1', 'الصف 1', 'Seite 1', 'Panig 1'],
+  ['Side 2', 'الصف 2', 'Seite 2', 'Panig 2'],
+  ['Start the debate', 'ابدأ المناقشة', 'Debatte starten', 'Simulan ang debate'],
+  ['Report this argument for being mean, unsafe or spammy?', 'تبلّغ عن الحجة دي عشان قليلة الذوق أو مش آمنة أو سبام؟', 'Dieses Argument als gemein, unsicher oder Spam melden?', 'I-report ang argumentong ito dahil masama, hindi ligtas o spam?'],
+  ['{n} arguments', '{n} حجة', '{n} Argumente', '{n} argumento'],
+  ['Ask a question for your poll', 'اكتب سؤال للتصويت', 'Stell eine Frage für deine Umfrage', 'Magtanong para sa poll mo'],
+  ['Each answer needs to be different', 'كل إجابة لازم تبقى مختلفة', 'Jede Antwort muss anders sein', 'Kailangang magkakaiba ang bawat sagot'],
+  ['Poll not found', 'التصويت مش موجود', 'Umfrage nicht gefunden', 'Hindi nakita ang poll'],
+  ['Pick an answer', 'اختار إجابة', 'Wähle eine Antwort', 'Pumili ng sagot'],
+  ['Ask a question to debate', 'اكتب سؤال للمناقشة', 'Stell eine Frage zum Debattieren', 'Magtanong na pagdedebatehan'],
+  ['The two sides need different names', 'الصفين لازم يبقى ليهم أسامي مختلفة', 'Die zwei Seiten brauchen verschiedene Namen', 'Kailangang magkaiba ang pangalan ng dalawang panig'],
+  ['That’s 3 debates today — let these ones heat up first!', 'دي 3 مناقشات النهارده — سيبهم يسخنوا الأول!', 'Das sind 3 Debatten heute – lass die erst mal heiß laufen!', 'Tatlong debate na ngayon — hayaan munang uminit ang mga ito!'],
+  ['Debate not found', 'المناقشة مش موجودة', 'Debatte nicht gefunden', 'Hindi nakita ang debate'],
+  ['This debate is closed', 'المناقشة دي اتقفلت', 'Diese Debatte ist geschlossen', 'Sarado na ang debate na ito'],
+  ['Pick a side', 'اختار صف', 'Wähle eine Seite', 'Pumili ng panig'],
+  ['Pick a side first', 'اختار صف الأول', 'Wähle zuerst eine Seite', 'Pumili muna ng panig'],
+  ['Make your point first!', 'قول رأيك الأول!', 'Bring zuerst dein Argument!', 'Sabihin muna ang punto mo!'],
+  ['Three arguments per debate — let others have a go!', 'تلات حجج بس في كل مناقشة — سيب غيرك يتكلم!', 'Drei Argumente pro Debatte – lass auch andere ran!', 'Tatlong argumento lang bawat debate — bigyan ng pagkakataon ang iba!'],
+  ['Argument not found', 'الحجة مش موجودة', 'Argument nicht gefunden', 'Hindi nakita ang argumento'],
+  ['No liking your own argument 😄', 'مينفعش تعمل لايك لحجتك 😄', 'Eigene Argumente kannst du nicht liken 😄', 'Bawal i-like ang sariling argumento 😄'],
+  ['The chat opens 15 minutes before the party', 'الشات بيفتح قبل الحفلة بـ 15 دقيقة', 'Der Chat öffnet 15 Minuten vor der Party', 'Bubukas ang chat 15 minuto bago ang party'],
+  ['Save the hype for when the party is on!', 'وفّر الحماس لحد ما الحفلة تبدأ!', 'Heb dir die Stimmung für die Party auf!', 'Itabi ang hype para sa party!'],
+  ['Give the party a title', 'اكتب عنوان للحفلة', 'Gib der Party einen Titel', 'Bigyan ng pamagat ang party'],
+  ['Pick a start time in the next 60 days', 'اختار معاد خلال الـ 60 يوم الجايين', 'Wähle einen Start in den nächsten 60 Tagen', 'Pumili ng oras ng simula sa susunod na 60 araw'],
+  ['You’re already in a squad — leave it first', 'إنت في سكواد خلاص — اخرج منه الأول', 'Du bist schon in einer Crew – verlass sie zuerst', 'Nasa isang squad ka na — umalis ka muna'],
+  ['Give your squad a name', 'اكتب اسم للسكواد', 'Gib deiner Crew einen Namen', 'Bigyan ng pangalan ang squad mo'],
+  ['You’re not in a squad', 'إنت مش في سكواد', 'Du bist in keiner Crew', 'Wala ka sa squad'],
+  ['Your squad is full (5 kernels)', 'السكواد بتاعك مليان (5 حبايات)', 'Deine Crew ist voll (5 Kerne)', 'Puno na ang squad mo (5 kernel)'],
+  ['You’re already in your squad 😄', 'إنت في السكواد بتاعك أصلًا 😄', 'Du bist doch schon in deiner Crew 😄', 'Nasa squad mo ka na 😄'],
+  ['You can’t invite this kernel', 'مينفعش تعزم الشخص ده', 'Du kannst diese Person nicht einladen', 'Hindi mo puwedeng imbitahan ang taong ito'],
+  ['They’re already in a squad', 'هو في سكواد خلاص', 'Diese Person ist schon in einer Crew', 'Nasa isang squad na sila'],
+  ['That invite is gone', 'الدعوة دي اختفت', 'Diese Einladung ist weg', 'Wala na ang imbitasyong iyan'],
+  ['That squad is gone', 'السكواد ده اختفى', 'Diese Crew gibt es nicht mehr', 'Wala na ang squad na iyan'],
+  ['That squad is full', 'السكواد ده مليان', 'Diese Crew ist voll', 'Puno na ang squad na iyan'],
 ];
 addStrings(MAIN_STRINGS);
 
@@ -5380,6 +5611,8 @@ const HATS = [
   { id: 'chart', emoji: '📈', xp: 0, stat: 'stockWins', min: 1, need: 'finish a Story Stocks week in the top 3', name: 'Market mogul' },
   { id: 'target', emoji: '🎯', xp: 0, stat: 'bingos', min: 3, need: 'get Tech Bingo 3 times', name: 'Bingo pro' },
   { id: 'joker', emoji: '🃏', xp: 0, stat: 'cardSets', min: 1, need: 'complete a card set', name: 'Card shark' },
+  { id: 'team', emoji: '🤝', xp: 0, stat: 'squadGoals', min: 3, need: 'reach your squad’s weekly goal 3 times', name: 'Team player' },
+  { id: 'gavel', emoji: '⚖️', xp: 0, stat: 'debateWins', min: 3, need: 'write the winning argument in 3 debates', name: 'Debate champ' },
 ];
 
 const FRAMES = [
@@ -6632,9 +6865,15 @@ const SKELETON = () => `
     <div class="dm-log" id="dmLog" aria-live="polite"></div>
     <div class="dm-banner" id="dmBanner" hidden></div>
     <div class="chat-share" id="dmShare" hidden></div>
+    <form class="dm-pollform" id="dmPoll" hidden>
+      <input name="q" maxlength="120" dir="auto" placeholder="${esc(t('Ask a question…'))}" aria-label="${esc(t('Poll question'))}">
+      <div class="dm-pollopts">${[1, 2, 3, 4].map((n) => `<input name="o${n}" maxlength="40" dir="auto" placeholder="${esc(t('Answer {n}', { n }))}${n > 2 ? ` (${esc(t('optional'))})` : ''}">`).join('')}</div>
+      <div class="dm-pollbtns"><button type="button" class="btn btn-sm btn-ghost" data-dm="poll-cancel">${t('Cancel')}</button><button class="btn btn-sm btn-primary">📊 ${t('Send poll')}</button></div>
+    </form>
     <form class="chat-form dm-form" id="dmForm">
       <label class="sr-only" for="dmInput">${t('Message')}</label>
       <input id="dmInput" maxlength="1000" autocomplete="off" placeholder="${esc(t('Message…'))}" enterkeyhint="send">
+      <button type="button" class="icon-btn dm-pollbtn" data-dm="poll" title="${esc(t('Make a poll'))}" aria-label="${esc(t('Make a poll'))}">📊</button>
       <button type="button" class="icon-btn dm-mic" data-dm="mic" title="${esc(t('Record a voice note'))}" aria-label="${esc(t('Record a voice note'))}">🎙️</button>
       <button type="submit" class="send-btn" aria-label="${esc(t('Send'))}">➤</button>
     </form>
@@ -6703,14 +6942,14 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const lastText = (th) => {
     if (!th.last) return '';
     const l = th.last;
-    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.poll ? `📊 ${t('Poll')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return l.mine ? `${t('You')}: ${body}` : body;
   };
   const groupLast = (g) => {
     const l = g.last;
     if (!l) return tn(g.members, '{n} member', '{n} members');
     if (l.kind === 'system') return systemText(l.text);
-    const body = l.deleted ? t('Message deleted') : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.poll ? `📊 ${t('Poll')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return `${l.mine ? t('You') : `@${l.from}`}: ${body}`;
   };
   const threadRow = (th) => `<button type="button" class="dm-row${th.unread ? ' unread' : ''}" data-thread="${th.id}">
@@ -6809,10 +7048,19 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       : p.kind === 'story' ? '<span aria-hidden="true">📰</span>' : `<span dir="auto">${esc(p.text.slice(0, 24))}</span>`;
     return `<span class="dm-popreply"><span class="dm-popthumb pop-bg-${(Number(p.bg) || 0) % 8}">${thumb}</span><small>🫧 ${mine ? t('You replied to their pop') : t('Replied to your pop')}${p.story ? `<br><span dir="auto">${esc(p.story.slice(0, 60))}</span>` : ''}</small></span>`;
   };
+  const pollHTML = (m) => {
+    const p = m.poll;
+    const total = p.total || 0;
+    return `<div class="dm-poll"><b dir="auto">📊 ${esc(p.q)}</b>${p.options.map((o, i) => {
+      const n = p.counts?.[i] || 0;
+      const pct = total ? Math.round((n / total) * 100) : 0;
+      return `<button type="button" class="dm-pollopt${p.mine === i ? ' on' : ''}" data-dpoll="${m.id}:${i}" aria-pressed="${p.mine === i}"><i style="width:${pct}%"></i><span dir="auto">${esc(o)}</span><small>${n}</small></button>`;
+    }).join('')}<small>${tn(total, '{n} vote', '{n} votes')}${p.mine == null ? ` · ${t('tap to vote')}` : ''}</small></div>`;
+  };
   const bubbleInner = (m) => {
     if (m.deleted) return `<i>${t('Message deleted')}</i>`;
     if (m.hidden) return `<i>🚩 ${t('Hidden after reports')}</i>`;
-    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}`;
+    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}${m.poll ? pollHTML(m) : ''}`;
   };
   const reactsHTML = (m) => {
     if (isGroup()) {
@@ -6824,7 +7072,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const msgHTML = (m, from = '') => {
     if (m.kind === 'system') return `<div class="dm-sys" dir="auto">${esc(systemText(m.system))}</div>`;
     const gone = m.deleted || m.hidden;
-    const card = (m.story || m.duel || m.trade) && !m.text && !m.voice;
+    const card = (m.story || m.duel || m.trade || m.poll) && !m.text && !m.voice;
     const actions = m.mine
       ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
       : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
@@ -6966,6 +7214,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   }
 
   function startConvo(next) {
+    $('#dmPoll').hidden = true;
     cancelRecording();
     stopVoice();
     cur = next;
@@ -7028,8 +7277,9 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
 
   /** Send a message (text and/or a shared story, or a voice note) to the open chat. */
   async function send(extra = {}) {
-    const text = extra.voice ? '' : input.value.trim();
-    const story = extra.voice ? null : share;
+    const special = !!(extra.voice || extra.poll); // a voice note or a poll goes on its own
+    const text = special ? '' : input.value.trim();
+    const story = special ? null : share;
     const before = cur.streak || 0;
     const target = cur;
     const payload = { text, storyKey: story?.key, ...extra };
@@ -7044,7 +7294,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     }
     msgs.set(r.message.id, r.message);
     typingSent = 0;
-    if (!extra.voice) { input.value = ''; share = null; }
+    if (!special) { input.value = ''; share = null; }
     renderConvo(true);
     sfx.pop();
     if (!isGroup() && r.streak >= 2 && r.streak > before) {
@@ -7072,6 +7322,20 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       btn.disabled = false;
       input.focus({ preventScroll: true });
     }
+  });
+
+  $('#dmPoll').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const q = f.elements.q.value.trim();
+    const options = [1, 2, 3, 4].map((n) => f.elements[`o${n}`].value.trim()).filter(Boolean);
+    if (!q || options.length < 2) { toast(t('Write a question and at least two answers'), { emoji: '📊' }); return; }
+    try {
+      await send({ poll: { q, options } });
+      f.reset();
+      f.hidden = true;
+      burstFrom($('.dm-pollbtn', form), { emojis: ['📊', '✨'], count: 8, spread: 40 });
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
   });
 
   // ---------------- ✍️ typing ----------------
@@ -7232,6 +7496,18 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if (gr) return openGroup(Number(gr.dataset.group));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const pv = el.closest('[data-dpoll]');
+    if (pv) {
+      const [id, option] = pv.dataset.dpoll.split(':').map(Number);
+      try {
+        const r = await auth.api('/api/chatpoll', { method: 'POST', body: { scope: isGroup() ? 'g' : 'd', id, option } });
+        const m = msgs.get(id);
+        if (m) msgs.set(id, { ...m, poll: r.poll });
+        renderConvo();
+        sfx.pop();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const kt = el.closest('[data-ktrade]');
     if (kt) {
       const [id, what] = kt.dataset.ktrade.split(':');
@@ -7259,6 +7535,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       if (what === 'requests' || what === 'requests-close') { showRequests = what === 'requests'; return renderInbox(); }
       if (what === 'unshare') { share = null; return cur ? paintComposer() : renderInbox(); }
       if (what === 'mic') return startRecording();
+      if (what === 'poll' || what === 'poll-cancel') { const f = $('#dmPoll'); f.hidden = what === 'poll-cancel' || !f.hidden; if (!f.hidden) f.elements.q.focus(); return; }
       if (what === 'rec-cancel') return cancelRecording();
       if (what === 'rec-send') return finishRecording();
       if (what === 'del-msg') {
@@ -9092,6 +9369,466 @@ function initCards({ openAuth }) {
 return { initCards };
 })();
 
+// ===== squads.js =====
+__m["squads"] = (() => {
+// 👥 Squads on the website (Me tab): your team of up to 5, this week's XP, the shared goal and the squad board.
+const { $, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { findPeople, personHTML } = __m["dm"];
+const { GROUP_EMOJIS } = __m["groups"];
+const { inWords } = __m["arena"];
+
+function initSquads({ openAuth, openGroup }) {
+  if (!auth.ready) { $('#squadWidget')?.remove(); return null; }
+  const box = $('#squadWidget');
+  const body = $('#squadBody');
+  let data = null;
+  let inviting = false;
+  let emoji = '🚀';
+  let hadGoal = null;
+  let seq = 0;
+
+  const boardHTML = () => (data.board.length ? `<p class="tp-label">🏆 ${t('Top squads this week')}</p><ol class="board-list">${data.board.slice(0, 5).map((b) => `<li><span class="bp">${b.place}</span><span aria-hidden="true">${esc(b.emoji)}</span><b dir="auto">${esc(b.name)}</b><span>${b.xp} XP</span></li>`).join('')}</ol>` : '');
+
+  function paint() {
+    box.hidden = false;
+    if (!auth.user) {
+      body.innerHTML = `<p class="small">${t('Team up with up to 4 friends. Earn XP together every week and everyone gets a bonus when you hit the goal!')}</p><button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to join a squad')}</button>`;
+      return;
+    }
+    if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">👥</span></div>'; return; }
+    const s = data.squad;
+    if (!s) {
+      body.innerHTML = `${data.invites.length ? `<p class="tp-label">📨 ${t('Invites')}</p>${data.invites.map((i) => `<div class="sq-invite"><span>${esc(i.emoji)} <b dir="auto">${esc(i.name)}</b><small>${t('from @{name}', { name: esc(i.by || '?') })} · ${tn(i.members, '{n} member', '{n} members')}</small></span>
+          <button type="button" class="btn btn-sm btn-primary" data-sq-join="${i.squad}">${t('Join')}</button><button type="button" class="btn btn-sm btn-ghost" data-sq-no="${i.squad}">${t('No thanks')}</button></div>`).join('')}` : ''}
+        <p class="small">${t('Team up with up to 4 friends. Earn XP together every week and everyone gets a bonus when you hit the goal!')}</p>
+        <form class="sq-new" data-sq-create><input name="name" maxlength="30" dir="auto" placeholder="${esc(t('Squad name'))}" required>
+          <div class="gd-emojis">${GROUP_EMOJIS.slice(1, 9).map((e) => `<button type="button" data-sq-emoji="${e}" aria-checked="${emoji === e}">${e}</button>`).join('')}</div>
+          <button class="btn btn-primary btn-block">👥 ${t('Start a squad')}</button></form>
+        ${boardHTML()}`;
+      return;
+    }
+    const pct = Math.min(100, Math.round((s.xp / s.goal) * 100));
+    body.innerHTML = `<div class="sq-head"><span class="sq-emoji" aria-hidden="true">${esc(s.emoji)}</span><span><b dir="auto">${esc(s.name)}</b><small>${s.place ? `#${s.place} · ` : ''}${t('ends in {time}', { time: inWords(data.endsAt - Date.now()) })}</small></span></div>
+      <div class="sq-goal"><span><i style="width:${pct}%"></i></span><small>${s.goalHit ? `🎉 ${t('Goal reached! Everyone got +{xp} XP', { xp: data.bonus })}` : t('{xp} / {goal} XP this week — reach it for +{bonus} XP each', { xp: s.xp, goal: s.goal, bonus: data.bonus })}</small></div>
+      <ul class="sq-members">${s.members.map((m) => `<li><button type="button" class="person-main" data-user="${esc(m.username)}">${lookHTML(m)}<span class="person-text"><b dir="auto">${esc(m.me ? t('You') : m.nickname)}</b><small>${m.owner ? '👑 ' : ''}@${esc(m.username)}</small></span></button><b>${m.xp} XP</b></li>`).join('')}
+        ${s.pending.map((n) => `<li class="muted small">⏳ @${esc(n)} ${t('(invited)')}</li>`).join('')}</ul>
+      ${inviting ? `<div class="kc-offer"><label class="people-search"><span class="search-icon" aria-hidden="true">🔍</span><input data-sq-search placeholder="${esc(t('Search people…'))}" autocomplete="off"></label><div id="sqPeople"></div></div>` : ''}
+      <div class="sq-actions">
+        ${s.members.length + s.pending.length < data.max && !inviting ? `<button type="button" class="btn btn-sm btn-primary" data-sq="invite">➕ ${t('Invite')}</button>` : ''}
+        ${s.group ? `<button type="button" class="btn btn-sm btn-ghost" data-sq="chat">💬 ${t('Squad chat')}</button>` : ''}
+        <button type="button" class="btn btn-sm btn-ghost" data-sq="leave">🚪 ${t('Leave')}</button></div>
+      ${boardHTML()}`;
+    if (inviting) { search(''); setTimeout(() => body.querySelector('[data-sq-search]')?.focus(), 50); }
+  }
+
+  async function load() {
+    try { data = await auth.api('/api/squad'); } catch { /* keep */ }
+    const hit = !!data?.squad?.goalHit;
+    if (hadGoal === false && hit) { rain(['🎉', '👥', '✨'], 50); sfx.win(); document.dispatchEvent(new CustomEvent('kernel:rewards')); }
+    hadGoal = data?.squad ? hit : null;
+    paint();
+  }
+
+  async function search(q) {
+    const my = ++seq;
+    try {
+      const found = (await findPeople(q)).filter((p) => !p.me && !p.blocked).slice(0, 6);
+      const el = $('#sqPeople');
+      if (my !== seq || !el) return;
+      el.innerHTML = found.map((p) => personHTML(p, { pick: 'data-sq-invite' })).join('') || `<p class="muted small">${t('No kernels found for “{q}”', { q: esc(q) })}</p>`;
+    } catch { /* offline */ }
+  }
+
+  async function act(path, payload, okMsg) {
+    try {
+      data = await auth.api(`/api/squad/${path}`, { method: 'POST', body: payload });
+      if (okMsg) toast(okMsg, { emoji: '👥' });
+      hadGoal = data.squad ? !!data.squad.goalHit : null;
+      paint();
+      return true;
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); return false; }
+  }
+
+  box.addEventListener('input', (e) => {
+    if (e.target.matches?.('[data-sq-search]')) { clearTimeout(box.timer); const q = e.target.value.trim(); box.timer = setTimeout(() => search(q), 220); }
+  });
+  box.addEventListener('submit', async (e) => {
+    const f = e.target.closest('[data-sq-create]');
+    if (!f) return;
+    e.preventDefault();
+    if (await act('create', { name: f.elements.name.value.trim(), emoji }, t('Squad started! Now invite your friends 👥'))) { sfx.ding(); burstFrom(box, { emojis: ['👥', emoji, '✨'], count: 12 }); }
+  });
+  box.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (!auth.user && el.closest('[data-sq]')) { openAuth('signin'); return; }
+    const em = el.closest('[data-sq-emoji]');
+    if (em) { emoji = em.dataset.sqEmoji; box.querySelectorAll('[data-sq-emoji]').forEach((b) => b.setAttribute('aria-checked', String(b === em))); return; }
+    const j = el.closest('[data-sq-join]');
+    if (j) { if (await act('answer', { squad: Number(j.dataset.sqJoin), accept: true }, t('Welcome to the squad! 🎉'))) sfx.win(); return; }
+    const no = el.closest('[data-sq-no]');
+    if (no) { act('answer', { squad: Number(no.dataset.sqNo), accept: false }); return; }
+    const inv = el.closest('[data-sq-invite]');
+    if (inv) { inviting = false; act('invite', { username: inv.dataset.sqInvite }, t('Invite sent to @{name}!', { name: inv.dataset.sqInvite })); return; }
+    const b = el.closest('[data-sq]');
+    if (!b) return;
+    if (b.dataset.sq === 'invite') { inviting = true; paint(); }
+    if (b.dataset.sq === 'chat' && data.squad?.group) openGroup?.(data.squad.group);
+    if (b.dataset.sq === 'leave' && confirm(t('Leave your squad?'))) act('leave', {}, t('You left the squad.'));
+  });
+  auth.addEventListener('signin', load);
+  auth.addEventListener('signout', () => { data = null; load(); });
+  setInterval(() => { if (!document.hidden && box.offsetParent) load(); }, 5 * 60_000);
+  load();
+  return { refresh: load };
+}
+
+return { initSquads };
+})();
+
+// ===== parties.js =====
+__m["parties"] = (() => {
+// 🎉 Watch Parties on the website: a countdown, then a live room with chat and a hype meter.
+// Every emoji anyone taps floats up on everyone's screen a moment later.
+const { $, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom } = __m["fun"];
+const { t, tServer, fmtDate, fmtTime } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { makeDialog, inWords } = __m["arena"];
+
+const POLL_MS = 2000;
+const clockLeft = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); return `${h ? `${h}:` : ''}${String(m).padStart(h ? 2 : 1, '0')}:${String(s % 60).padStart(2, '0')}`; };
+
+function initParties({ openAuth, openStory }) {
+  if (!auth.ready) { $('#partyWidget')?.remove(); return null; }
+  const box = $('#partyWidget');
+  const body = $('#partyBody');
+  const P = makeDialog('party-dialog', '🎉');
+  const title = P.dlg.querySelector('h2');
+  let list = null;
+  let hypeEmojis = ['🔥', '😂', '😮', '👏', '🍿', '❤️'];
+  let party = null;
+  let since = 0;
+  let hypeSince = 0;
+  let msgs = [];
+  let timer = 0;
+  let tick = 0;
+  let pending = {}; // taps waiting to be sent
+  let sendTimer = 0;
+
+  function paintWidget() {
+    if (!list) { box.hidden = true; return; }
+    const now = Date.now();
+    const phaseOf = (p) => (now < p.starts - 15 * 60_000 ? 'soon' : now < p.starts ? 'lobby' : now < p.ends ? 'live' : 'over'); // works out the phase as time passes
+    const ps = list.parties.map((p) => ({ ...p, phase: phaseOf(p) })).filter((p) => p.phase !== 'over');
+    box.hidden = !ps.length;
+    if (!ps.length) return;
+    body.innerHTML = ps.slice(0, 3).map((p) => {
+      const when = p.phase === 'live' ? `🔴 ${t('LIVE NOW')}` : p.phase === 'lobby' ? t('Starts in {time}', { time: clockLeft(p.starts - Date.now()) }) : `${fmtDate(p.starts, { weekday: 'short', day: 'numeric', month: 'short' })} ${fmtTime(p.starts)} · ${t('in {time}', { time: inWords(p.starts - Date.now()) })}`;
+      return `<div class="pt-item"><span class="pt-emoji" aria-hidden="true">${esc(p.emoji)}</span><span class="pt-text"><b dir="auto">${esc(p.title)}</b><small>${when}${p.rsvps ? ` · ${t('{n} going', { n: p.rsvps })}` : ''}</small></span>
+        ${p.phase === 'soon' ? `<button type="button" class="btn btn-sm ${p.going ? 'btn-ghost' : 'btn-primary'}" data-pt-rsvp="${p.id}" data-on="${p.going ? 1 : 0}">${p.going ? `✓ ${t('Going')}` : `🔔 ${t('Remind me')}`}</button>`
+          : `<button type="button" class="btn btn-sm btn-primary" data-pt-open="${p.id}">${t('Join the party')}</button>`}</div>`;
+    }).join('');
+  }
+
+  async function loadList() {
+    try { list = await auth.api('/api/parties'); hypeEmojis = list.hype || hypeEmojis; } catch { /* keep */ }
+    paintWidget();
+  }
+
+  // ---------- the live room ----------
+  function roomHTML() {
+    const p = party;
+    const left = p.phase === 'live' ? p.ends - Date.now() : p.starts - Date.now();
+    return `<div class="pt-top"><span class="pt-phase ${p.phase}">${p.phase === 'live' ? `🔴 ${t('LIVE')}` : p.phase === 'over' ? t('Party’s over') : t('Starting soon')}</span>
+        <span class="pt-clock" id="ptClock">${p.phase === 'over' ? '' : clockLeft(left)}</span><span class="pt-viewers" id="ptViewers">👀 0</span></div>
+      ${p.story ? `<button type="button" class="pt-story" data-pt-story>📰 <span dir="auto">${esc(p.story.title)}</span></button>` : ''}
+      <div class="pt-stage" id="ptStage" aria-hidden="true"></div>
+      <div class="pt-meter"><span><i id="ptMeter"></i></span><small id="ptMeterLabel"></small></div>
+      <div class="pt-hype">${hypeEmojis.map((e) => `<button type="button" data-pt-hype="${e}" aria-label="${esc(t('Send {emoji}', { emoji: e }))}">${e}</button>`).join('')}</div>
+      <div class="pt-log" id="ptLog" aria-live="polite"></div>
+      ${auth.user ? `<form class="chat-form pt-form" id="ptForm"><input maxlength="280" autocomplete="off" placeholder="${esc(t('Say something…'))}" aria-label="${esc(t('Message'))}"><button type="submit" class="send-btn" aria-label="${esc(t('Send'))}">➤</button></form>`
+        : `<button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to chat and hype')}</button>`}`;
+  }
+
+  function paintLog() {
+    const log = $('#ptLog');
+    if (!log) return;
+    const near = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+    log.innerHTML = msgs.slice(-80).map((m) => `<div class="pt-msg${m.mine ? ' mine' : ''}" data-ptmsg="${m.id}">${lookHTML(m.user)}<span><b dir="auto">${esc(m.user.nickname)}</b> <span dir="auto">${esc(m.text)}</span></span>${m.mine ? '' : `<button type="button" class="pt-flag" data-pt-report="${m.id}" aria-label="${esc(t('Report message'))}">🚩</button>`}</div>`).join('')
+      || `<p class="muted small">${t('Be the first to say hi! 👋')}</p>`;
+    if (near) log.scrollTop = log.scrollHeight;
+  }
+
+  function float(emoji) {
+    const stage = $('#ptStage');
+    if (!stage || stage.childElementCount > 60) return;
+    const el = document.createElement('span');
+    el.className = 'pt-float';
+    el.textContent = emoji;
+    el.style.left = `${5 + Math.random() * 90}%`;
+    el.style.setProperty('--drift', `${(Math.random() - 0.5) * 80}px`);
+    el.style.animationDuration = `${2.2 + Math.random() * 1.6}s`;
+    stage.append(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  async function poll() {
+    if (!party || !P.dlg.open) return;
+    try {
+      const r = await auth.api(`/api/parties/${party.id}?since=${since}&hype=${hypeSince}`);
+      party = r.party;
+      since = r.messages.length ? r.messages[r.messages.length - 1].created : since;
+      for (const m of r.messages) if (!msgs.some((x) => x.id === m.id)) msgs.push(m);
+      if (r.messages.length) paintLog();
+      // everyone's taps (but not the ones we already floated for ourselves)
+      const latest = Math.max(hypeSince, ...r.hype.map((h) => (h.bucket + 1) * 2000));
+      if (hypeSince) for (const h of r.hype) for (let i = 0; i < Math.min(h.n, 8); i++) setTimeout(() => float(h.emoji), Math.random() * POLL_MS);
+      hypeSince = latest || r.now;
+      $('#ptViewers').textContent = `👀 ${r.viewers}`;
+      const level = Math.min(100, Math.round((r.hypeMinute / 60) * 100));
+      $('#ptMeter').style.width = `${level}%`;
+      $('#ptMeterLabel').textContent = level >= 80 ? t('🔥 The hype is unreal!') : level >= 40 ? t('🍿 Things are heating up') : t('Tap the emojis to hype it up!');
+    } catch (err) { if (err.status === 404) { P.dlg.close(); toast(t('That party is over'), { emoji: '🎉' }); } }
+  }
+
+  async function openParty(id) {
+    try {
+      const r = await auth.api(`/api/parties/${id}?since=0&hype=0`);
+      party = r.party;
+      msgs = r.messages;
+      since = msgs.length ? msgs[msgs.length - 1].created : 0;
+      hypeSince = r.now;
+      title.textContent = `${party.emoji} ${party.title}`;
+      P.body.innerHTML = roomHTML();
+      paintLog();
+      if (!P.dlg.open) P.dlg.showModal();
+      sfx.ding();
+      clearInterval(timer);
+      timer = setInterval(() => { if (P.dlg.open && !document.hidden) poll(); }, POLL_MS);
+      clearInterval(tick);
+      tick = setInterval(() => {
+        if (!P.dlg.open || !party) return clearInterval(tick);
+        const c = $('#ptClock');
+        if (c && party.phase !== 'over') c.textContent = clockLeft(party.phase === 'live' ? party.ends - Date.now() : party.starts - Date.now());
+      }, 1000);
+      poll();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  }
+
+  function flushHype() {
+    const batch = pending;
+    pending = {};
+    for (const [emoji, n] of Object.entries(batch)) auth.api(`/api/parties/${party.id}/hype`, { method: 'POST', body: { emoji, n } }).catch((err) => toast(tServer(err.message), { emoji: '😵' }));
+  }
+
+  P.dlg.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const h = el.closest('[data-pt-hype]');
+    if (h) {
+      if (!auth.user) { openAuth('signin'); return; }
+      const emoji = h.dataset.ptHype;
+      float(emoji);
+      burstFrom(h, { emojis: [emoji], count: 3, spread: 30 });
+      pending[emoji] = Math.min(5, (pending[emoji] || 0) + 1);
+      clearTimeout(sendTimer);
+      sendTimer = setTimeout(flushHype, 600);
+      return;
+    }
+    if (el.closest('[data-pt-story]') && party?.story) { P.dlg.close(); openStory?.(party.story); return; }
+    const rep = el.closest('[data-pt-report]');
+    if (rep && confirm(t('Report this message for being mean, unsafe or spammy?'))) {
+      try { await auth.api('/api/parties/report', { method: 'POST', body: { id: Number(rep.dataset.ptReport) } }); toast(t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' }); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    }
+  });
+  P.dlg.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'ptForm') return;
+    e.preventDefault();
+    const input = e.target.querySelector('input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    try {
+      const r = await auth.api(`/api/parties/${party.id}/chat`, { method: 'POST', body: { text, since } });
+      for (const m of r.messages) if (!msgs.some((x) => x.id === m.id)) msgs.push(m);
+      since = msgs.length ? msgs[msgs.length - 1].created : since;
+      paintLog();
+      sfx.pop();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); input.value = text; }
+  });
+  P.dlg.addEventListener('close', () => { clearInterval(timer); clearInterval(tick); if (Object.keys(pending).length) flushHype(); });
+
+  box.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const o = el?.closest('[data-pt-open]');
+    if (o) return openParty(Number(o.dataset.ptOpen));
+    const r = el?.closest('[data-pt-rsvp]');
+    if (r) {
+      if (!auth.user) { openAuth('signin'); return; }
+      const going = r.dataset.on !== '1';
+      try { list = await auth.api(`/api/parties/${r.dataset.ptRsvp}/rsvp`, { method: 'POST', body: { going } }); paintWidget(); if (going) { sfx.ding(); toast(t('We’ll remind you when it starts 🔔'), { emoji: '🎉' }); } } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    }
+  });
+  auth.addEventListener('signin', loadList);
+  auth.addEventListener('signout', loadList);
+  setInterval(() => { if (!document.hidden) { if (list?.parties.some((p) => Date.now() > p.starts - 16 * 60_000 && Date.now() < p.ends)) paintWidget(); } }, 1000);
+  setInterval(() => { if (!document.hidden) loadList(); }, 5 * 60_000);
+  loadList();
+  return { open: openParty, refresh: loadList };
+}
+
+return { initParties };
+})();
+
+// ===== debates.js =====
+__m["debates"] = (() => {
+// ⚖️ Debate Rooms on the website: pick a side, post your best argument, ❤️ the good ones.
+const { $, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { makeDialog, inWords } = __m["arena"];
+
+function initDebates({ openAuth, openStory }) {
+  if (!auth.ready) { $('#debateWidget')?.remove(); return null; }
+  const box = $('#debateWidget');
+  const body = $('#debateBody');
+  const D = makeDialog('debate-dialog', `⚖️ ${t('Debate')}`);
+  let list = null;
+  let cur = null;          // { debate, arguments }
+  let draft = null;        // a new debate for a story
+
+  // only the daily debate's wording is ours to translate; people's own questions stay as written
+  const tx = (d, text) => (d.auto ? t(text) : text);
+  const sideLabel = (d, s) => tx(d, d.sides[s === 'a' ? 0 : 1]);
+  const bar = (d) => {
+    const total = d.votes[0] + d.votes[1];
+    const a = total ? Math.round((d.votes[0] / total) * 100) : 50;
+    return `<div class="db-bar" role="img" aria-label="${esc(`${sideLabel(d, 'a')} ${d.votes[0]} · ${sideLabel(d, 'b')} ${d.votes[1]}`)}"><i style="width:${a}%"></i></div>
+      <div class="db-bar-labels"><span dir="auto">${esc(sideLabel(d, 'a'))} <b>${d.votes[0]}</b></span><span dir="auto"><b>${d.votes[1]}</b> ${esc(sideLabel(d, 'b'))}</span></div>`;
+  };
+
+  function paintWidget() {
+    if (!list) { box.hidden = true; return; }
+    box.hidden = false;
+    const open = list.debates.filter((d) => !d.closed);
+    body.innerHTML = open.length ? open.slice(0, 4).map((d) => `<button type="button" class="db-item" data-db="${d.id}">
+        <small>${d.auto ? `🔥 ${t('Today’s big debate')}` : t('Open debate')} · ${tn(d.args, '{n} argument', '{n} arguments')}</small>
+        <b dir="auto">${esc(tx(d, d.question))}</b>${d.story ? `<span class="db-story" dir="auto">📰 ${esc(d.story.title)}</span>` : ''}${bar(d)}</button>`).join('')
+      : `<p class="muted small">${t('No open debates yet — start one from any story ⚖️')}</p>`;
+    body.innerHTML += `<p class="muted small">${t('Open a story and tap ⚖️ to start your own debate.')}</p>`;
+  }
+
+  async function loadList() {
+    try { list = await auth.api('/api/debates'); } catch { /* keep */ }
+    paintWidget();
+  }
+
+  function paintDebate() {
+    const { debate: d, arguments: args } = cur;
+    const side = (s) => {
+      const mine = d.mine === s;
+      const items = args.filter((a) => a.side === s);
+      return `<div class="db-side db-${s}${mine ? ' mine' : ''}"><h3 dir="auto">${esc(sideLabel(d, s))} <small>${d.votes[s === 'a' ? 0 : 1]}</small></h3>
+        ${!d.closed ? `<button type="button" class="btn btn-sm ${mine ? 'btn-primary' : 'btn-ghost'} btn-block" data-db-vote="${s}">${mine ? `✓ ${t('Your side')}` : t('Pick this side')}</button>` : ''}
+        <div class="db-args">${items.length ? items.map((a) => `<div class="db-arg${d.best === a.id ? ' best' : ''}">${d.best === a.id ? `<span class="db-best">🏆 ${t('Best argument')}</span>` : ''}
+            <p dir="auto">${esc(a.text)}</p><div class="db-arg-foot"><button type="button" class="db-who" data-user="${esc(a.user.username)}">${lookHTML(a.user)}<small>@${esc(a.user.username)}</small></button>
+            <button type="button" class="db-like${a.liked ? ' on' : ''}" data-db-like="${a.id}" ${a.mine || d.closed ? 'disabled' : ''} aria-label="${esc(t('Like this argument'))}">❤️ ${a.likes}</button>
+            ${a.mine ? '' : `<button type="button" class="pt-flag" data-db-report="${a.id}" aria-label="${esc(t('Report'))}">🚩</button>`}</div></div>`).join('') : `<p class="muted small">${t('No arguments yet.')}</p>`}</div></div>`;
+    };
+    D.body.innerHTML = `<p class="db-q" dir="auto">${esc(tx(d, d.question))}</p>
+      ${d.story ? `<button type="button" class="pt-story" data-db-story>📰 <span dir="auto">${esc(d.story.title)}</span></button>` : ''}
+      ${bar(d)}
+      <p class="muted small">${d.closed ? (d.winner === 'tie' ? t('It’s a tie!') : t('Closed — “{side}” won!', { side: esc(sideLabel(d, d.winner)) })) : t('Closes in {time}', { time: inWords(d.closes - Date.now()) })}</p>
+      ${!d.closed && d.mine ? `<form class="db-form" data-db-argue><textarea maxlength="280" rows="2" dir="auto" placeholder="${esc(t('Your best argument for “{side}”…', { side: sideLabel(d, d.mine) }))}"></textarea><button class="btn btn-primary btn-sm">${t('Post')}</button></form>`
+        : !d.closed && auth.user ? `<p class="small">👆 ${t('Pick a side to post an argument.')}</p>` : !auth.user ? `<button type="button" class="btn btn-primary" data-action="signup">${t('Sign up to join the debate')}</button>` : ''}
+      <div class="db-sides">${side('a')}${side('b')}</div>
+      <p class="muted small">${t('The side with more votes wins, and the best-liked argument on it earns XP.')}</p>`;
+  }
+
+  async function open(id) {
+    if (!D.dlg.open) D.dlg.showModal();
+    D.body.innerHTML = '<div class="chat-empty"><span class="spin">⚖️</span></div>';
+    try { cur = await auth.api(`/api/debates/${id}`); paintDebate(); } catch (err) { D.body.innerHTML = `<p>😵 ${esc(tServer(err.message))}</p>`; }
+  }
+
+  /** From the reader: this story's debates, or a form to start one. */
+  async function forStory(story) {
+    if (!auth.user) { toast(t('Sign in to start a debate ⚖️'), { emoji: '⚖️' }); openAuth('signin'); return; }
+    draft = story;
+    if (!D.dlg.open) D.dlg.showModal();
+    let existing = [];
+    try { existing = (await auth.api(`/api/debates?story=${encodeURIComponent(story.key)}`)).debates; } catch { /* fine */ }
+    D.body.innerHTML = `${existing.length ? `<p class="tp-label">${t('Debates on this story')}</p>${existing.map((d) => `<button type="button" class="db-item" data-db="${d.id}"><b dir="auto">${esc(tx(d, d.question))}</b>${bar(d)}</button>`).join('')}` : ''}
+      <form class="db-new" data-db-new><p class="tp-label">${t('Start a debate')}</p>
+        <p class="pt-story">📰 <span dir="auto">${esc(story.title)}</span></p>
+        <label class="field"><span>${t('Question')}</span><input name="q" maxlength="120" dir="auto" required placeholder="${esc(t('e.g. Is this good news for gamers?'))}"></label>
+        <div class="db-new-sides"><label class="field"><span>${t('Side 1')}</span><input name="a" maxlength="30" dir="auto" value="${esc(t('Yes'))}"></label><label class="field"><span>${t('Side 2')}</span><input name="b" maxlength="30" dir="auto" value="${esc(t('No'))}"></label></div>
+        <button class="btn btn-primary btn-block">⚖️ ${t('Start the debate')}</button></form>`;
+  }
+
+  D.dlg.addEventListener('submit', async (e) => {
+    const f = e.target;
+    if (!f.matches('[data-db-argue], [data-db-new]')) return; // let the ✕ button close the dialog
+    e.preventDefault();
+    try {
+      if (f.matches('[data-db-argue]')) {
+        const text = f.querySelector('textarea').value.trim();
+        if (!text) return;
+        cur = await auth.api('/api/debates/argue', { method: 'POST', body: { id: cur.debate.id, text } });
+        sfx.pop();
+        paintDebate();
+      } else if (f.matches('[data-db-new]')) {
+        cur = await auth.api('/api/debates', { method: 'POST', body: { storyKey: draft.key, question: f.elements.q.value, sideA: f.elements.a.value, sideB: f.elements.b.value } });
+        sfx.ding();
+        rain(['⚖️', '🍿'], 24);
+        paintDebate();
+        loadList();
+      }
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  });
+  D.dlg.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const item = el.closest('[data-db]');
+    if (item) return open(Number(item.dataset.db));
+    if (el.closest('[data-db-story]') && cur?.debate.story) { D.dlg.close(); openStory?.(cur.debate.story); return; }
+    const v = el.closest('[data-db-vote]');
+    if (v) {
+      if (!auth.user) { openAuth('signin'); return; }
+      try { cur = await auth.api('/api/debates/vote', { method: 'POST', body: { id: cur.debate.id, side: v.dataset.dbVote } }); sfx.blip(); burstFrom(v, { emojis: ['⚖️', '✨'], count: 6, spread: 40 }); paintDebate(); loadList(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const like = el.closest('[data-db-like]');
+    if (like) {
+      if (!auth.user) { openAuth('signin'); return; }
+      const on = !like.classList.contains('on');
+      try { cur = await auth.api('/api/debates/like', { method: 'POST', body: { id: Number(like.dataset.dbLike), like: on } }); if (on) { burstFrom(like, { emojis: ['❤️'], count: 6, spread: 30 }); sfx.pop(); } paintDebate(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const rep = el.closest('[data-db-report]');
+    if (rep && confirm(t('Report this argument for being mean, unsafe or spammy?'))) {
+      try { await auth.api('/api/debates/report', { method: 'POST', body: { id: Number(rep.dataset.dbReport) } }); toast(t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' }); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    }
+  });
+  box.addEventListener('click', (e) => { const b = e.target instanceof Element && e.target.closest('[data-db]'); if (b) open(Number(b.dataset.db)); });
+  auth.addEventListener('signin', loadList);
+  auth.addEventListener('signout', loadList);
+  setInterval(() => { if (!document.hidden && box.offsetParent) loadList(); }, 5 * 60_000);
+  loadList();
+  return { open, forStory, refresh: loadList };
+}
+
+return { initDebates };
+})();
+
 // ===== discover.js =====
 __m["discover"] = (() => {
 // ☀️ Morning Drop, 🔔 followed topics and companies, 🕰️ "how we got here" timelines in the reader.
@@ -10841,7 +11578,7 @@ const { auth } = __m["auth"];
 const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML, photoUrl } = __m["look"];
 
-const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['log', '📜', 'Log']];
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['parties', '🎉', 'Parties'], ['log', '📜', 'Log']];
 
 function initMod() {
   const dlg = document.createElement('dialog');
@@ -10884,7 +11621,7 @@ function initMod() {
     try {
       const r = await api('/api/mod/reports');
       const contentRow = (kind, x) => `<div class="mod-item${x.hidden ? ' is-hidden' : ''}">
-          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
+          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : kind === 'debate' || kind === 'party' ? `${kind === 'debate' ? '⚖️' : '🎉'} ${esc(String(x.where || '').slice(0, 60))}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
           ${kind === 'pop' && x.photo ? `<img class="mod-pop-photo" src="${esc(auth.apiBase)}/api/pops/photo/${esc(x.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
           <p class="mod-text" dir="auto">${kind === 'pop' && x.story ? `📰 ${esc(x.story)}<br>` : ''}${esc(x.text) || (kind === 'pop' ? '' : `<i>${t('(deleted by its author)')}</i>`)}</p>
           <div class="mod-actions"><span class="chip">🚩 ${x.reports}</span>${x.hidden ? `<span class="chip">${t('hidden')}</span>` : ''}
@@ -10908,6 +11645,8 @@ function initMod() {
         + section(`🗨️ ${t('Comments')}`, r.comments, (x) => contentRow('comment', x))
         + section(`👥 ${t('Group messages')}`, r.groups || [], (x) => contentRow('group', x))
         + section(`🫧 ${t('Pops')}`, r.pops || [], (x) => contentRow('pop', x))
+        + section(`⚖️ ${t('Debate arguments')}`, r.debates || [], (x) => contentRow('debate', x))
+        + section(`🎉 ${t('Watch party chat')}`, r.parties || [], (x) => contentRow('party', x))
         + section(`✉️ ${t('Reported in private messages')}`, r.dms, dmRow)
         + section(`📷 ${t('Profile photos')}`, r.photos, photoRow);
     } catch (e) { fail(e); }
@@ -10953,6 +11692,27 @@ function initMod() {
     box.dataset.username = u.username;
   }
 
+  async function parties() {
+    loading();
+    try {
+      const r = await api('/api/parties');
+      const soon = new Date(Date.now() + 3600_000);
+      soon.setMinutes(0, 0, 0);
+      const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+      pane.innerHTML = `<form class="mod-predict" data-modparty>
+          <label class="field"><span>${t('Title')}</span><input name="title" maxlength="80" required placeholder="${esc(t('e.g. Big phone launch event'))}"></label>
+          <label class="field"><span>${t('Emoji')}</span><input name="emoji" maxlength="4" value="🎉"></label>
+          <label class="field"><span>${t('Starts (your time)')}</span><input name="starts" type="datetime-local" value="${local}" required></label>
+          <label class="field"><span>${t('Length')}</span><select name="minutes"><option value="30">30 min</option><option value="60">1 h</option><option value="90" selected>1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></label>
+          <button class="btn btn-primary">🎉 ${t('Schedule party')}</button>
+        </form>
+        <h3 class="mini-title">${t('Coming up')} <small>${r.parties.length}</small></h3>
+        ${r.parties.length ? r.parties.map((p) => `<div class="mod-item"><p class="mod-text" dir="auto">${esc(p.emoji)} ${esc(p.title)}</p>
+          <p class="muted small">${when(p.starts)} · ${t('{n} going', { n: p.rsvps })}</p>
+          <div class="mod-actions"><button type="button" class="btn btn-sm btn-ghost" data-partydel="${p.id}">${t('Cancel party')}</button></div></div>`).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}`;
+    } catch (e) { fail(e); }
+  }
+
   async function predict() {
     loading();
     try {
@@ -10985,10 +11745,20 @@ function initMod() {
   const show = (name) => {
     tab = name;
     dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
-    ({ overview, reports, people, predict, log })[name]();
+    ({ overview, reports, people, predict, parties, log })[name]();
   };
 
   dlg.addEventListener('submit', async (e) => {
+    const party = e.target.closest('[data-modparty]');
+    if (party) {
+      e.preventDefault();
+      try {
+        await api('/api/mod/parties', { title: party.elements.title.value, emoji: party.elements.emoji.value || '🎉', starts: new Date(party.elements.starts.value).getTime(), minutes: Number(party.elements.minutes.value) });
+        toast(t('Party scheduled! 🎉'), { emoji: '🎉' });
+        parties();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const pf = e.target.closest('[data-modpredict]');
     if (pf) {
       e.preventDefault();
@@ -11015,6 +11785,12 @@ function initMod() {
     const lk = el.closest('[data-lookup]');
     if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
     const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    const pd = el.closest('[data-partydel]');
+    if (pd) {
+      if (!confirm(t('Cancel this party?'))) return;
+      try { await api('/api/mod/parties/delete', { id: Number(pd.dataset.partydel) }); parties(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const rs = el.closest('[data-resolve]');
     if (rs) {
       const [id, answer] = rs.dataset.resolve.split(':').map(Number);
@@ -11285,6 +12061,7 @@ function initReader({ getData, reactsHTML, summarize, speakText, showComments, o
     const d = getData();
     const saved = d.saved.some((s) => s.key === it.key);
     return `<button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${icon('bookmark')}</button>
+      ${chatEnabled ? `<button type="button" class="icon-btn pop-it" data-debate title="${t('Debate this story')}" aria-label="${t('Debate this story')}">⚖️</button>` : ''}
       ${chatEnabled ? `<button type="button" class="icon-btn pop-it" data-popshare title="${t('Pop it — share to your 24-hour pop')}" aria-label="${t('Pop it — share to your 24-hour pop')}">🫧</button><button type="button" class="icon-btn" data-dmshare title="${t('Send to a friend')}">${icon('send')}</button><button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">${icon('chat')}</button>` : ''}
       <button type="button" class="icon-btn" data-share title="${t('Share')}">${icon('share')}</button>`;
   }
@@ -11388,6 +12165,9 @@ const { initStocks } = __m["stocks"];
 const { initBingo } = __m["bingo"];
 const { initGuess } = __m["guess"];
 const { initCards } = __m["cards"];
+const { initSquads } = __m["squads"];
+const { initParties } = __m["parties"];
+const { initDebates } = __m["debates"];
 const { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } = __m["invite"];
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -11430,6 +12210,8 @@ let arena = null;
 let discover = null;
 let stocks = null;
 let cards = null;
+let parties = null;
+let debates = null;
 let invites = null;
 
 // ====================================================================================
@@ -12535,6 +13317,9 @@ function openDeepLink() {
   else if (h === 'pops') community?.openMessages();
   else if (h === 'drop') discover?.openDrop();
   else if (h === 'stocks') { tabs?.show('play'); stocks?.open(); }
+  else if (h.startsWith('party=')) { tabs?.show('play'); parties?.open(Number(h.slice(6))); }
+  else if (h.startsWith('debate=')) { tabs?.show('play'); debates?.open(Number(h.slice(7))); }
+  else if (h === 'squad') { tabs?.show('me'); setTimeout(() => $('#squadWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'cards') { tabs?.show('play'); setTimeout(() => $('#cardsWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
@@ -12635,6 +13420,9 @@ function boot() {
   initBingo({ openStory: storyOpener });
   initGuess({ openAuth, openStory: storyOpener, onDone: (kind, right) => { addXp(right * 2); bump('guessGames'); } });
   cards = initCards({ openAuth });
+  initSquads({ openAuth, openGroup: (id) => community?.openGroup(id) });
+  parties = initParties({ openAuth, openStory: storyOpener });
+  debates = initDebates({ openAuth, openStory: storyOpener });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
@@ -12690,7 +13478,10 @@ function boot() {
       else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
       else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-popshare]')) {
+      else if (el.closest('[data-debate]')) {
+        const it = findItem(key);
+        if (it && debates) { reader?.close(); debates.forStory(it); }
+      } else if (el.closest('[data-popshare]')) {
         const it = findItem(key);
         if (!auth.user) { toast(t('Sign in to post pops 🫧'), { emoji: '🫧' }); openAuth('signin'); }
         else if (it && community) { reader?.close(); community.popStory(it); } else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });

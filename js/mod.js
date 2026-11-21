@@ -4,7 +4,7 @@ import { auth } from './auth.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML, photoUrl } from './look.js';
 
-const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['log', '📜', 'Log']];
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['parties', '🎉', 'Parties'], ['log', '📜', 'Log']];
 
 export function initMod() {
   const dlg = document.createElement('dialog');
@@ -47,7 +47,7 @@ export function initMod() {
     try {
       const r = await api('/api/mod/reports');
       const contentRow = (kind, x) => `<div class="mod-item${x.hidden ? ' is-hidden' : ''}">
-          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
+          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : kind === 'debate' || kind === 'party' ? `${kind === 'debate' ? '⚖️' : '🎉'} ${esc(String(x.where || '').slice(0, 60))}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
           ${kind === 'pop' && x.photo ? `<img class="mod-pop-photo" src="${esc(auth.apiBase)}/api/pops/photo/${esc(x.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
           <p class="mod-text" dir="auto">${kind === 'pop' && x.story ? `📰 ${esc(x.story)}<br>` : ''}${esc(x.text) || (kind === 'pop' ? '' : `<i>${t('(deleted by its author)')}</i>`)}</p>
           <div class="mod-actions"><span class="chip">🚩 ${x.reports}</span>${x.hidden ? `<span class="chip">${t('hidden')}</span>` : ''}
@@ -71,6 +71,8 @@ export function initMod() {
         + section(`🗨️ ${t('Comments')}`, r.comments, (x) => contentRow('comment', x))
         + section(`👥 ${t('Group messages')}`, r.groups || [], (x) => contentRow('group', x))
         + section(`🫧 ${t('Pops')}`, r.pops || [], (x) => contentRow('pop', x))
+        + section(`⚖️ ${t('Debate arguments')}`, r.debates || [], (x) => contentRow('debate', x))
+        + section(`🎉 ${t('Watch party chat')}`, r.parties || [], (x) => contentRow('party', x))
         + section(`✉️ ${t('Reported in private messages')}`, r.dms, dmRow)
         + section(`📷 ${t('Profile photos')}`, r.photos, photoRow);
     } catch (e) { fail(e); }
@@ -116,6 +118,27 @@ export function initMod() {
     box.dataset.username = u.username;
   }
 
+  async function parties() {
+    loading();
+    try {
+      const r = await api('/api/parties');
+      const soon = new Date(Date.now() + 3600_000);
+      soon.setMinutes(0, 0, 0);
+      const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+      pane.innerHTML = `<form class="mod-predict" data-modparty>
+          <label class="field"><span>${t('Title')}</span><input name="title" maxlength="80" required placeholder="${esc(t('e.g. Big phone launch event'))}"></label>
+          <label class="field"><span>${t('Emoji')}</span><input name="emoji" maxlength="4" value="🎉"></label>
+          <label class="field"><span>${t('Starts (your time)')}</span><input name="starts" type="datetime-local" value="${local}" required></label>
+          <label class="field"><span>${t('Length')}</span><select name="minutes"><option value="30">30 min</option><option value="60">1 h</option><option value="90" selected>1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></label>
+          <button class="btn btn-primary">🎉 ${t('Schedule party')}</button>
+        </form>
+        <h3 class="mini-title">${t('Coming up')} <small>${r.parties.length}</small></h3>
+        ${r.parties.length ? r.parties.map((p) => `<div class="mod-item"><p class="mod-text" dir="auto">${esc(p.emoji)} ${esc(p.title)}</p>
+          <p class="muted small">${when(p.starts)} · ${t('{n} going', { n: p.rsvps })}</p>
+          <div class="mod-actions"><button type="button" class="btn btn-sm btn-ghost" data-partydel="${p.id}">${t('Cancel party')}</button></div></div>`).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}`;
+    } catch (e) { fail(e); }
+  }
+
   async function predict() {
     loading();
     try {
@@ -148,10 +171,20 @@ export function initMod() {
   const show = (name) => {
     tab = name;
     dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
-    ({ overview, reports, people, predict, log })[name]();
+    ({ overview, reports, people, predict, parties, log })[name]();
   };
 
   dlg.addEventListener('submit', async (e) => {
+    const party = e.target.closest('[data-modparty]');
+    if (party) {
+      e.preventDefault();
+      try {
+        await api('/api/mod/parties', { title: party.elements.title.value, emoji: party.elements.emoji.value || '🎉', starts: new Date(party.elements.starts.value).getTime(), minutes: Number(party.elements.minutes.value) });
+        toast(t('Party scheduled! 🎉'), { emoji: '🎉' });
+        parties();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const pf = e.target.closest('[data-modpredict]');
     if (pf) {
       e.preventDefault();
@@ -178,6 +211,12 @@ export function initMod() {
     const lk = el.closest('[data-lookup]');
     if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
     const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    const pd = el.closest('[data-partydel]');
+    if (pd) {
+      if (!confirm(t('Cancel this party?'))) return;
+      try { await api('/api/mod/parties/delete', { id: Number(pd.dataset.partydel) }); parties(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const rs = el.closest('[data-resolve]');
     if (rs) {
       const [id, answer] = rs.dataset.resolve.split(':').map(Number);

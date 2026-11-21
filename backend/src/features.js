@@ -20,6 +20,10 @@ import { getMarket, trade } from './market.js';
 import { getBingo, claimBingo } from './bingo.js';
 import { getGuess, startGuess, answerGuess } from './guess.js';
 import { getCards, openPack, offerCard, answerTrade } from './cards.js';
+import { getSquad, createSquad, inviteToSquad, answerInvite, leaveSquad } from './squads.js';
+import { listParties, getParty, partyChat, partyHype, rsvpParty, reportPartyMessage, createParty, deleteParty } from './parties.js';
+import { listDebates, startDebate, getDebate, voteDebate, argue, likeArgument, reportArgument } from './debates.js';
+import { voteChatPoll } from './chatpolls.js';
 import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
@@ -74,6 +78,8 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     if (path === '/api/mod/photo' && m === 'POST') return json(await moderatePhoto(env, admin, body));
     if (path === '/api/mod/user' && m === 'POST') return json(await moderateUser(env, admin, body));
     if (path === '/api/mod/predictions' && m === 'POST') return json(await modCreatePrediction(env, admin, body));
+    if (path === '/api/mod/parties' && m === 'POST') return json(await createParty(env, admin, body));
+    if (path === '/api/mod/parties/delete' && m === 'POST') return json(await deleteParty(env, admin, body.id));
     if (path === '/api/mod/predictions/resolve' && m === 'POST') return json(await modResolvePrediction(env, admin, body));
     throw new HttpError(404, 'Not found');
   }
@@ -312,6 +318,63 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     const user = await requireUser(request, env);
     await rateLimit(env, `cardanswer:${user.id}`, 120, 3600_000);
     return json(await answerTrade(env, user, await readJson(request, 500)));
+  }
+
+  // ---- 👥 squads ----
+  if (path === '/api/squad' && m === 'GET') return json(await getSquad(env, await currentUser(request, env)));
+  const sq = path.match(/^\/api\/squad\/(create|invite|answer|leave)$/);
+  if (sq && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `squad:${user.id}`, 60, 3600_000);
+    const body = await readJson(request, 1_000);
+    if (sq[1] === 'create') { await assertNotMuted(env, user); return json(await createSquad(env, user, body)); }
+    if (sq[1] === 'invite') return json(await inviteToSquad(env, user, body));
+    if (sq[1] === 'answer') return json(await answerInvite(env, user, body, ctx));
+    return json(await leaveSquad(env, user));
+  }
+
+  // ---- 🎉 watch parties ----
+  if (path === '/api/parties' && m === 'GET') return json(await listParties(env, await currentUser(request, env)));
+  if (path === '/api/parties/report' && m === 'POST') return json(await reportPartyMessage(env, await requireUser(request, env), await readJson(request, 500)));
+  const party = path.match(/^\/api\/parties\/(\d+)(\/chat|\/hype|\/rsvp)?$/);
+  if (party) {
+    if (!party[2] && m === 'GET') {
+      await rateLimit(env, `partypoll:${ip}`, 3600, 3600_000);
+      return json(await getParty(env, await currentUser(request, env), party[1], url.searchParams.get('since'), url.searchParams.get('hype')));
+    }
+    const user = await requireUser(request, env);
+    const body = await readJson(request, 1_000);
+    if (party[2] === '/chat' && m === 'POST') { await rateLimit(env, `partychat:${user.id}`, 6, 10_000); return json(await partyChat(env, user, party[1], body)); }
+    if (party[2] === '/hype' && m === 'POST') { await rateLimit(env, `partyhype:${user.id}`, 40, 20_000); return json(await partyHype(env, user, party[1], body)); }
+    if (party[2] === '/rsvp' && m === 'POST') return json(await rsvpParty(env, user, party[1], body));
+  }
+
+  // ---- ⚖️ debates ----
+  if (path === '/api/debates' && m === 'GET') return json(await listDebates(env, await currentUser(request, env), url.searchParams.get('story')));
+  if (path === '/api/debates' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `debatenew:${user.id}`, 10, 3600_000);
+    return json(await startDebate(env, user, await readJson(request, 1_000)));
+  }
+  const deb = path.match(/^\/api\/debates\/(\d+)$/);
+  if (deb && m === 'GET') return json(await getDebate(env, await currentUser(request, env), deb[1]));
+  const debAct = path.match(/^\/api\/debates\/(vote|argue|like|report)$/);
+  if (debAct && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `debate:${user.id}`, 200, 3600_000);
+    const body = await readJson(request, 1_000);
+    if (debAct[1] === 'vote') return json(await voteDebate(env, user, body));
+    if (debAct[1] === 'argue') { await assertNotMuted(env, user); return json(await argue(env, user, body)); }
+    if (debAct[1] === 'like') return json(await likeArgument(env, user, body));
+    return json(await reportArgument(env, user, body));
+  }
+
+  // ---- 📊 polls in chats ----
+  if (path === '/api/chatpoll' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `chatpoll:${user.id}`, 200, 3600_000);
+    return json(await voteChatPoll(env, user, await readJson(request, 500)));
   }
 
   // ---- 📷 profile photos ----

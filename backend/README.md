@@ -36,6 +36,10 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🎯 **Tech Bingo** | 40 headline patterns; each person gets 24 of them (seeded by week and user). This week's first matching headline marks a square. Prizes for a line, three lines and a full card are paid once each. |
 | 🔤 🌫️ **Guessing games** | Five rounds a day, the same for everyone. The server keeps the answers, starts the clock, and won't count answer times faster than the real time that passed. |
 | 🃏 **Cards** | Packs are dealt on the server with rarity weights. Only doubles can be gifted or traded; trades are claimed atomically so a card can't be spent twice. |
+| 👥 **Squads** | Up to 5 people. Each person's XP for the week is counted on `users.week_xp`, so the squad total is a cheap sum. The first time the total reaches the goal that week, everyone gets the bonus once. Joining creates (or grows) the squad's group chat. |
+| 🎉 **Watch Parties** | Moderators create them with `POST /api/mod/parties`. The phase (soon, lobby 15 minutes before, live, over) comes from the clock. Hype taps are counted in 2-second buckets so a busy room writes few rows; viewers are counted from a seen-time written at most every 20 seconds. Going people get a push when it starts. |
+| ⚖️ **Debates** | One automatic debate a day on the top story, plus up to 3 a day per person from the reader. 48 hours long; the cron settles closed ones, pays the best-liked argument on the winning side and writes nothing for a tie. 3 reports hide an argument. |
+| 📊 **Chat polls** | A poll is stored as JSON on the message itself (`dm_messages.poll`, `group_messages.poll`), with votes in `chat_poll_votes`. Only people in that chat can vote. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
 | 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
@@ -145,6 +149,14 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/guess/emoji\|blur` · `POST …/start` · `POST …/answer` | optional / Bearer | Today's rounds (no answers) · start the clock · `{ answers: [{ pick, ms }] }` |
 | `GET /api/cards` (`?user=`) · `POST /api/cards/open` | Bearer | Your collection, packs and open trades (or someone's collection) · open a pack |
 | `POST /api/cards/offer` · `/answer` | Bearer | `{ to, give, want? }` (no `want` = gift) · `{ id, accept }` |
+| `GET /api/squad` · `POST /api/squad/create` · `/invite` · `/answer` · `/leave` | optional / Bearer | Your squad, invites and the week's top squads · `{ name, emoji }` · `{ username }` · `{ squad, accept }` |
+| `GET /api/parties` · `GET /api/parties/:id?since=&hype=` | optional | Upcoming parties · the room: new chat, hype taps since then, viewers |
+| `POST /api/parties/:id/chat` · `/hype` · `/rsvp` · `POST /api/parties/report` | Bearer | `{ text, since }` · `{ emoji, n }` · `{ going }` · `{ id }` |
+| `POST /api/mod/parties` · `/delete` | moderator | `{ title, emoji, starts, minutes, storyKey? }` · `{ id }` |
+| `GET /api/debates` (`?story=`) · `GET /api/debates/:id` · `POST /api/debates` | optional / Bearer | Open and recent debates · one debate with its arguments · `{ storyKey, question, sideA, sideB }` |
+| `POST /api/debates/vote` · `/argue` · `/like` · `/report` | Bearer | `{ id, side }` · `{ id, text }` · `{ id, like }` · `{ id }` |
+| `POST /api/dm` · `/api/groups/:id/messages` (also) | Bearer | `poll: { question, options: [2–4] }` sends a poll |
+| `POST /api/chatpoll` | Bearer | `{ scope: d\|g, id: messageId, option }` (the same option again takes the vote back) |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
@@ -188,6 +200,10 @@ src/market.js  Story Stocks
 src/bingo.js   Tech Bingo
 src/guess.js   Emoji Headlines + Blur Reveal
 src/cards.js   kerNEl Cards
+src/squads.js  Squads
+src/parties.js Watch Parties
+src/debates.js Debate Rooms
+src/chatpolls.js polls in private and group chats
 src/rewards.js server-given XP, special counters, invites
 src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine

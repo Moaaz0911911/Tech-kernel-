@@ -107,6 +107,7 @@ export async function createParty(env, admin, body) {
 export async function deleteParty(env, admin, id) {
   await log(env, admin, 'party:delete', id);
   await env.DB.batch([
+    env.DB.prepare('DELETE FROM party_reports WHERE msg_id IN (SELECT id FROM party_messages WHERE party_id = ?)').bind(Number(id)),
     env.DB.prepare('DELETE FROM party_messages WHERE party_id = ?').bind(Number(id)),
     env.DB.prepare('DELETE FROM party_hype WHERE party_id = ?').bind(Number(id)),
     env.DB.prepare('DELETE FROM party_rsvps WHERE party_id = ?').bind(Number(id)),

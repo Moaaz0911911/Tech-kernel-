@@ -24,6 +24,7 @@ export function initReader({ getData, reactsHTML, summarize, speakText, showComm
     const d = getData();
     const saved = d.saved.some((s) => s.key === it.key);
     return `<button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${icon('bookmark')}</button>
+      ${chatEnabled ? `<button type="button" class="icon-btn pop-it" data-debate title="${t('Debate this story')}" aria-label="${t('Debate this story')}">⚖️</button>` : ''}
       ${chatEnabled ? `<button type="button" class="icon-btn pop-it" data-popshare title="${t('Pop it — share to your 24-hour pop')}" aria-label="${t('Pop it — share to your 24-hour pop')}">🫧</button><button type="button" class="icon-btn" data-dmshare title="${t('Send to a friend')}">${icon('send')}</button><button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">${icon('chat')}</button>` : ''}
       <button type="button" class="icon-btn" data-share title="${t('Share')}">${icon('share')}</button>`;
   }

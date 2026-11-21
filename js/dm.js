@@ -96,9 +96,15 @@ const SKELETON = () => `
     <div class="dm-log" id="dmLog" aria-live="polite"></div>
     <div class="dm-banner" id="dmBanner" hidden></div>
     <div class="chat-share" id="dmShare" hidden></div>
+    <form class="dm-pollform" id="dmPoll" hidden>
+      <input name="q" maxlength="120" dir="auto" placeholder="${esc(t('Ask a question…'))}" aria-label="${esc(t('Poll question'))}">
+      <div class="dm-pollopts">${[1, 2, 3, 4].map((n) => `<input name="o${n}" maxlength="40" dir="auto" placeholder="${esc(t('Answer {n}', { n }))}${n > 2 ? ` (${esc(t('optional'))})` : ''}">`).join('')}</div>
+      <div class="dm-pollbtns"><button type="button" class="btn btn-sm btn-ghost" data-dm="poll-cancel">${t('Cancel')}</button><button class="btn btn-sm btn-primary">📊 ${t('Send poll')}</button></div>
+    </form>
     <form class="chat-form dm-form" id="dmForm">
       <label class="sr-only" for="dmInput">${t('Message')}</label>
       <input id="dmInput" maxlength="1000" autocomplete="off" placeholder="${esc(t('Message…'))}" enterkeyhint="send">
+      <button type="button" class="icon-btn dm-pollbtn" data-dm="poll" title="${esc(t('Make a poll'))}" aria-label="${esc(t('Make a poll'))}">📊</button>
       <button type="button" class="icon-btn dm-mic" data-dm="mic" title="${esc(t('Record a voice note'))}" aria-label="${esc(t('Record a voice note'))}">🎙️</button>
       <button type="submit" class="send-btn" aria-label="${esc(t('Send'))}">➤</button>
     </form>
@@ -167,14 +173,14 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   const lastText = (th) => {
     if (!th.last) return '';
     const l = th.last;
-    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.poll ? `📊 ${t('Poll')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return l.mine ? `${t('You')}: ${body}` : body;
   };
   const groupLast = (g) => {
     const l = g.last;
     if (!l) return tn(g.members, '{n} member', '{n} members');
     if (l.kind === 'system') return systemText(l.text);
-    const body = l.deleted ? t('Message deleted') : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.poll ? `📊 ${t('Poll')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return `${l.mine ? t('You') : `@${l.from}`}: ${body}`;
   };
   const threadRow = (th) => `<button type="button" class="dm-row${th.unread ? ' unread' : ''}" data-thread="${th.id}">
@@ -273,10 +279,19 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
       : p.kind === 'story' ? '<span aria-hidden="true">📰</span>' : `<span dir="auto">${esc(p.text.slice(0, 24))}</span>`;
     return `<span class="dm-popreply"><span class="dm-popthumb pop-bg-${(Number(p.bg) || 0) % 8}">${thumb}</span><small>🫧 ${mine ? t('You replied to their pop') : t('Replied to your pop')}${p.story ? `<br><span dir="auto">${esc(p.story.slice(0, 60))}</span>` : ''}</small></span>`;
   };
+  const pollHTML = (m) => {
+    const p = m.poll;
+    const total = p.total || 0;
+    return `<div class="dm-poll"><b dir="auto">📊 ${esc(p.q)}</b>${p.options.map((o, i) => {
+      const n = p.counts?.[i] || 0;
+      const pct = total ? Math.round((n / total) * 100) : 0;
+      return `<button type="button" class="dm-pollopt${p.mine === i ? ' on' : ''}" data-dpoll="${m.id}:${i}" aria-pressed="${p.mine === i}"><i style="width:${pct}%"></i><span dir="auto">${esc(o)}</span><small>${n}</small></button>`;
+    }).join('')}<small>${tn(total, '{n} vote', '{n} votes')}${p.mine == null ? ` · ${t('tap to vote')}` : ''}</small></div>`;
+  };
   const bubbleInner = (m) => {
     if (m.deleted) return `<i>${t('Message deleted')}</i>`;
     if (m.hidden) return `<i>🚩 ${t('Hidden after reports')}</i>`;
-    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}`;
+    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}${m.poll ? pollHTML(m) : ''}`;
   };
   const reactsHTML = (m) => {
     if (isGroup()) {
@@ -288,7 +303,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   const msgHTML = (m, from = '') => {
     if (m.kind === 'system') return `<div class="dm-sys" dir="auto">${esc(systemText(m.system))}</div>`;
     const gone = m.deleted || m.hidden;
-    const card = (m.story || m.duel || m.trade) && !m.text && !m.voice;
+    const card = (m.story || m.duel || m.trade || m.poll) && !m.text && !m.voice;
     const actions = m.mine
       ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
       : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
@@ -430,6 +445,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   }
 
   function startConvo(next) {
+    $('#dmPoll').hidden = true;
     cancelRecording();
     stopVoice();
     cur = next;
@@ -492,8 +508,9 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
 
   /** Send a message (text and/or a shared story, or a voice note) to the open chat. */
   async function send(extra = {}) {
-    const text = extra.voice ? '' : input.value.trim();
-    const story = extra.voice ? null : share;
+    const special = !!(extra.voice || extra.poll); // a voice note or a poll goes on its own
+    const text = special ? '' : input.value.trim();
+    const story = special ? null : share;
     const before = cur.streak || 0;
     const target = cur;
     const payload = { text, storyKey: story?.key, ...extra };
@@ -508,7 +525,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
     }
     msgs.set(r.message.id, r.message);
     typingSent = 0;
-    if (!extra.voice) { input.value = ''; share = null; }
+    if (!special) { input.value = ''; share = null; }
     renderConvo(true);
     sfx.pop();
     if (!isGroup() && r.streak >= 2 && r.streak > before) {
@@ -536,6 +553,20 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
       btn.disabled = false;
       input.focus({ preventScroll: true });
     }
+  });
+
+  $('#dmPoll').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const q = f.elements.q.value.trim();
+    const options = [1, 2, 3, 4].map((n) => f.elements[`o${n}`].value.trim()).filter(Boolean);
+    if (!q || options.length < 2) { toast(t('Write a question and at least two answers'), { emoji: '📊' }); return; }
+    try {
+      await send({ poll: { q, options } });
+      f.reset();
+      f.hidden = true;
+      burstFrom($('.dm-pollbtn', form), { emojis: ['📊', '✨'], count: 8, spread: 40 });
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
   });
 
   // ---------------- ✍️ typing ----------------
@@ -696,6 +727,18 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
     if (gr) return openGroup(Number(gr.dataset.group));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const pv = el.closest('[data-dpoll]');
+    if (pv) {
+      const [id, option] = pv.dataset.dpoll.split(':').map(Number);
+      try {
+        const r = await auth.api('/api/chatpoll', { method: 'POST', body: { scope: isGroup() ? 'g' : 'd', id, option } });
+        const m = msgs.get(id);
+        if (m) msgs.set(id, { ...m, poll: r.poll });
+        renderConvo();
+        sfx.pop();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const kt = el.closest('[data-ktrade]');
     if (kt) {
       const [id, what] = kt.dataset.ktrade.split(':');
@@ -723,6 +766,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
       if (what === 'requests' || what === 'requests-close') { showRequests = what === 'requests'; return renderInbox(); }
       if (what === 'unshare') { share = null; return cur ? paintComposer() : renderInbox(); }
       if (what === 'mic') return startRecording();
+      if (what === 'poll' || what === 'poll-cancel') { const f = $('#dmPoll'); f.hidden = what === 'poll-cancel' || !f.hidden; if (!f.hidden) f.elements.q.focus(); return; }
       if (what === 'rec-cancel') return cancelRecording();
       if (what === 'rec-send') return finishRecording();
       if (what === 'del-msg') {

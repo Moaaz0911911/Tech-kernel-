@@ -114,6 +114,42 @@ const T = {
     de: '👥 @{who} in „{name}“',
     tl: '👥 @{who} sa “{name}”',
   },
+  squadGoal: {
+    en: '🎯 Your squad “{name}” hit its weekly goal!',
+    ar: '🎯 السكواد بتاعك «{name}» وصل لهدف الأسبوع!',
+    de: '🎯 Deine Crew „{name}“ hat ihr Wochenziel erreicht!',
+    tl: '🎯 Naabot ng squad mong “{name}” ang lingguhang goal!',
+  },
+  squadGoalBody: {
+    en: 'Everyone in the squad gets +{xp} XP.',
+    ar: 'كل اللي في السكواد هياخدوا +{xp} XP.',
+    de: 'Alle in der Crew bekommen +{xp} XP.',
+    tl: 'Lahat sa squad ay may +{xp} XP.',
+  },
+  squadInvite: {
+    en: '👥 @{who} invited you to the squad “{name}”',
+    ar: '👥 @{who} عزمك على سكواد «{name}»',
+    de: '👥 @{who} hat dich in die Crew „{name}“ eingeladen',
+    tl: '👥 Inimbitahan ka ni @{who} sa squad na “{name}”',
+  },
+  squadInviteBody: {
+    en: 'Open kerNEl to join (or say no thanks).',
+    ar: 'افتح kerNEl عشان تنضم (أو ترفض).',
+    de: 'Öffne kerNEl, um beizutreten (oder abzulehnen).',
+    tl: 'Buksan ang kerNEl para sumali (o tumanggi).',
+  },
+  partySoon: {
+    en: '🎉 “{title}” is about to start!',
+    ar: '🎉 «{title}» هيبدأ دلوقتي!',
+    de: '🎉 „{title}“ geht gleich los!',
+    tl: '🎉 Magsisimula na ang “{title}”!',
+  },
+  partySoonBody: {
+    en: 'Join the watch party and bring the hype 🍿',
+    ar: 'ادخل الـ Watch Party وهات الحماس 🍿',
+    de: 'Komm zur Watch Party und bring Stimmung mit 🍿',
+    tl: 'Sumali sa watch party at magdala ng hype 🍿',
+  },
   stocksWin: {
     en: '📈 You finished #{place} on Story Stocks!',
     ar: '📈 خلّصت رقم #{place} في Story Stocks!',

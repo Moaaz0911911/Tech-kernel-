@@ -28,6 +28,10 @@ const MIGRATIONS = [
   'ALTER TABLE notify_prefs ADD COLUMN drop_hour INTEGER',
   'ALTER TABLE notify_prefs ADD COLUMN last_drop_day TEXT',
   'ALTER TABLE dm_messages ADD COLUMN trade INTEGER',
+  'ALTER TABLE dm_messages ADD COLUMN poll TEXT',
+  'ALTER TABLE group_messages ADD COLUMN poll TEXT',
+  'ALTER TABLE users ADD COLUMN week TEXT',
+  'ALTER TABLE users ADD COLUMN week_xp INTEGER NOT NULL DEFAULT 0',
 ];
 
 export class KernelDB extends DurableObject {

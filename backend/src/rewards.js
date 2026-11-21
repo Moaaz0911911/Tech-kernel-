@@ -6,7 +6,7 @@ import { notify } from './push.js';
 import { tr, langOfProfile } from './i18n.js';
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
-export const STAT_KEYS = ['invites', 'invited', 'liveWins', 'prophet', 'duelsWon', 'seasonWins', 'stockWins', 'bingos', 'cardSets'];
+export const STAT_KEYS = ['invites', 'invited', 'liveWins', 'prophet', 'duelsWon', 'seasonWins', 'stockWins', 'bingos', 'cardSets', 'squadGoals', 'debateWins'];
 export const statsOf = (row) => parse(row?.stats, {});
 
 /** Give someone XP (collected on their next visit) and/or bump one of their counters. */

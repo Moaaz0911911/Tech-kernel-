@@ -52,7 +52,9 @@ CREATE TABLE IF NOT EXISTS users (
   banned_until  INTEGER,                      -- set by a moderator
   invited_by    TEXT,
   season        TEXT,                         -- the month their season_xp belongs to (YYYY-MM)
-  season_xp     INTEGER NOT NULL DEFAULT 0
+  season_xp     INTEGER NOT NULL DEFAULT 0,
+  week          TEXT,                         -- the week their week_xp belongs to (Monday's date)
+  week_xp       INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS users_board ON users (on_board, xp DESC);
 
@@ -295,6 +297,7 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   voice       TEXT,                          -- JSON { key, ms, peaks } of a 🎙️ voice note
   pop         TEXT,                          -- JSON snapshot of the 🫧 pop this message replies to
   trade       INTEGER,                       -- a 🃏 card gift or trade offer
+  poll        TEXT,                          -- JSON { q, options } of a 📊 poll
   deleted     INTEGER NOT NULL DEFAULT 0,
   created     INTEGER NOT NULL,
   updated     INTEGER NOT NULL
@@ -477,6 +480,7 @@ CREATE TABLE IF NOT EXISTS group_messages (
   text        TEXT NOT NULL DEFAULT '',
   story       TEXT,
   voice       TEXT,
+  poll        TEXT,
   reacts      TEXT NOT NULL DEFAULT '{}',
   reports     INTEGER NOT NULL DEFAULT 0,
   hidden      INTEGER NOT NULL DEFAULT 0,
@@ -598,4 +602,137 @@ CREATE TABLE IF NOT EXISTS card_trades (
   status      TEXT NOT NULL DEFAULT 'open',  -- open | done | declined | cancelled | failed | gift
   created     INTEGER NOT NULL,
   done        INTEGER
+);
+
+-- 👥 Squads
+CREATE TABLE IF NOT EXISTS squads (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  emoji       TEXT NOT NULL,
+  owner_id    TEXT NOT NULL,
+  group_id    INTEGER,                       -- the squad's group chat
+  created     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS squad_members (
+  user_id     TEXT PRIMARY KEY,              -- one squad per person
+  squad_id    INTEGER NOT NULL,
+  joined      INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS squad_members_squad ON squad_members (squad_id);
+CREATE TABLE IF NOT EXISTS squad_invites (
+  squad_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  by_id       TEXT,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (squad_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS squad_goals (
+  squad_id    INTEGER NOT NULL,
+  week        TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (squad_id, week)
+);
+
+-- 🎉 Watch Parties
+CREATE TABLE IF NOT EXISTS parties (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT NOT NULL,
+  emoji       TEXT NOT NULL,
+  starts      INTEGER NOT NULL,
+  ends        INTEGER NOT NULL,
+  story       TEXT,
+  created_by  TEXT,
+  created     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS party_messages (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  party_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  created     INTEGER NOT NULL,
+  hidden      INTEGER NOT NULL DEFAULT 0,
+  reports     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS party_messages_party ON party_messages (party_id, created);
+CREATE TABLE IF NOT EXISTS party_hype (
+  party_id    INTEGER NOT NULL,
+  bucket      INTEGER NOT NULL,              -- 2-second slot
+  emoji       TEXT NOT NULL,
+  n           INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (party_id, bucket, emoji)
+);
+CREATE TABLE IF NOT EXISTS party_rsvps (
+  party_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  reminded    INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (party_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS party_viewers (
+  party_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (party_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS party_reports (
+  msg_id      INTEGER NOT NULL,
+  reporter_id TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (msg_id, reporter_id)
+);
+
+-- ⚖️ Debate Rooms
+CREATE TABLE IF NOT EXISTS debates (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  story_key   TEXT,
+  story       TEXT,
+  question    TEXT NOT NULL,
+  side_a      TEXT NOT NULL,
+  side_b      TEXT NOT NULL,
+  created_by  TEXT,
+  created     INTEGER NOT NULL,
+  closes      INTEGER NOT NULL,
+  auto        INTEGER NOT NULL DEFAULT 0,
+  winner      TEXT,                          -- a | b | tie (once closed)
+  best_arg    INTEGER
+);
+CREATE INDEX IF NOT EXISTS debates_story ON debates (story_key);
+CREATE TABLE IF NOT EXISTS debate_votes (
+  debate_id   INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  side        TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (debate_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS debate_args (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  debate_id   INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  side        TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  likes       INTEGER NOT NULL DEFAULT 0,
+  created     INTEGER NOT NULL,
+  hidden      INTEGER NOT NULL DEFAULT 0,
+  reports     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS debate_args_debate ON debate_args (debate_id);
+CREATE TABLE IF NOT EXISTS debate_likes (
+  arg_id      INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  PRIMARY KEY (arg_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS debate_reports (
+  arg_id      INTEGER NOT NULL,
+  reporter_id TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (arg_id, reporter_id)
+);
+
+-- 📊 votes on polls inside chats
+CREATE TABLE IF NOT EXISTS chat_poll_votes (
+  scope       TEXT NOT NULL,                 -- d (private chat) | g (group)
+  msg_id      INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  option      INTEGER NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (scope, msg_id, user_id)
 );

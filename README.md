@@ -48,6 +48,10 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🎯 **Tech Bingo**: a new 5×5 card every week, different for everyone, with squares like "a rocket launch" or "a hack or data leak". Squares fill in by themselves when a matching headline appears; a line, three lines and a full card pay XP and 🃏 card packs.
 - 🔤 **Emoji Headlines** and 🌫️ **Blur Reveal**: daily guessing games — pick the story from emojis, or from a photo that slowly un-blurs. Faster right answers score more, with a daily board; a perfect game earns a card pack.
 - 🃏 **kerNEl Cards**: 36 collectible cards in 4 sets (Retro Gadgets, Space Tech, AI & Robots, Code Legends), each with a fun fact. A free pack of 3 every day, bonus packs for bingo lines, duel wins, right predictions and perfect guessing games. Gift or trade your doubles — offers arrive as cards in Messages. One full set unlocks the 🃏 Card shark hat, all four the Master collector frame.
+- 👥 **Squads**: team up with up to 4 friends. Your XP adds up all week; hit the squad goal (150 XP per member) and everyone gets a +40 XP bonus. Each squad gets its own group chat, and the best squads of the week show on the Me tab. Three goals reached unlock the 🤝 Team player hat.
+- 🎉 **Watch Parties**: moderators schedule a party for a big launch or event. Tap 🔔 to get reminded; the room opens 15 minutes early with a live chat, a viewer count and a hype meter, and every emoji anyone taps floats up on everyone's screen.
+- ⚖️ **Debate Rooms**: every day the biggest story gets a "Is this a big deal?" debate, and anyone can start one from the reader (up to 3 a day). Pick a side, post up to 3 arguments, ❤️ the good ones. After 48 hours the side with more votes wins, and the best-liked argument on it earns XP (three wins unlock the ⚖️ Debate champ hat).
+- 📊 **Polls in chats**: tap 📊 in any private or group chat to ask a question with 2–4 answers. Votes update live; tap your answer again to take your vote back.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -204,6 +208,9 @@ js/stocks.js      📈 Story Stocks
 js/bingo.js       🎯 Tech Bingo
 js/guess.js       🔤 Emoji Headlines + 🌫️ Blur Reveal
 js/cards.js       🃏 packs, collection, gifts and trades (cards-ui.js draws a card, cards-data.js lists them)
+js/squads.js      👥 Squads
+js/parties.js     🎉 Watch Parties
+js/debates.js     ⚖️ Debate Rooms
 js/emoji.js       the emoji dictionary (shared with the server)
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped

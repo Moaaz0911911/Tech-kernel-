@@ -6,6 +6,7 @@ import { notify } from './push.js';
 import { tr, langOfProfile } from './i18n.js';
 import { person, lastSeen, activeFields, DM_REACTS } from './people.js';
 import { saveVoice, dropVoice, typingIn, setTypingIn } from './media.js';
+import { cleanPoll, attachPolls, pollOf } from './chatpolls.js';
 
 export const GROUP = { maxMembers: 32, nameMax: 40, perDay: 10, reportsToHide: 3 };
 export const GROUP_EMOJIS = ['👥', '🍿', '🎮', '🚀', '💻', '🤖', '📱', '🎧', '⚽', '📚', '🔥', '💡'];
@@ -94,7 +95,7 @@ function toGM(r, me) {
     id: r.id, kind: r.kind, from: r.username || null, mine: r.user_id === me.id, created: r.created, updated: r.updated,
     deleted: !!r.deleted, hidden: !!r.hidden && !r.deleted,
     system: r.kind === 'system' ? parse(r.text, {}) : null,
-    text: gone || r.kind === 'system' ? '' : r.text, story: gone ? null : parse(r.story, null), voice: gone ? null : parse(r.voice, null),
+    text: gone || r.kind === 'system' ? '' : r.text, story: gone ? null : parse(r.story, null), voice: gone ? null : parse(r.voice, null), poll: pollOf(r),
     reacts: counts, myReact: reacts[me.id] || null,
   };
 }
@@ -122,7 +123,7 @@ export async function listGroups(env, user) {
       faces: faces.filter((f) => f.group_id === r.id).slice(0, 2).map((f) => person({ ...f, xp: 0 })),
       last: visible ? {
         kind: l.kind, from: l.username, mine: l.user_id === user.id, deleted: !!l.deleted || !!l.hidden,
-        text: l.deleted || l.hidden ? '' : l.kind === 'system' ? parse(l.text, {}) : l.text.slice(0, 120), story: !!l.story, voice: !!l.voice,
+        text: l.deleted || l.hidden ? '' : l.kind === 'system' ? parse(l.text, {}) : l.text.slice(0, 120), story: !!l.story, voice: !!l.voice, poll: !!l.poll,
       } : null,
     };
   });
@@ -154,7 +155,7 @@ export async function getGroup(env, user, groupId, since = 0) {
     group: { id: g.id, name: g.name, emoji: g.emoji, owner: g.owner_id === user.id, muted: !!m.muted, created: g.created },
     members,
     authors: Object.fromEntries(authorIds.filter((id) => byId[id]).map((id) => [byId[id].username, person(byId[id])])),
-    messages: rows.map((r) => toGM(r, user)),
+    messages: await attachPolls(env, 'g', rows.map((r) => toGM(r, user)), user),
     typing: typingIds.map((id) => byId[id]).filter(Boolean).map((u) => person(u)),
     now,
   };
@@ -168,11 +169,12 @@ export async function sendGroup(env, user, groupId, body, ctx) {
     const s = await env.DB.prepare('SELECT * FROM stories WHERE key = ?').bind(body.storyKey.slice(0, 300)).first();
     if (s) { const x = rowToStory(s); story = { key: x.key, title: x.title, url: x.url, source: x.source, cat: x.cat, image: x.image, domain: x.domain, time: x.time }; }
   }
+  const poll = cleanPoll(body.poll);
   const voice = body.voice ? await saveVoice(env, user, `g:${g.id}`, body) : null;
-  if (!text && !story && !voice) throw new HttpError(400, 'Say something first!');
+  if (!text && !story && !voice && !poll) throw new HttpError(400, 'Say something first!');
   const now = Date.now();
-  const msg = await env.DB.prepare("INSERT INTO group_messages (group_id, user_id, kind, text, story, voice, reacts, created, updated) VALUES (?, ?, 'msg', ?, ?, ?, '{}', ?, ?) RETURNING *")
-    .bind(g.id, user.id, text, story ? JSON.stringify(story) : null, voice ? JSON.stringify(voice) : null, now, now).first();
+  const msg = await env.DB.prepare("INSERT INTO group_messages (group_id, user_id, kind, text, story, voice, poll, reacts, created, updated) VALUES (?, ?, 'msg', ?, ?, ?, ?, '{}', ?, ?) RETURNING *")
+    .bind(g.id, user.id, text, story ? JSON.stringify(story) : null, voice ? JSON.stringify(voice) : null, poll, now, now).first();
   // the chat message before this one ("added", "renamed" and other notes don't count)
   const prev = await env.DB.prepare("SELECT MAX(id) AS id FROM group_messages WHERE group_id = ? AND kind = 'msg' AND id < ?").bind(g.id, msg.id).first();
   const prevLast = prev?.id || 0;
@@ -185,14 +187,14 @@ export async function sendGroup(env, user, groupId, body, ctx) {
   const job = (async () => {
     const { results } = await env.DB.prepare(`SELECT u.id, u.profile FROM group_members m JOIN users u ON u.id = m.user_id
       WHERE m.group_id = ? AND m.user_id != ? AND m.muted = 0 AND m.read_id >= ? LIMIT 40`).bind(g.id, user.id, prevLast).all();
-    const preview = text || (story ? `📰 ${story.title}` : voice ? '🎙️' : '');
+    const preview = text || (story ? `📰 ${story.title}` : voice ? '🎙️' : poll ? `📊 ${JSON.parse(poll).q}` : '');
     const budget = { left: 16 };
     for (const p of results) {
       await notify(env, p.id, { kind: 'dms', title: tr(langOfProfile(p.profile), 'groupMessage', { who: user.username, name: g.name }), body: preview.slice(0, 160), url: `./#group=${g.id}`, tag: `grp-${g.id}`, icon: g.emoji }, budget);
     }
   })().catch((e) => console.error('group push', e));
   if (ctx?.waitUntil) ctx.waitUntil(job); else await job;
-  return { message: toGM({ ...msg, username: user.username }, user) };
+  return { message: (await attachPolls(env, 'g', [toGM({ ...msg, username: user.username }, user)], user))[0] };
 }
 
 async function messageFor(env, user, id) {

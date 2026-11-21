@@ -17,6 +17,8 @@ export const HATS = [
   { id: 'chart', emoji: '📈', xp: 0, stat: 'stockWins', min: 1, need: 'finish a Story Stocks week in the top 3', name: 'Market mogul' },
   { id: 'target', emoji: '🎯', xp: 0, stat: 'bingos', min: 3, need: 'get Tech Bingo 3 times', name: 'Bingo pro' },
   { id: 'joker', emoji: '🃏', xp: 0, stat: 'cardSets', min: 1, need: 'complete a card set', name: 'Card shark' },
+  { id: 'team', emoji: '🤝', xp: 0, stat: 'squadGoals', min: 3, need: 'reach your squad’s weekly goal 3 times', name: 'Team player' },
+  { id: 'gavel', emoji: '⚖️', xp: 0, stat: 'debateWins', min: 3, need: 'write the winning argument in 3 debates', name: 'Debate champ' },
 ];
 
 export const FRAMES = [

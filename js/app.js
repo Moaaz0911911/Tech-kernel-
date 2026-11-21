@@ -26,6 +26,9 @@ import { initStocks } from './stocks.js';
 import { initBingo } from './bingo.js';
 import { initGuess } from './guess.js';
 import { initCards } from './cards.js';
+import { initSquads } from './squads.js';
+import { initParties } from './parties.js';
+import { initDebates } from './debates.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -68,6 +71,8 @@ let arena = null;
 let discover = null;
 let stocks = null;
 let cards = null;
+let parties = null;
+let debates = null;
 let invites = null;
 
 // ====================================================================================
@@ -1173,6 +1178,9 @@ function openDeepLink() {
   else if (h === 'pops') community?.openMessages();
   else if (h === 'drop') discover?.openDrop();
   else if (h === 'stocks') { tabs?.show('play'); stocks?.open(); }
+  else if (h.startsWith('party=')) { tabs?.show('play'); parties?.open(Number(h.slice(6))); }
+  else if (h.startsWith('debate=')) { tabs?.show('play'); debates?.open(Number(h.slice(7))); }
+  else if (h === 'squad') { tabs?.show('me'); setTimeout(() => $('#squadWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'cards') { tabs?.show('play'); setTimeout(() => $('#cardsWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
@@ -1273,6 +1281,9 @@ function boot() {
   initBingo({ openStory: storyOpener });
   initGuess({ openAuth, openStory: storyOpener, onDone: (kind, right) => { addXp(right * 2); bump('guessGames'); } });
   cards = initCards({ openAuth });
+  initSquads({ openAuth, openGroup: (id) => community?.openGroup(id) });
+  parties = initParties({ openAuth, openStory: storyOpener });
+  debates = initDebates({ openAuth, openStory: storyOpener });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
@@ -1328,7 +1339,10 @@ function boot() {
       else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
       else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-popshare]')) {
+      else if (el.closest('[data-debate]')) {
+        const it = findItem(key);
+        if (it && debates) { reader?.close(); debates.forStory(it); }
+      } else if (el.closest('[data-popshare]')) {
         const it = findItem(key);
         if (!auth.user) { toast(t('Sign in to post pops 🫧'), { emoji: '🫧' }); openAuth('signin'); }
         else if (it && community) { reader?.close(); community.popStory(it); } else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });

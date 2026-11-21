@@ -16,6 +16,9 @@ import { statsOf, claimXp, myInvites } from './rewards.js';
 import { forgetGroupsOf } from './groups.js';
 import { sendMorningDrops, notifyTopics } from './discover.js';
 import { updatePrices, awardMarket } from './market.js';
+import { weekUpdate, forgetSquadOf } from './squads.js';
+import { remindParties } from './parties.js';
+import { makeDailyDebate, settleDebates } from './debates.js';
 import { dropPopStatements } from './pops.js';
 import { seasonBoard, seasonUpdate, remindLive, makeAutoPredictions, resolveAutoPredictions, awardSeason, seasonMedals } from './arena.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
@@ -116,7 +119,7 @@ async function route(request, env, ctx) {
     const data = mergeDataPatch(before, await readJson(request, 400_000));
     await env.DB.prepare('UPDATE users SET data = ?, xp = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), data.xp || 0, Date.now(), user.id).run();
     const gained = (data.xp || 0) - (user.xp || 0);
-    if (gained > 0) await seasonUpdate(env, user, gained).run();
+    if (gained > 0) await env.DB.batch([seasonUpdate(env, user, gained), weekUpdate(env, user, gained)]);
     const events = activityFromData({ ...before, xp: user.xp || 0 }, data); // rank-ups and new badges → friends' feed
     if (events.length) ctx.waitUntil(recordActivity(env, user, events).catch((e) => console.error('activity', e)));
     return json({ ok: true, xp: data.xp || 0 });
@@ -129,6 +132,7 @@ async function route(request, env, ctx) {
   }
   if (path === '/api/me' && m === 'DELETE') { // delete the account and everything in it
     const user = await requireUser(request, env);
+    await forgetSquadOf(env, user);
     await forgetGroupsOf(env, user); // leave every group first (hands over the ones they started)
     await env.DB.batch([
       ...dropPopStatements(env, 'user_id = ?', user.id),
@@ -143,6 +147,16 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM user_cards WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM card_packs WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM card_trades WHERE from_id = ? OR to_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM party_messages WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM party_rsvps WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM party_viewers WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM party_reports WHERE reporter_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM debate_likes WHERE user_id = ? OR arg_id IN (SELECT id FROM debate_args WHERE user_id = ?)').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM debate_reports WHERE reporter_id = ? OR arg_id IN (SELECT id FROM debate_args WHERE user_id = ?)').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM debate_args WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM debate_votes WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('UPDATE debates SET created_by = NULL WHERE created_by = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM chat_poll_votes WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM topic_alerts WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM voice_notes WHERE user_id = ? OR scope IN (SELECT \'d:\' || thread_id FROM dm_members WHERE user_id = ?)').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM reactions WHERE user_id = ?').bind(user.id),
@@ -321,6 +335,7 @@ export default {
         await remindLive(env, budget).catch((e) => console.error('live reminder', e));
         await sendMorningDrops(env, budget).catch((e) => console.error('morning drop', e));
         await notifyTopics(env, budget).catch((e) => console.error('topic alerts', e));
+        await remindParties(env, budget).catch((e) => console.error('party reminders', e));
         await awardTrophies(env).catch((e) => console.error('trophies', e));
         await env.DB.prepare('DELETE FROM notifications WHERE created < ?').bind(Date.now() - 30 * 864e5).run();
         console.log(`notifications: ${news} news pushes, ${streaks} streak pushes`);
@@ -334,6 +349,8 @@ export default {
       await awardSeason(env).catch((e) => console.error('season', e));
       await updatePrices(env).catch((e) => console.error('stocks', e));
       await awardMarket(env).catch((e) => console.error('stocks award', e));
+      await makeDailyDebate(env).catch((e) => console.error('debate', e));
+      await settleDebates(env).catch((e) => console.error('debates', e));
       if (new Date().getUTCMinutes() < 5 || event.cron === 'cleanup') await env.DB.batch([ // the clean-up runs once an hour
         env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()),
         env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
@@ -369,6 +386,19 @@ export default {
         env.DB.prepare('DELETE FROM guess_scores WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare("DELETE FROM kv WHERE (k LIKE 'guess:%' OR k LIKE 'bingo:hits:%') AND substr(k, -10) < ?").bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare("DELETE FROM card_trades WHERE status != 'open' AND created < ?").bind(Date.now() - 90 * 864e5),
+        env.DB.prepare('DELETE FROM party_hype WHERE bucket < ?').bind(Math.floor((Date.now() - 864e5) / 2000)),
+        env.DB.prepare('DELETE FROM party_viewers WHERE at < ?').bind(Date.now() - 864e5),
+        env.DB.prepare('DELETE FROM squad_invites WHERE at < ?').bind(Date.now() - 14 * 864e5),
+        // watch parties (with their chat) go 30 days after they end
+        env.DB.prepare('DELETE FROM party_reports WHERE msg_id IN (SELECT m.id FROM party_messages m JOIN parties p ON p.id = m.party_id WHERE p.ends < ?)').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM party_messages WHERE party_id IN (SELECT id FROM parties WHERE ends < ?)').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM party_rsvps WHERE party_id IN (SELECT id FROM parties WHERE ends < ?)').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM parties WHERE ends < ?').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM debate_likes WHERE arg_id IN (SELECT a.id FROM debate_args a JOIN debates d ON d.id = a.debate_id WHERE d.closes < ?)').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM debate_reports WHERE arg_id IN (SELECT a.id FROM debate_args a JOIN debates d ON d.id = a.debate_id WHERE d.closes < ?)').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM debate_args WHERE debate_id IN (SELECT id FROM debates WHERE closes < ?)').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM debate_votes WHERE debate_id IN (SELECT id FROM debates WHERE closes < ?)').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM debates WHERE closes < ?').bind(Date.now() - 60 * 864e5),
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'tl:%' AND substr(k, 4) NOT IN (SELECT key FROM stories)"), // timelines go with their story
         env.DB.prepare("DELETE FROM group_messages WHERE created < ? AND kind = 'msg'").bind(Date.now() - 365 * 864e5), // group messages keep a year
         env.DB.prepare('DELETE FROM group_reports WHERE msg_id NOT IN (SELECT id FROM group_messages)'),

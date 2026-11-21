@@ -63,7 +63,13 @@ export async function reports(env) {
     JOIN users u ON u.id = gm.user_id LEFT JOIN chat_groups g ON g.id = gm.group_id WHERE gm.reports > 0 ORDER BY gm.id DESC LIMIT 50`).all();
   const { results: pops } = await env.DB.prepare(`SELECT p.id, p.kind, p.text, p.bg, p.photo_key, p.story, p.reports, p.hidden, p.created, p.expires, u.username, u.profile FROM pops p
     JOIN users u ON u.id = p.user_id WHERE p.reports > 0 AND p.expires > ? ORDER BY p.id DESC LIMIT 50`).bind(Date.now()).all();
+  const { results: debateArgs } = await env.DB.prepare(`SELECT a.id, a.text, a.reports, a.hidden, a.created, d.question, u.username, u.profile FROM debate_args a JOIN users u ON u.id = a.user_id
+    LEFT JOIN debates d ON d.id = a.debate_id WHERE a.reports > 0 ORDER BY a.id DESC LIMIT 50`).all();
+  const { results: partyMsgs } = await env.DB.prepare(`SELECT m.id, m.text, m.reports, m.hidden, m.created, p.title, u.username, u.profile FROM party_messages m JOIN users u ON u.id = m.user_id
+    LEFT JOIN parties p ON p.id = m.party_id WHERE m.reports > 0 ORDER BY m.id DESC LIMIT 50`).all();
   return {
+    debates: debateArgs.map((x) => ({ id: x.id, text: x.text, reports: x.reports, hidden: !!x.hidden, created: x.created, where: x.question || '?', user: who(x) })),
+    parties: partyMsgs.map((x) => ({ id: x.id, text: x.text, reports: x.reports, hidden: !!x.hidden, created: x.created, where: x.title || '?', user: who(x) })),
     groups: groups.map((m) => ({ id: m.id, group: m.grp || '?', text: m.deleted ? '' : m.text || (m.voice ? '🎙️' : ''), reports: m.reports, hidden: !!m.hidden, created: m.created, user: who(m) })),
     pops: pops.map((p) => ({ id: p.id, kind: p.kind, text: p.text, photo: p.photo_key || null, story: parse(p.story, null)?.title || null, reports: p.reports, hidden: !!p.hidden, created: p.created, expires: p.expires, user: who(p) })),
     chat: chat.map((m) => ({ id: m.id, room: m.room, text: m.text, reports: m.reports, hidden: !!m.hidden, created: m.created, user: m.profile ? who({ ...m }) : { username: m.username, nickname: m.username, avatar: '🍿' } })),
@@ -82,6 +88,8 @@ export async function moderateContent(env, admin, body) {
     comment: ['comments', 'comment_reports', 'comment_id', false],
     group: ['group_messages', 'group_reports', 'msg_id', true],
     pop: ['pops', 'pop_reports', 'pop_id', false],
+    debate: ['debate_args', 'debate_reports', 'arg_id', false],
+    party: ['party_messages', 'party_reports', 'msg_id', false],
   };
   const [table, reportsTable, idCol, hasUpdated] = KINDS[body.kind] || [];
   if (!table || !id) throw new HttpError(400, 'Pick a message or comment');
