@@ -13,7 +13,7 @@ const jsonArg = process.argv.indexOf('--json');
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
 const unq = (s) => s.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
 
-const MAIN_FILES = ['app', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'look', 'news', 'fun', 'auth', 'content', 'reader', 'tabs', 'dm', 'photo', 'mod', 'invite', 'cosmetics', 'arena'];
+const MAIN_FILES = ['app', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'look', 'news', 'fun', 'auth', 'content', 'reader', 'tabs', 'dm', 'photo', 'mod', 'invite', 'cosmetics', 'arena', 'voice', 'groups', 'pops'];
 const KIDS_FILES = ['kids'];
 const files = (which === 'kids' ? KIDS_FILES : MAIN_FILES).map((f) => `js/${f}.js`);
 

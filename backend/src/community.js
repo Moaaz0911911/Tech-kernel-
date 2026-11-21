@@ -6,6 +6,7 @@ import { look, liveStreak, followCounts, isFollowing } from './social.js';
 import { trophiesOf } from './play.js';
 import { relation } from './people.js';
 import { seasonMedals } from './arena.js';
+import { popStatus } from './pops.js';
 import { tr, langOfProfile } from './i18n.js';
 
 export const ROOMS = [
@@ -197,6 +198,7 @@ export async function publicProfile(env, username, viewer = null) {
     messages: msgs?.n || 0, joined: r.created,
     ...(await relation(env, viewer, r)),
     seasons: await seasonMedals(env, r.id),
+    ...(await popStatus(env, viewer, r.id)),
   };
 }
 

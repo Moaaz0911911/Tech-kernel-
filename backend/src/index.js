@@ -13,6 +13,8 @@ import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordAc
 import { awardTrophies } from './play.js';
 import { isAdmin } from './admin.js';
 import { statsOf, claimXp, myInvites } from './rewards.js';
+import { forgetGroupsOf } from './groups.js';
+import { dropPopStatements } from './pops.js';
 import { seasonBoard, seasonUpdate, remindLive, makeAutoPredictions, resolveAutoPredictions, awardSeason, seasonMedals } from './arena.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
 
@@ -125,7 +127,13 @@ async function route(request, env, ctx) {
   }
   if (path === '/api/me' && m === 'DELETE') { // delete the account and everything in it
     const user = await requireUser(request, env);
+    await forgetGroupsOf(env, user); // leave every group first (hands over the ones they started)
     await env.DB.batch([
+      ...dropPopStatements(env, 'user_id = ?', user.id),
+      env.DB.prepare('DELETE FROM pop_views WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM pop_reports WHERE reporter_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM typing WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM voice_notes WHERE user_id = ? OR scope IN (SELECT \'d:\' || thread_id FROM dm_members WHERE user_id = ?)').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM reactions WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM chat_messages WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM chat_reacts WHERE user_id = ?').bind(user.id),
@@ -305,8 +313,7 @@ export default {
       return;
     }
     ctx.waitUntil((async () => {
-      const r = await collectNews(env);
-      const t = await findThumbnails(env, 15);
+      // the quick jobs go first, so a slow news run can never crowd them out
       await makeAutoPredictions(env).catch((e) => console.error('predictions', e));
       await resolveAutoPredictions(env).catch((e) => console.error('predictions', e));
       await awardSeason(env).catch((e) => console.error('season', e));
@@ -337,7 +344,16 @@ export default {
         env.DB.prepare('DELETE FROM prediction_votes WHERE pred_id IN (SELECT id FROM predictions WHERE resolved < ?)').bind(Date.now() - 60 * 864e5),
         env.DB.prepare('DELETE FROM predictions WHERE resolved < ?').bind(Date.now() - 60 * 864e5),
         env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
-      ]);
+        ...dropPopStatements(env, 'expires < ?', Date.now()), // 🫧 pops last a day
+        env.DB.prepare('DELETE FROM typing WHERE at < ?').bind(Date.now() - 60_000),
+        env.DB.prepare("DELETE FROM group_messages WHERE created < ? AND kind = 'msg'").bind(Date.now() - 365 * 864e5), // group messages keep a year
+        env.DB.prepare('DELETE FROM group_reports WHERE msg_id NOT IN (SELECT id FROM group_messages)'),
+        env.DB.prepare('DELETE FROM voice_notes WHERE created < ?').bind(Date.now() - 366 * 864e5),
+        env.DB.prepare("DELETE FROM voice_notes WHERE scope LIKE 'd:%' AND CAST(substr(scope, 3) AS INTEGER) NOT IN (SELECT id FROM dm_threads)"),
+        env.DB.prepare("DELETE FROM voice_notes WHERE scope LIKE 'g:%' AND CAST(substr(scope, 3) AS INTEGER) NOT IN (SELECT id FROM chat_groups)"),
+      ]).catch((e) => console.error('cleanup', e));
+      const r = await collectNews(env);
+      const t = await findThumbnails(env, 8);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);
     })());
   },

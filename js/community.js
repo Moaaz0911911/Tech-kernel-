@@ -7,6 +7,7 @@ import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML } from './look.js';
 import { initDM, mountPeopleSearch, activeText } from './dm.js';
 import { seasonMedalsHTML } from './arena.js';
+import { initPops } from './pops.js';
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -38,7 +39,8 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
   let dmCount = 0;
   let mode = store.get('chat:mode', 'rooms') === 'dms' ? 'dms' : 'rooms';
   let lastSeen = store.get('chat:seen', 0);
-  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, onBadge: (n) => { dmCount = n; paintDot(); } });
+  const pops = initPops({ openAuth, openStory, openProfile: (u) => showProfile(u) });
+  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, pops, openProfile: (u) => showProfile(u), onBadge: (n) => { dmCount = n; paintDot(); } });
 
   function setMode(m) {
     mode = m;
@@ -307,7 +309,8 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       const badges = u.badges.map(badgeInfo).filter(Boolean);
       const trophies = u.trophies || [];
       body.innerHTML = `
-        <div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>
+        ${u.pops ? `<button type="button" class="uc-ava pop-ring ${u.popsUnseen ? 'unseen' : 'seen'}" data-pops-of="${esc(u.username)}" aria-label="${esc(t('Pops from {name}', { name: u.nickname }))}">${lookHTML(u, { streak: u.streak, active: u.active })}</button>`
+          : `<div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>`}
         <h2 dir="auto">${esc(u.nickname)}</h2>
         <p class="muted">@${esc(u.username)} · ${t('joined {when}', { when: fmtDate(u.joined, { month: 'short', year: 'numeric' }) })}</p>
         ${u.bio ? `<p class="uc-bio" dir="auto">${esc(u.bio)}</p>` : ''}
@@ -354,6 +357,8 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       input.focus();
       return;
     }
+    const popsBtn = el?.closest('[data-pops-of]');
+    if (popsBtn) { $('#userCard').close(); pops.openUser(popsBtn.dataset.popsOf); return; }
     const duelBtn = el?.closest('[data-duel-user]');
     if (duelBtn) { $('#userCard').close(); challenge?.(duelBtn.dataset.duelUser); return; }
     const msgBtn = el?.closest('[data-message]');
@@ -440,6 +445,12 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
     },
     openDM,
     openMessages: () => { open(null, { as: 'dms' }); dm.inbox(); },
+    openGroup: (id) => {
+      if (!auth.user) { toast(t('Sign in to message people privately ✉️'), { emoji: '✉️' }); openAuth('signin'); return; }
+      open(null, { as: 'dms' });
+      dm.openGroup(id);
+    },
+    popStory: (item) => pops.compose({ story: item }),
     refreshPoll: loadPoll,
     showProfile,
   };

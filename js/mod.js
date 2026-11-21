@@ -34,6 +34,7 @@ export function initMod() {
       pane.innerHTML = `<div class="mod-tiles">
           ${tile(o.users, 'kernels')}${tile(o.newUsers, 'new today')}${tile(o.activeNow, 'active now')}
           ${tile(o.chat, 'chat messages today')}${tile(o.comments, 'comments today')}${tile(o.dms, 'private messages today')}
+          ${tile(o.groupMsgs || 0, 'group messages today')}${tile(o.pops || 0, 'pops today')}${tile((o.groupReports || 0) + (o.popReports || 0), 'reported group messages and pops', true)}
           ${tile(o.chatReports, 'reported chat messages', true)}${tile(o.commentReports, 'reported comments', true)}${tile(o.dmReports, 'reported people', true)}
           ${tile(o.photoReports, 'reported photos', true)}${tile(o.muted, 'muted')}${tile(o.banned, 'banned')}
         </div>
@@ -46,8 +47,9 @@ export function initMod() {
     try {
       const r = await api('/api/mod/reports');
       const contentRow = (kind, x) => `<div class="mod-item${x.hidden ? ' is-hidden' : ''}">
-          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
-          <p class="mod-text" dir="auto">${esc(x.text) || `<i>${t('(deleted by its author)')}</i>`}</p>
+          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
+          ${kind === 'pop' && x.photo ? `<img class="mod-pop-photo" src="${esc(auth.apiBase)}/api/pops/photo/${esc(x.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+          <p class="mod-text" dir="auto">${kind === 'pop' && x.story ? `📰 ${esc(x.story)}<br>` : ''}${esc(x.text) || (kind === 'pop' ? '' : `<i>${t('(deleted by its author)')}</i>`)}</p>
           <div class="mod-actions"><span class="chip">🚩 ${x.reports}</span>${x.hidden ? `<span class="chip">${t('hidden')}</span>` : ''}
             ${x.hidden ? `<button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:restore">${t('Bring back')}</button>` : `<button type="button" class="btn btn-sm btn-primary" data-content="${kind}:${x.id}:hide">${t('Hide')}</button>`}
             <button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:dismiss">${t('Looks fine')}</button></div>
@@ -67,6 +69,8 @@ export function initMod() {
       const section = (title, items, row) => `<h3 class="mini-title">${title} <small>${items.length}</small></h3>${items.length ? items.map(row).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}`;
       pane.innerHTML = section(`💬 ${t('Chat messages')}`, r.chat, (x) => contentRow('chat', x))
         + section(`🗨️ ${t('Comments')}`, r.comments, (x) => contentRow('comment', x))
+        + section(`👥 ${t('Group messages')}`, r.groups || [], (x) => contentRow('group', x))
+        + section(`🫧 ${t('Pops')}`, r.pops || [], (x) => contentRow('pop', x))
         + section(`✉️ ${t('Reported in private messages')}`, r.dms, dmRow)
         + section(`📷 ${t('Profile photos')}`, r.photos, photoRow);
     } catch (e) { fail(e); }

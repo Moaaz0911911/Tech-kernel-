@@ -25,6 +25,10 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🗨️ **Comments** | Comments on any kerNEl story, with @mentions, the swear filter, reports (3 → hidden), mutes and comment counts in `/api/news`. |
 | 👯 **Friends** | Follow people; their rank-ups, achievements, quiz/tournament scores, trophies and streak milestones go to a friends feed, and the big ones to followers' phones. |
 | ✉️ **Messages** | Private chats between two people, with message requests for people you don't follow (3 messages until accepted), read receipts, reactions, day streaks, shared stories, blocking and reports (3 reports in a day mute someone for 24 hours). Messages are kept for a year. |
+| 👥 **Group chats** | Up to 32 members, with stories, voice notes, reactions, "Seen by", mute, rename, add/remove and leave (the oldest member takes over from a creator who leaves). New members only see messages after they joined. One push per member until they catch up, so busy groups don't buzz nonstop. Three reports hide a message. |
+| 🎙️ **Voice notes** | Up to 30 seconds and 240 KB, in private and group chats. Only real audio (WebM, Ogg, MP4, MP3, AAC) is accepted, checked by its first bytes, and each clip is fetched by an unguessable key. |
+| ✍️ **Typing** | "typing…" lasts 6 seconds after the last keystroke ping, and clears when the message is sent. |
+| 🫧 **Pops** | 24-hour posts (text on a background, a photo up to 450 KB, or a kerNEl story) for your followers, with views, emoji reactions, replies into Messages and reports (3 hide a pop). Expired pops and their photos are deleted by the cleanup cron. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
 | 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
@@ -115,6 +119,16 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/predictions` · `POST /api/predictions/vote` | optional / Bearer | Open and recently settled predictions with your record · `{ id, choice }` |
 | `POST /api/mod/predictions` · `/resolve` | moderator | `{ question, options: [2–4], hours }` · `{ id, answer }` |
 | `GET /api/leaderboard?season=1` | optional | This month's season board, your place and last season's winners |
+| `POST /api/dm` (also) | Bearer | `voice: "data:audio/…"`, `voiceMs`, `voicePeaks` for a voice note · `pop: id` to reply to someone's pop |
+| `POST /api/dm/typing` | Bearer | `{ thread, stop? }` |
+| `POST /api/groups` | Bearer | `{ name, emoji, members: [usernames] }` → `{ group, skipped }` |
+| `GET /api/groups/:id?since=` · `POST /api/groups/:id/messages` | Bearer | Messages, members (with what each has read), who's typing · `{ text?, storyKey?, voice? }` |
+| `POST /api/groups/react` · `/report` · `/update` · `/add` · `/remove` · `/mute` · `/typing` | Bearer | `{ id, emoji }` · `{ id }` · `{ group, name?, emoji? }` · `{ group, usernames }` · `{ group, username? }` (none = leave) · `{ group, muted }` · `{ group, stop? }` |
+| `DELETE /api/groups/messages/:id` | Bearer | Delete your own group message |
+| `GET /api/voice/:key` | – | A voice note's audio |
+| `GET /api/pops?user=` · `POST /api/pops` | Bearer | Rings of pops from you and the people you follow (or one person) · `{ kind: text\|photo\|story, text, bg, photo?, storyKey? }` |
+| `POST /api/pops/view` · `/report` · `GET /api/pops/:id/viewers` · `DELETE /api/pops/:id` | Bearer | `{ id, react? }` · `{ id }` · who saw your pop · delete it |
+| `GET /api/pops/photo/:key` | – | A pop's photo (only while the pop is live) |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
@@ -150,6 +164,9 @@ src/play.js    Daily Quiz, Popcorn Battles, weekly tournament + trophies
 src/arena.js   Quiz Duels, kerNEl Live, Predictions, Seasons
 src/social.js  comments, follows, friends' activity, avatar looks
 src/people.js  messages, people search, profile photos, blocking
+src/groups.js  group chats
+src/pops.js    24-hour pops
+src/media.js   voice notes and typing
 src/rewards.js server-given XP, special counters, invites
 src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine

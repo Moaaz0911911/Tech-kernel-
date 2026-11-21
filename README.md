@@ -51,6 +51,10 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
   - **Send a story to a friend** from the reader. It arrives as a card that opens in their reader.
   - Block, report (which also blocks) and "delete chat". Settings has **Who can message me**: everyone, only people I follow, or nobody.
   - New messages can send a push notification, with their own on/off switch.
+  - ✍️ **"typing…"** shows in the chat header and as bouncing dots, in private chats and groups.
+  - 🎙️ **Voice notes** up to 30 seconds: tap the mic, watch the level meter, send. They play in the chat with a waveform, seeking and 1× / 1.5× / 2× speed.
+- 👥 **Group chats** for up to 32 kernels: pick a name and an emoji, add people (only people who take messages from you), react, share stories and voice notes, see "Seen by". Anyone can add people or rename the group; the creator can remove people, and the oldest member takes over if they leave. Mute a group to keep it off your badge. New members only see what's sent after they join. Three reports hide a message, and moderators see every report.
+- 🫧 **Pops**: 24-hour posts for the people who follow you, in a row of rings at the top of Messages (and on profile cards). Pop some text on a colourful background, a photo (shrunk in the browser), or a kerNEl story straight from the reader (🫧 button). The full-screen viewer has tap-to-skip, hold-to-pause, emoji reactions and replies that land in Messages. You see who viewed your pops. Three reports hide a pop.
 - 🔍 **Find people**: search by name or @username on the Me tab or in Messages, with suggestions (people who follow you, the most active kernels). Follow or message right from the results.
 - 📷 **Profile photos**: pick a photo from your gallery or camera, then drag and zoom to crop it to a circle. It's shrunk to a small JPEG in the browser before upload and shows everywhere your avatar does: chat, comments, leaderboard, profile cards. Photos are public, and 3 reports from different people take one down.
 - 🎟️ **Invite links**: on the Me tab, copy or share your link (`…/#join=yourname`). When a friend signs up with it, you both get +50 XP. One invite unlocks the 🎟️ VIP ticket hat, five unlock the Ambassador frame, and new kernels get the 🥳 Party hat.
@@ -184,7 +188,10 @@ js/arena.js       ⚔️ Quiz Duels, 📺 kerNEl Live, 🔮 Predictions, 🏅 se
 js/social.js      story comments (+ reactions on comments), friends + activity feed
 js/mod.js         🛡️ moderator tools
 js/invite.js      🎟️ invite links and the invite widget
-js/dm.js          ✉️ Messages (requests, Seen, reactions, streaks, shared stories) + 🔍 people search
+js/dm.js          ✉️ Messages (requests, Seen, reactions, streaks, shared stories, groups, typing, voice notes) + 🔍 people search
+js/groups.js      👥 new-group and group-settings dialogs
+js/pops.js        🫧 the pops row, full-screen viewer and composer
+js/voice.js       🎙️ voice note recorder and player
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
 js/look.js        avatars with hats, frames and streak flames

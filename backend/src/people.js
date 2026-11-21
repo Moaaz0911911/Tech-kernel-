@@ -5,6 +5,7 @@ import { look, liveStreak, RANKS, rankIndex } from './social.js';
 import { rowToStory } from './news.js';
 import { notify } from './push.js';
 import { tr, langOfProfile } from './i18n.js';
+import { saveVoice, dropVoice, typingIn, setTypingIn } from './media.js';
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
 const ACTIVE_MS = 5 * 60_000;
@@ -25,12 +26,12 @@ export function person(r, extra = {}) {
 }
 
 /** When people were last around (any page that polls: chat, messages). */
-async function lastSeen(env, ids) {
+export async function lastSeen(env, ids) {
   if (!ids.length) return {};
   const { results } = await env.DB.prepare(`SELECT user_id, at FROM presence WHERE user_id IN (${marks(ids)})`).bind(...ids).all();
   return Object.fromEntries(results.map((r) => [r.user_id, r.at]));
 }
-const activeFields = (at) => ({ active: !!at && Date.now() - at < ACTIVE_MS, lastActive: at && Date.now() - at < 864e5 ? at : null });
+export const activeFields = (at) => ({ active: !!at && Date.now() - at < ACTIVE_MS, lastActive: at && Date.now() - at < 864e5 ? at : null });
 
 export async function touch(env, user) {
   await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, 'dm', Date.now()).run();
@@ -129,13 +130,14 @@ function toDM(r, me) {
   const story = r.deleted ? null : parse(r.story, null);
   return {
     id: r.id, mine: r.user_id === me.id, text: r.deleted ? '' : r.text, story, deleted: !!r.deleted, duel: r.deleted ? null : r.duel || null,
+    voice: r.deleted ? null : parse(r.voice, null), pop: r.deleted ? null : parse(r.pop, null),
     myReact: reacts[me.id] || null, theirReact: Object.entries(reacts).find(([k]) => k !== me.id)?.[1] || null,
     created: r.created, updated: r.updated,
   };
 }
 const threadStreak = (t) => (t.streak_day && t.streak_day >= day(1) ? t.streak : 0);
 
-async function memberOf(env, user, threadId) {
+export async function memberOf(env, user, threadId) {
   const m = await env.DB.prepare('SELECT * FROM dm_members WHERE thread_id = ? AND user_id = ?').bind(Number(threadId), user.id).first();
   if (!m) throw new HttpError(404, 'Conversation not found');
   return m;
@@ -161,7 +163,7 @@ export async function listThreads(env, user) {
     const last = lastBy[r.id];
     return {
       id: r.id, other: person(byId[r.other], activeFields(seen[r.other])), streak: threadStreak(r), lastAt: r.last_at,
-      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, duel: !!last.duel && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
+      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, duel: !!last.duel && !last.deleted, voice: !!last.voice && !last.deleted, pop: !!last.pop && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
       unread: unreadBy[r.id] || 0, request: !r.accepted, pending: !r.their_accepted,
     };
   });
@@ -195,7 +197,9 @@ export async function getThread(env, user, threadId, since = 0) {
   if (me.accepted && t.last_id > me.read_id) await env.DB.prepare('UPDATE dm_members SET read_id = ? WHERE thread_id = ? AND user_id = ?').bind(t.last_id, t.id, user.id).run();
   const b = await blockState(env, user, other.id);
   const seen = await lastSeen(env, [other.id]);
+  const typing = (await typingIn(env, `d:${t.id}`, user.id)).length > 0;
   return {
+    typing,
     thread: {
       id: t.id, other: person(other, activeFields(seen[other.id])), streak: threadStreak(t),
       request: !me.accepted, pending: !them.accepted, blocked: b.iBlocked, blockedMe: b.blockedMe,
@@ -232,9 +236,15 @@ export async function sendDM(env, user, body, ctx) {
     const s = await env.DB.prepare('SELECT * FROM stories WHERE key = ?').bind(body.storyKey.slice(0, 300)).first();
     if (s) { const x = rowToStory(s); story = { key: x.key, title: x.title, url: x.url, source: x.source, cat: x.cat, image: x.image, domain: x.domain, time: x.time }; }
   }
+  let pop = null; // replying to one of their 🫧 pops
+  if (body.pop) {
+    const p = await env.DB.prepare('SELECT * FROM pops WHERE id = ? AND user_id = ? AND hidden = 0 AND expires > ?').bind(Number(body.pop), other.id, Date.now()).first();
+    if (!p) throw new HttpError(404, 'That pop is gone');
+    pop = { id: p.id, kind: p.kind, text: p.text.slice(0, 100), bg: p.bg, photo: p.photo_key || null, story: p.story ? parse(p.story, {})?.title || null : null, by: other.username };
+  }
   const duel = Number(body.duel) || null; // a ⚔️ Quiz Duel challenge (created by arena.js for these two people)
   if (duel && !(await env.DB.prepare('SELECT 1 AS y FROM duels WHERE id = ? AND a = ? AND b = ?').bind(duel, user.id, other.id).first())) throw new HttpError(400, 'Unknown duel');
-  if (!text && !story && !duel) throw new HttpError(400, 'Say something first!');
+  if (!text && !story && !duel && !body.voice) throw new HttpError(400, 'Say something first!');
 
   const theyFollowMe = await follows(env, other.id, user.id);
   const now = Date.now();
@@ -257,8 +267,9 @@ export async function sendDM(env, user, body, ctx) {
     const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM dm_messages WHERE thread_id = ? AND user_id = ? AND deleted = 0').bind(t.id, user.id).first();
     if ((n?.n || 0) >= MAX_REQUEST_MESSAGES) throw new HttpError(429, 'Wait until they accept your message request');
   }
-  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated, duel) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?) RETURNING *')
-    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now, duel).first();
+  const voice = body.voice ? await saveVoice(env, user, `d:${t.id}`, body) : null;
+  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated, duel, voice, pop) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?) RETURNING *')
+    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now, duel, voice ? JSON.stringify(voice) : null, pop ? JSON.stringify(pop) : null).first();
 
   // 🔥 streak: both people sent something today
   const today = day();
@@ -273,11 +284,12 @@ export async function sendDM(env, user, body, ctx) {
     // replying to a request accepts it; sending marks everything as read; a "deleted" chat comes back
     env.DB.prepare('UPDATE dm_members SET accepted = 1, hidden = 0, read_id = ?, sent_day = ? WHERE thread_id = ? AND user_id = ?').bind(msg.id, today, t.id, user.id),
     env.DB.prepare('UPDATE dm_members SET hidden = 0 WHERE thread_id = ? AND user_id = ?').bind(t.id, other.id),
+    env.DB.prepare('DELETE FROM typing WHERE scope = ? AND user_id = ?').bind(`d:${t.id}`, user.id),
   ]);
 
   const job = (async () => {
     const lang = langOfProfile(other.profile);
-    const preview = text || (story ? `📰 ${story.title}` : '');
+    const preview = text || (story ? `📰 ${story.title}` : voice ? '🎙️' : '');
     if (duel) {
       await notify(env, other.id, { kind: 'games', title: tr(lang, 'duelChallenge', { who: user.username }), body: tr(lang, 'duelChallengeBody', { who: user.username }), url: `./#duel=${duel}`, tag: `duel-${duel}`, icon: '⚔️' }, { left: 4 });
     } else if (theirs.accepted) {
@@ -321,7 +333,8 @@ export async function deleteDM(env, user, id) {
   const msg = await env.DB.prepare('SELECT * FROM dm_messages WHERE id = ?').bind(Number(id)).first();
   if (!msg) throw new HttpError(404, 'Message not found');
   if (msg.user_id !== user.id) throw new HttpError(403, 'You can only delete your own messages');
-  await env.DB.prepare("UPDATE dm_messages SET deleted = 1, text = '', story = NULL, reacts = '{}', updated = ? WHERE id = ?").bind(Date.now(), msg.id).run();
+  await env.DB.prepare("UPDATE dm_messages SET deleted = 1, text = '', story = NULL, voice = NULL, pop = NULL, reacts = '{}', updated = ? WHERE id = ?").bind(Date.now(), msg.id).run();
+  await dropVoice(env, msg.voice);
   return { ok: true };
 }
 
@@ -330,14 +343,20 @@ export async function reportDM(env, user, body) {
   const m = await memberOf(env, user, body.thread);
   const now = Date.now();
   // moderators see what was reported: the reported person's last few messages in this chat
-  const { results: last } = await env.DB.prepare('SELECT text, story, created FROM dm_messages WHERE thread_id = ? AND user_id = ? AND deleted = 0 ORDER BY id DESC LIMIT 5').bind(m.thread_id, m.other_id).all();
-  const evidence = last.reverse().map((x) => ({ text: x.text.slice(0, 300), story: x.story ? parse(x.story, {})?.title || null : null, at: x.created }));
+  const { results: last } = await env.DB.prepare('SELECT text, story, voice, created FROM dm_messages WHERE thread_id = ? AND user_id = ? AND deleted = 0 ORDER BY id DESC LIMIT 5').bind(m.thread_id, m.other_id).all();
+  const evidence = last.reverse().map((x) => ({ text: x.text.slice(0, 300) || (x.voice ? '🎙️' : ''), story: x.story ? parse(x.story, {})?.title || null : null, at: x.created }));
   await env.DB.prepare('INSERT OR REPLACE INTO dm_reports (reporter_id, user_id, msg_id, at, evidence) VALUES (?, ?, ?, ?, ?)').bind(user.id, m.other_id, Number(body.id) || null, now, JSON.stringify(evidence)).run();
   const other = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(m.other_id).first();
   if (other) await setBlock(env, user, { username: other.username, block: true });
   const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM dm_reports WHERE user_id = ? AND at > ?').bind(m.other_id, now - 864e5).first();
   if ((n?.n || 0) >= 3) await env.DB.prepare('INSERT OR REPLACE INTO mutes (user_id, until) VALUES (?, ?)').bind(m.other_id, now + 864e5).run();
   return { ok: true, blocked: true };
+}
+
+export async function dmTyping(env, user, body) {
+  const m = await memberOf(env, user, body.thread);
+  await setTypingIn(env, user, `d:${m.thread_id}`, body.stop !== true);
+  return { ok: true };
 }
 
 // ---------------- 📷 profile photos ----------------

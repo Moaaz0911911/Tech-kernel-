@@ -36,13 +36,17 @@ export async function overview(env) {
       (SELECT COUNT(*) FROM chat_messages WHERE created > ?) AS chat,
       (SELECT COUNT(*) FROM comments WHERE created > ?) AS comments,
       (SELECT COUNT(*) FROM dm_messages WHERE created > ?) AS dms,
+      (SELECT COUNT(*) FROM group_messages WHERE created > ? AND kind = 'msg') AS groupMsgs,
+      (SELECT COUNT(*) FROM pops WHERE created > ?) AS pops,
+      (SELECT COUNT(*) FROM group_messages WHERE reports > 0) AS groupReports,
+      (SELECT COUNT(*) FROM pops WHERE reports > 0 AND expires > ?) AS popReports,
       (SELECT COUNT(*) FROM chat_messages WHERE reports > 0) AS chatReports,
       (SELECT COUNT(*) FROM comments WHERE reports > 0) AS commentReports,
       (SELECT COUNT(*) FROM dm_reports) AS dmReports,
       (SELECT COUNT(DISTINCT owner_id) FROM photo_reports) AS photoReports,
       (SELECT COUNT(*) FROM mutes WHERE until > ?) AS muted,
       (SELECT COUNT(*) FROM users WHERE banned_until > ?) AS banned`)
-    .bind(now - DAY, now - 5 * 60_000, now - DAY, now - DAY, now - DAY, now, now).first();
+    .bind(now - DAY, now - 5 * 60_000, now - DAY, now - DAY, now - DAY, now - DAY, now - DAY, now, now, now).first();
   return { ...r, at: now };
 }
 
@@ -55,7 +59,13 @@ export async function reports(env) {
     JOIN users a ON a.id = r.reporter_id JOIN users b ON b.id = r.user_id ORDER BY r.at DESC LIMIT 50`).all();
   const { results: photos } = await env.DB.prepare(`SELECT u.username, u.profile, COUNT(*) AS n, MAX(pr.at) AS at FROM photo_reports pr JOIN users u ON u.id = pr.owner_id
     GROUP BY pr.owner_id ORDER BY n DESC, at DESC LIMIT 50`).all();
+  const { results: groups } = await env.DB.prepare(`SELECT gm.id, gm.text, gm.voice, gm.reports, gm.hidden, gm.deleted, gm.created, g.name AS grp, u.username, u.profile FROM group_messages gm
+    JOIN users u ON u.id = gm.user_id LEFT JOIN chat_groups g ON g.id = gm.group_id WHERE gm.reports > 0 ORDER BY gm.id DESC LIMIT 50`).all();
+  const { results: pops } = await env.DB.prepare(`SELECT p.id, p.kind, p.text, p.bg, p.photo_key, p.story, p.reports, p.hidden, p.created, p.expires, u.username, u.profile FROM pops p
+    JOIN users u ON u.id = p.user_id WHERE p.reports > 0 AND p.expires > ? ORDER BY p.id DESC LIMIT 50`).bind(Date.now()).all();
   return {
+    groups: groups.map((m) => ({ id: m.id, group: m.grp || '?', text: m.deleted ? '' : m.text || (m.voice ? '🎙️' : ''), reports: m.reports, hidden: !!m.hidden, created: m.created, user: who(m) })),
+    pops: pops.map((p) => ({ id: p.id, kind: p.kind, text: p.text, photo: p.photo_key || null, story: parse(p.story, null)?.title || null, reports: p.reports, hidden: !!p.hidden, created: p.created, expires: p.expires, user: who(p) })),
     chat: chat.map((m) => ({ id: m.id, room: m.room, text: m.text, reports: m.reports, hidden: !!m.hidden, created: m.created, user: m.profile ? who({ ...m }) : { username: m.username, nickname: m.username, avatar: '🍿' } })),
     comments: comments.map((c) => ({ id: c.id, text: c.text, reports: c.reports, hidden: !!c.hidden, created: c.created, story: c.title || c.story_key, user: c.profile ? who(c) : { username: c.username, nickname: c.username, avatar: '🍿' } })),
     dms: dms.map((d) => ({ reporter: d.reporter, reporterId: d.reporter_id, userId: d.user_id, at: d.at, evidence: parse(d.evidence, []), user: who(d) })),
@@ -66,15 +76,19 @@ export async function reports(env) {
 /** Hide, bring back or dismiss a reported chat message / comment. */
 export async function moderateContent(env, admin, body) {
   const id = Number(body.id);
-  const table = body.kind === 'comment' ? 'comments' : body.kind === 'chat' ? 'chat_messages' : null;
+  // what each kind is stored in; tables with an "updated" time get it bumped so open chats pick up the change
+  const KINDS = {
+    chat: ['chat_messages', 'chat_reports', 'msg_id', true],
+    comment: ['comments', 'comment_reports', 'comment_id', false],
+    group: ['group_messages', 'group_reports', 'msg_id', true],
+    pop: ['pops', 'pop_reports', 'pop_id', false],
+  };
+  const [table, reportsTable, idCol, hasUpdated] = KINDS[body.kind] || [];
   if (!table || !id) throw new HttpError(400, 'Pick a message or comment');
-  const reportsTable = table === 'comments' ? 'comment_reports' : 'chat_reports';
-  const idCol = table === 'comments' ? 'comment_id' : 'msg_id';
   const now = Date.now();
-  // chat messages also carry an "updated" time, so everyone's chat picks up the change
-  const update = (set) => (table === 'chat_messages'
-    ? env.DB.prepare(`UPDATE chat_messages SET ${set}, updated = ? WHERE id = ?`).bind(now, id)
-    : env.DB.prepare(`UPDATE comments SET ${set} WHERE id = ?`).bind(id));
+  const update = (set) => (hasUpdated
+    ? env.DB.prepare(`UPDATE ${table} SET ${set}, updated = ? WHERE id = ?`).bind(now, id)
+    : env.DB.prepare(`UPDATE ${table} SET ${set} WHERE id = ?`).bind(id));
   if (body.action === 'hide') await update('hidden = 1').run();
   else if (body.action === 'restore') await env.DB.batch([update('reports = 0, hidden = 0'), env.DB.prepare(`DELETE FROM ${reportsTable} WHERE ${idCol} = ?`).bind(id)]);
   else if (body.action === 'dismiss') await env.DB.batch([update('reports = 0'), env.DB.prepare(`DELETE FROM ${reportsTable} WHERE ${idCol} = ?`).bind(id)]);

@@ -96,6 +96,30 @@ const T = {
     de: '✉️ @{who} hat dir geschrieben',
     tl: '✉️ Nag-message sa’yo si @{who}',
   },
+  groupAdded: {
+    en: '👥 @{who} added you to “{name}”',
+    ar: '👥 @{who} ضافك لجروب «{name}»',
+    de: '👥 @{who} hat dich zu „{name}“ hinzugefügt',
+    tl: '👥 Idinagdag ka ni @{who} sa “{name}”',
+  },
+  groupAddedBody: {
+    en: 'Open kerNEl to say hi to the group.',
+    ar: 'افتح kerNEl وقول أهلًا للجروب.',
+    de: 'Öffne kerNEl und sag Hallo zur Gruppe.',
+    tl: 'Buksan ang kerNEl at mag-hi sa grupo.',
+  },
+  groupMessage: {
+    en: '👥 @{who} in “{name}”',
+    ar: '👥 @{who} في «{name}»',
+    de: '👥 @{who} in „{name}“',
+    tl: '👥 @{who} sa “{name}”',
+  },
+  popReact: {
+    en: '{emoji} @{who} reacted to your pop',
+    ar: '{emoji} @{who} اتفاعل مع البوب بتاعك',
+    de: '{emoji} @{who} hat auf deinen Pop reagiert',
+    tl: '{emoji} Nag-react si @{who} sa pop mo',
+  },
   dmRequest: {
     en: '📨 New message request from @{who}',
     ar: '📨 طلب رسالة جديد من @{who}',

@@ -7,8 +7,14 @@ import { getQuiz, answerQuiz, quizBoard, getBattle, voteBattle, getTournament, p
 import { explainStory, kidsNews, timeMachine } from './extras.js';
 import {
   searchPeople, setBlock, listBlocked, listThreads, dmCounts, getThread, sendDM, acceptThread, hideThread, reactDM, deleteDM, reportDM,
-  setPhoto, removePhoto, photoResponse, reportPhoto,
+  setPhoto, removePhoto, photoResponse, reportPhoto, dmTyping,
 } from './people.js';
+import {
+  createGroup, listGroups, groupCounts, getGroup, sendGroup, reactGroup, deleteGroupMessage, reportGroupMessage,
+  updateGroup, addToGroup, removeFromGroup, muteGroup, groupTyping,
+} from './groups.js';
+import { createPop, listPops, viewPop, popViewers, deletePop, reportPop, popPhotoResponse } from './pops.js';
+import { voiceResponse } from './media.js';
 import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
@@ -119,14 +125,25 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
   if (path === '/api/dm' && m === 'GET') {
     const user = await requireUser(request, env);
     await rateLimit(env, `dmpoll:${user.id}`, 2400, 3600_000);
-    return json(url.searchParams.get('count') ? await dmCounts(env, user) : await listThreads(env, user));
+    if (url.searchParams.get('count')) {
+      const c = await dmCounts(env, user);
+      return json({ ...c, unread: c.unread + (await groupCounts(env, user)) });
+    }
+    const r = await listThreads(env, user);
+    const groups = await listGroups(env, user);
+    return json({ ...r, groups, unread: r.unread + groups.filter((g) => !g.muted).reduce((a, g) => a + g.unread, 0) });
   }
   if (path === '/api/dm' && m === 'POST') {
     const user = await requireUser(request, env);
     await assertNotMuted(env, user);
     await rateLimit(env, `dm:burst:${user.id}`, 6, 10_000);
     await rateLimit(env, `dm:hour:${user.id}`, 300, 3600_000);
-    return json(await sendDM(env, user, await readJson(request, 6_000), ctx));
+    return json(await sendDM(env, user, await readJson(request, 340_000), ctx));
+  }
+  if (path === '/api/dm/typing' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `typing:${user.id}`, 1500, 3600_000);
+    return json(await dmTyping(env, user, await readJson(request, 500)));
   }
   const thread = path.match(/^\/api\/dm\/(\d+)$/);
   if (thread && m === 'GET') {
@@ -148,6 +165,83 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
   }
   const dmDel = path.match(/^\/api\/dm\/messages\/(\d+)$/);
   if (dmDel && m === 'DELETE') return json(await deleteDM(env, await requireUser(request, env), dmDel[1]));
+
+  // ---- 👥 group chats ----
+  if (path === '/api/groups' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `groupnew:${user.id}`, 20, 3600_000);
+    return json(await createGroup(env, user, await readJson(request, 4_000), ctx));
+  }
+  const grp = path.match(/^\/api\/groups\/(\d+)(\/messages)?$/);
+  if (grp) {
+    const user = await requireUser(request, env);
+    if (!grp[2] && m === 'GET') {
+      await rateLimit(env, `dmpoll:${user.id}`, 2400, 3600_000);
+      return json(await getGroup(env, user, grp[1], Number(url.searchParams.get('since')) || 0));
+    }
+    if (grp[2] && m === 'POST') {
+      await assertNotMuted(env, user);
+      await rateLimit(env, `dm:burst:${user.id}`, 6, 10_000);
+      await rateLimit(env, `dm:hour:${user.id}`, 300, 3600_000);
+      return json(await sendGroup(env, user, grp[1], await readJson(request, 340_000), ctx));
+    }
+  }
+  const gAct = path.match(/^\/api\/groups\/(react|report|update|add|remove|mute|typing)$/);
+  if (gAct && m === 'POST') {
+    const user = await requireUser(request, env);
+    const body = await readJson(request, 4_000);
+    const what = gAct[1];
+    if (what === 'typing') { await rateLimit(env, `typing:${user.id}`, 1500, 3600_000); return json(await groupTyping(env, user, body)); }
+    await rateLimit(env, `groupact:${user.id}`, 300, 3600_000);
+    if (what === 'react') return json(await reactGroup(env, user, body));
+    if (what === 'report') return json(await reportGroupMessage(env, user, body));
+    if (what === 'mute') return json(await muteGroup(env, user, body));
+    if (what === 'remove') return json(await removeFromGroup(env, user, body));
+    await assertNotMuted(env, user);
+    if (what === 'update') return json(await updateGroup(env, user, body));
+    return json(await addToGroup(env, user, body, ctx));
+  }
+  const gDel = path.match(/^\/api\/groups\/messages\/(\d+)$/);
+  if (gDel && m === 'DELETE') return json(await deleteGroupMessage(env, await requireUser(request, env), gDel[1]));
+
+  // ---- 🎙️ voice notes ----
+  const voice = path.match(/^\/api\/voice\/([0-9a-f]{32})$/);
+  if (voice && m === 'GET') {
+    await rateLimit(env, `voiceget:${ip}`, 3000, 3600_000);
+    return voiceResponse(env, voice[1]);
+  }
+
+  // ---- 🫧 pops ----
+  if (path === '/api/pops' && m === 'GET') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pops:${user.id}`, 1200, 3600_000);
+    return json(await listPops(env, user, url.searchParams.get('user')));
+  }
+  if (path === '/api/pops' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `popnew:${user.id}`, 30, 3600_000);
+    return json(await createPop(env, user, await readJson(request, 650_000)));
+  }
+  if (path === '/api/pops/view' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `popview:${user.id}`, 3000, 3600_000);
+    return json(await viewPop(env, user, await readJson(request, 500), ctx));
+  }
+  if (path === '/api/pops/report' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `popreport:${user.id}`, 30, 3600_000);
+    return json(await reportPop(env, user, await readJson(request, 500)));
+  }
+  const popPhoto = path.match(/^\/api\/pops\/photo\/([0-9a-f]{32})$/);
+  if (popPhoto && m === 'GET') {
+    await rateLimit(env, `popphoto:${ip}`, 3000, 3600_000);
+    return popPhotoResponse(env, popPhoto[1]);
+  }
+  const pop = path.match(/^\/api\/pops\/(\d+)(\/viewers)?$/);
+  if (pop && pop[2] && m === 'GET') return json(await popViewers(env, await requireUser(request, env), pop[1]));
+  if (pop && !pop[2] && m === 'DELETE') return json(await deletePop(env, await requireUser(request, env), pop[1]));
 
   // ---- 📷 profile photos ----
   if (path === '/api/me/photo' && m === 'PUT') {

@@ -136,12 +136,12 @@ export async function findThumbnails(env, max = 12) {
       if (!/news\.ycombinator\.com/.test(row.url)) {
         const res = await fetchWithTimeout(row.url, 6000, { headers: { Accept: 'text/html' } });
         if (res.ok && /html/i.test(res.headers.get('content-type') || '')) {
-          const html = await readHead(res, 250_000);
-          image = metaContent(html, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
+          const metas = metaTags(await readHead(res, 250_000));
+          image = metaContent(metas, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
           if (image) image = new URL(decodeEntities(image), row.url).href;
           if (image && !isHttpUrl(image)) image = null;
           // the publisher's own short description, so the in-app reader has something to show
-          description = metaContent(html, ['og:description', 'twitter:description', 'description']);
+          description = metaContent(metas, ['og:description', 'twitter:description', 'description']);
           if (description) description = stripTags(decodeEntities(description)).slice(0, 400) || null;
         }
       }
@@ -158,20 +158,34 @@ async function readHead(res, limit) {
   while (html.length < limit) {
     const { done, value } = await reader.read();
     if (done) break;
-    html += dec.decode(value, { stream: true });
-    if (/<\/head>/i.test(html)) break;
+    const chunk = dec.decode(value, { stream: true });
+    html += chunk;
+    if (/<\/head>/i.test(html.slice(-(chunk.length + 6)))) break; // only look at what just arrived
   }
   reader.cancel().catch(() => {});
   return html;
 }
 
-function metaContent(html, names) {
+/**
+ * Every <meta> tag in a page, as a map of property/name → content (the first one wins).
+ * One linear pass: the old per-name regexes could backtrack across a whole 250 KB page and burn seconds of CPU.
+ */
+function metaTags(html) {
+  const out = new Map();
+  for (const [tagText] of html.matchAll(/<meta\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi)) {
+    const a = {};
+    // content="…" may contain the other kind of quote (like an apostrophe), so each value runs to its own closing quote
+    for (const m of tagText.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g)) a[m[1].toLowerCase()] = m[2] ?? m[3] ?? m[4] ?? '';
+    const key = (a.property || a.name || '').toLowerCase();
+    if (key && a.content != null && !out.has(key)) out.set(key, a.content);
+  }
+  return out;
+}
+
+function metaContent(metas, names) {
   for (const n of names) {
-    const esc = n.replace(/[.:]/g, '\\$&');
-    // content="…" may contain the other kind of quote (like an apostrophe), so match the same quote at both ends
-    const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${esc}["'][^>]+content=(["'])(.*?)\\1`, 'is'))
-      || html.match(new RegExp(`<meta[^>]+content=(["'])(.*?)\\1[^>]+(?:property|name)=["']${esc}["']`, 'is'));
-    if (m && m[2].trim()) return m[2];
+    const v = metas.get(n);
+    if (v && v.trim()) return v;
   }
   return null;
 }

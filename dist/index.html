@@ -1266,6 +1266,215 @@ a.stat:hover { color: var(--text); }
   .ticker-run { animation: none; }
 }
 
+/* ================= Wave C: 🫧 pops · 👥 groups · 🎙️ voice notes · ✍️ typing ================= */
+/* pop backgrounds (text pops and story pops) */
+.pop-bg-0 { background: #0b0b0c; color: #fff; }
+.pop-bg-1 { background: #f5f5f7; color: #0b0b0c; }
+.pop-bg-2 { background: linear-gradient(135deg, #ff9a3c, #ff3d77 55%, #7b2ff7); color: #fff; }
+.pop-bg-3 { background: linear-gradient(135deg, #00c6ff, #0072ff 60%, #1b1464); color: #fff; }
+.pop-bg-4 { background: linear-gradient(135deg, #0f9b0f, #00d084 60%, #c6ff00); color: #04210f; }
+.pop-bg-5 { background: linear-gradient(135deg, #ff6fd8, #3813c2); color: #fff; }
+.pop-bg-6 { background: linear-gradient(135deg, #f7d046, #f78e2a 60%, #c8102e); color: #1d0b00; }
+.pop-bg-7 { background: radial-gradient(circle at 30% 20%, #3a3a40, #0b0b0c 70%); color: #fff; }
+
+/* the row of rings in Messages */
+.dm-pops[hidden] { display: none; }
+.pops-row[hidden] { display: none; }
+.pops-strip { display: flex; gap: 12px; padding: 2px 14px 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.pops-strip::-webkit-scrollbar { display: none; }
+.pop-item { position: relative; flex: none; width: 66px; display: flex; flex-direction: column; align-items: center; gap: 4px; scroll-snap-align: start; }
+.pop-item small { max-width: 66px; font-size: .7rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pop-avatar { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; transition: transform .4s var(--spring); }
+.pop-avatar:active { transform: scale(.9); }
+.pop-ring { position: relative; isolation: isolate; display: grid; place-items: center; width: 62px; height: 62px; padding: 3px; border-radius: 50%; }
+.pop-ring .ava { width: 100%; height: 100%; font-size: 1.6rem; background: var(--card-2); box-shadow: 0 0 0 2.5px var(--bg-2); border-radius: 50%; }
+/* the colourful ring spins on a layer behind the avatar (the button itself stays still) */
+.pop-ring.unseen::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: conic-gradient(from 210deg, #ff9a3c, #ff3d77, #7b2ff7, #00c6ff, #ff9a3c); animation: ringSpin 6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .pop-ring.unseen::before { animation: none; } }
+.pop-ring.seen { background: var(--line-2); }
+.pop-ring.none { background: none; border: 2px dashed var(--line-2); }
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+.pop-plus { position: absolute; top: 42px; inset-inline-end: 0; width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 2px solid var(--bg-2); background: var(--accent); color: var(--on-accent); font: 800 .95rem/1 var(--font); cursor: pointer; }
+.uc-ava.pop-ring { width: 104px; height: 104px; padding: 4px; border: 0; cursor: pointer; margin-bottom: 8px; }
+.uc-ava.pop-ring .ava { font-size: 3rem; }
+.pop-it { font-size: 1.05rem; }
+
+/* the full-screen viewer */
+.pop-viewer { padding: 0; border: 0; background: transparent; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; color: #fff; overflow: hidden; }
+.pop-viewer::backdrop { background: rgba(0, 0, 0, .86); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.pop-viewer[open] { display: grid; place-items: center; animation: fadeIn .3s var(--ease); }
+.pv-stage { position: relative; width: min(440px, 100vw); height: min(100dvh, 860px); aspect-ratio: 9 / 16; max-height: 100dvh; display: flex; flex-direction: column; border-radius: 26px; overflow: hidden; background: #000; box-shadow: 0 30px 90px rgba(0, 0, 0, .6); animation: sheetIn .5s var(--spring); }
+.pv-bars { position: absolute; z-index: 3; top: 10px; left: 12px; right: 12px; display: flex; gap: 4px; }
+.pv-bars span { flex: 1; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .3); overflow: hidden; }
+.pv-bars span::after { content: ''; display: block; height: 100%; width: calc(var(--k, 0) * 100%); background: #fff; }
+[dir="rtl"] .pv-bars span::after { margin-inline-start: 0; }
+.pv-head { position: absolute; z-index: 3; top: 20px; left: 0; right: 0; display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: linear-gradient(rgba(0, 0, 0, .45), transparent); }
+.pv-who { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px; border: 0; background: none; color: #fff; text-align: start; cursor: pointer; }
+.pv-who .ava { width: 34px; height: 34px; font-size: 1.1rem; background: rgba(255, 255, 255, .18); }
+.pv-who span { display: flex; flex-direction: column; min-width: 0; }
+.pv-who b { font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.pv-who small { font-size: .72rem; opacity: .8; }
+.pv-spacer { flex: 1; }
+.pv-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .25); color: #fff; font-size: 1rem; cursor: pointer; }
+.pv-btn:hover { background: rgba(0, 0, 0, .45); }
+.pv-menu { position: absolute; top: 48px; inset-inline-end: 10px; min-width: 180px; padding: 6px; border-radius: 16px; display: flex; flex-direction: column; color: var(--text); background: var(--glass-strong); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); animation: glassIn .3s var(--spring); }
+.pv-menu[hidden] { display: none; }
+.pv-menu button { padding: 10px 12px; border: 0; border-radius: 12px; background: none; color: var(--text); font: 500 .88rem var(--font); text-align: start; cursor: pointer; }
+.pv-menu button:hover { background: var(--card-2); }
+.pv-body { flex: 1; min-height: 0; display: flex; user-select: none; -webkit-user-select: none; touch-action: manipulation; cursor: pointer; }
+.pv-body > * { flex: 1; min-width: 0; }
+.pv-text { display: grid; place-items: center; padding: 70px 26px; text-align: center; }
+.pv-text p { margin: 0; font: 800 1.5rem/1.25 var(--font-display); letter-spacing: -.02em; overflow-wrap: anywhere; animation: popIn .5s var(--spring); }
+.pv-text p.big { font-size: 2.3rem; }
+.pv-text p.small { font-size: 1.15rem; font-weight: 700; }
+.pv-photo { position: relative; display: grid; place-items: center; background: #000; }
+.pv-photo img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.pv-photo .pv-gone { display: none; }
+.pv-photo.gone .pv-gone { display: block; opacity: .7; }
+.pv-caption { position: absolute; left: 16px; right: 16px; bottom: 16px; margin: 0; padding: 10px 14px; border-radius: 16px; background: rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: .95rem; text-align: center; overflow-wrap: anywhere; }
+.pv-storywrap { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 80px 22px; }
+.pv-say { margin: 0; font: 800 1.35rem/1.25 var(--font-display); text-align: center; overflow-wrap: anywhere; }
+.pv-story { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 0; padding: 0; border: 0; border-radius: 22px; overflow: hidden; background: #fff; color: #0b0b0c; text-align: start; box-shadow: 0 18px 50px rgba(0, 0, 0, .35); cursor: pointer; }
+.pv-story img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.pv-story-emoji { display: grid; place-items: center; aspect-ratio: 16 / 9; font-size: 3rem; background: #f0f0f2; }
+.pv-story > span:last-child { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; }
+.pv-story b { font-size: 1.05rem; line-height: 1.3; }
+.pv-story small { color: #6e6e73; font-size: .76rem; }
+.pv-read { margin-top: 6px; font-weight: 700; font-size: .85rem; }
+.pv-foot { position: relative; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 10px 12px 14px; background: linear-gradient(transparent, rgba(0, 0, 0, .55)); flex-wrap: wrap; }
+.pv-reply { flex: 1 1 100%; display: flex; gap: 8px; }
+.pv-reply input { flex: 1; min-width: 0; height: 42px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .5); background: rgba(0, 0, 0, .25); color: #fff; font-size: .9rem; outline: none; }
+.pv-reply input::placeholder { color: rgba(255, 255, 255, .75); }
+.pv-reply button { width: 42px; height: 42px; border: 0; border-radius: 50%; background: #fff; color: #000; cursor: pointer; }
+.pv-reacts { display: flex; gap: 4px; justify-content: center; flex: 1 1 100%; }
+.pv-reacts button { width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .12); font-size: 1.25rem; cursor: pointer; transition: transform .35s var(--spring), background-color .2s; }
+.pv-reacts button:hover { transform: scale(1.18); }
+.pv-reacts button[aria-pressed="true"] { background: rgba(255, 255, 255, .45); transform: scale(1.12); }
+.pv-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .16); color: #fff; font: 600 .84rem var(--font); cursor: pointer; }
+.pv-chip.warn { background: rgba(215, 0, 21, .6); }
+.pv-sheet { position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; max-height: 62%; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; color: var(--text); background: var(--glass-strong); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%); animation: sheetIn .45s var(--spring); }
+.pv-sheet[hidden] { display: none; }
+.pv-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+.pv-sheet-head .pv-btn { background: var(--card-2); color: var(--text); }
+.pv-sheet-list { overflow-y: auto; padding: 4px 10px 16px; }
+.pv-sheet-list p { padding: 0 8px; }
+.pv-viewer { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 14px; background: none; color: var(--text); text-align: start; cursor: pointer; }
+.pv-viewer:hover { background: var(--card-2); }
+.pv-viewer .ava { width: 40px; height: 40px; font-size: 1.2rem; background: var(--card-2); }
+.pv-viewer > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pv-viewer small { color: var(--muted); font-size: .74rem; }
+.pv-viewer-react { font-size: 1.3rem; }
+@media (max-width: 520px) {
+  .pv-stage { width: 100vw; height: 100dvh; border-radius: 0; aspect-ratio: auto; }
+}
+
+/* the composer */
+.pop-compose, .group-dialog { padding: 26px 20px 20px; }
+.pop-compose > .modal-x, .group-dialog > .modal-x { position: absolute; top: 14px; inset-inline-end: 14px; z-index: 2; }
+.pop-compose h2, .group-dialog h2 { margin: 0 0 12px; font: 800 1.35rem/1.2 var(--font-display); letter-spacing: -.02em; text-align: center; }
+.pc-seg { margin: 0 auto 12px; }
+.pc-seg[hidden] { display: none; }
+.pc-preview { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 300px; aspect-ratio: 4 / 5; max-height: 52dvh; margin: 0 auto 12px; padding: 18px; border-radius: 22px; overflow: hidden; transition: background .4s var(--ease); }
+.pc-preview textarea { flex: 1; width: 100%; border: 0; background: none; color: inherit; font: 800 1.5rem/1.25 var(--font-display); text-align: center; resize: none; outline: none; display: flex; align-items: center; padding-top: 30%; }
+.pc-preview textarea::placeholder { color: inherit; opacity: .6; }
+.pc-preview input { width: 100%; height: 42px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(0, 0, 0, .35); color: #fff; font-size: .9rem; outline: none; }
+.pc-preview input::placeholder { color: rgba(255, 255, 255, .75); }
+.pc-photo { background: #000; padding: 0; }
+.pc-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.pc-photo input { position: absolute; left: 14px; right: 14px; bottom: 14px; width: auto; }
+.pc-change { position: absolute; top: 12px; inset-inline-start: 12px; }
+.pc-pick { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px; border: 2px dashed rgba(255, 255, 255, .4); border-radius: 22px; background: none; color: #fff; font: 600 .95rem var(--font); cursor: pointer; }
+.pc-pick span { font-size: 2.4rem; }
+.pc-story { margin: 0; pointer-events: none; }
+.pc-bgs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+.pc-bgs[hidden] { display: none; }
+.pc-bgs button { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--line-2); cursor: pointer; transition: transform .3s var(--spring); }
+.pc-bgs button[aria-checked="true"] { transform: scale(1.18); box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text); }
+.pc-note { text-align: center; margin: 0 0 12px; }
+
+/* 👥 group chats */
+.dm-searchbar { display: flex; align-items: center; gap: 4px; padding-inline-end: 10px; }
+.dm-searchbar .people-search { flex: 1; margin-inline-end: 0; }
+.dm-newgroup { margin-bottom: 8px; width: 40px; height: 40px; border-radius: 50%; background: var(--card-2); font-size: 1rem; }
+.dm-newgroup small { font-size: .7rem; font-weight: 800; margin-inline-start: -2px; }
+.gav { position: relative; flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--card-2); }
+.gav-emoji { font-size: 1.45rem; }
+.gav .gav-face { position: absolute; width: 22px; height: 22px; font-size: .7rem; background: var(--card-3); box-shadow: 0 0 0 2px var(--bg-2); border-radius: 50%; }
+.gav .gav-f1 { bottom: -2px; inset-inline-end: -3px; }
+.gav .gav-f2 { bottom: -2px; inset-inline-start: -3px; }
+.gav .gav-face .ava-hat, .gav .gav-face .ava-flame { display: none; }
+.dm-who .gav { width: 38px; height: 38px; }
+.dm-who .gav-emoji { font-size: 1.15rem; }
+.dm-who .gav .gav-face { width: 18px; height: 18px; }
+.gav-lg { width: 86px; height: 86px; margin: 0 auto 6px; }
+.gav-lg .gav-emoji { font-size: 2.5rem; }
+.dm-unread.muted { background: var(--faint); }
+.dm-sys { align-self: center; max-width: 90%; margin: 8px 0; padding: 5px 12px; border-radius: 999px; background: var(--card-2); color: var(--muted); font-size: .74rem; text-align: center; }
+.dm-from { display: flex; align-items: center; gap: 6px; margin: 8px 0 3px; padding: 0 4px; border: 0; background: none; color: var(--muted); font: 600 .74rem var(--font); cursor: pointer; }
+.dm-from .ava { width: 20px; height: 20px; font-size: .7rem; background: var(--card-2); }
+.dm-from .ava-hat, .dm-from .ava-flame { display: none; }
+.dm-who small.is-typing { color: var(--text); font-weight: 600; }
+.dm-typing-row { flex-direction: row; align-items: flex-end; gap: 6px; }
+.dm-typing-row > .ava { width: 22px; height: 22px; font-size: .7rem; background: var(--card-2); }
+.dm-typing { display: flex; gap: 4px; padding: 13px 14px; cursor: default; }
+.dm-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: dots 1s infinite; }
+.dm-typing i:nth-child(2) { animation-delay: .15s; } .dm-typing i:nth-child(3) { animation-delay: .3s; }
+.dm-reacts small { font-size: .68rem; margin-inline: 1px 3px; color: var(--muted); }
+.group-dialog { width: min(460px, calc(100vw - 24px)); }
+.gd-emojis { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 4px 0 12px; }
+.gd-emojis button { width: 38px; height: 38px; border: 0; border-radius: 12px; background: var(--card-2); font-size: 1.2rem; cursor: pointer; transition: transform .3s var(--spring); }
+.gd-emojis button[aria-checked="true"] { background: var(--accent); transform: scale(1.12); }
+.gd-picked { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; align-items: center; margin-bottom: 8px; }
+.gd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border: 0; border-radius: 999px; background: var(--card-2); color: var(--text); font-size: .8rem; cursor: pointer; }
+.gd-chip .ava { width: 24px; height: 24px; font-size: .8rem; background: var(--card-3); }
+.gd-chip .ava-hat, .gd-chip .ava-flame { display: none; }
+.group-dialog .people-search { margin: 0 0 8px; }
+.gd-results { max-height: 260px; overflow-y: auto; margin-bottom: 12px; }
+.gd-person { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px; border: 0; border-radius: 14px; background: none; color: var(--text); text-align: start; cursor: pointer; }
+.gd-person:hover { background: var(--card-2); }
+.gd-person .ava { width: 40px; height: 40px; font-size: 1.2rem; background: var(--card-2); }
+.gd-person .person-text { flex: 1; }
+.gd-check { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--line-2); font-weight: 800; font-size: .8rem; }
+.gd-person[aria-pressed="true"] .gd-check { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.gd-top { text-align: center; }
+.gd-top h2 { margin-bottom: 2px; }
+.gd-edit { margin: 10px 0; padding: 10px 12px; border-radius: 16px; background: var(--card-2); }
+.gd-edit summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+.gd-edit .field { margin-top: 10px; }
+.gd-mute { margin: 8px 0 4px; }
+.gd-members { margin-bottom: 10px; }
+.gd-members .person { display: flex; align-items: center; gap: 6px; }
+.gd-members .person-main { flex: 1; }
+.gd-leave { color: var(--danger); margin-top: 6px; }
+
+/* 🎙️ voice notes */
+.dm-bubble.only-voice { padding: 6px 8px; }
+.vn { display: flex; align-items: center; gap: 8px; min-width: 210px; max-width: 260px; }
+.vn-play { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: .78rem; cursor: pointer; transition: transform .3s var(--spring); }
+.dmsg.mine .vn-play { background: var(--on-accent); color: var(--accent); }
+.vn-play:active { transform: scale(.88); }
+.vn-wave { flex: 1; height: 28px; display: flex; align-items: center; gap: 2px; cursor: pointer; }
+.vn-wave i { flex: 1; height: var(--h); min-height: 3px; border-radius: 2px; background: currentColor; opacity: .35; transition: opacity .15s; pointer-events: none; }
+.vn-wave i.on { opacity: 1; }
+.vn-time { flex: none; font-size: .72rem; font-variant-numeric: tabular-nums; opacity: .8; min-width: 30px; }
+.vn-speed { flex: none; padding: 2px 6px; border: 0; border-radius: 999px; background: rgba(127, 127, 127, .2); color: inherit; font: 700 .68rem var(--font); cursor: pointer; }
+.dm-form .dm-mic { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--card-2); font-size: 1.05rem; }
+.dm-form.has-text .dm-mic { display: none; }
+.dm-mic[hidden] { display: none !important; }
+.dm-rec { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.dm-rec[hidden] { display: none; }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff3b30; animation: pulse 1s infinite; }
+.rec-time { font: 600 .82rem var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
+.rec-meter { flex: 1; height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; }
+.rec-meter i { flex: none; width: 3px; height: var(--h); border-radius: 2px; background: var(--text); animation: popIn .2s var(--ease); }
+
+/* replies to pops, inside messages */
+.dm-popreply { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.dm-popthumb { flex: none; width: 40px; height: 56px; display: grid; place-items: center; border-radius: 10px; overflow: hidden; font-size: .55rem; font-weight: 700; line-height: 1.1; text-align: center; padding: 2px; }
+.dm-popthumb img { width: 100%; height: 100%; object-fit: cover; }
+.dm-popreply small { font-size: .72rem; opacity: .8; }
+.mod-pop-photo { display: block; max-width: 160px; max-height: 220px; border-radius: 12px; margin: 6px 0; }
+
 
 /* single-file: kids corner overlay */
 #kidsFrame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1000; background: #8fd3ff; }
@@ -3601,6 +3810,120 @@ const MAIN_STRINGS = [
   ['Write a question first', 'اكتب سؤال الأول', 'Schreib zuerst eine Frage', 'Sumulat muna ng tanong'],
   ['Give at least two answers', 'اكتب إجابتين على الأقل', 'Gib mindestens zwei Antworten an', 'Magbigay ng hindi bababa sa dalawang sagot'],
   ['Unknown duel', 'مبارزة مش معروفة', 'Unbekanntes Duell', 'Hindi kilalang duel'],
+  // 🫧 pops, 👥 groups, ✍️ typing, 🎙️ voice notes
+  ['Sign in to post pops 🫧', 'سجّل دخول عشان تنزّل بوبس 🫧', 'Melde dich an, um Pops zu posten 🫧', 'Mag-sign in para mag-post ng pops 🫧'],
+  ['Pops from {name}', 'بوبس {name}', 'Pops von {name}', 'Mga pop ni {name}'],
+  ['Pop it — share to your 24-hour pop', 'نزّلها بوب — تفضل 24 ساعة', 'Als Pop teilen – 24 Stunden sichtbar', 'I-pop ito — makikita sa loob ng 24 oras'],
+  ['Pop', 'بوب', 'Pop', 'Pop'],
+  ['Pops', 'البوبس', 'Pops', 'Mga pop'],
+  ['See your pop', 'شوف البوب بتاعك', 'Deinen Pop ansehen', 'Tingnan ang pop mo'],
+  ['Add a pop', 'ضيف بوب', 'Pop hinzufügen', 'Magdagdag ng pop'],
+  ['Your pop', 'البوب بتاعك', 'Dein Pop', 'Pop mo'],
+  ['That pop is gone', 'البوب ده اختفى', 'Dieser Pop ist weg', 'Wala na ang pop na iyan'],
+  ['Read the story', 'اقرا الخبر', 'Story lesen', 'Basahin ang balita'],
+  ['Add', 'ضيف', 'Hinzufügen', 'Idagdag'],
+  ['Delete pop', 'امسح البوب', 'Pop löschen', 'Burahin ang pop'],
+  ['Reply to @{name}…', 'رد على @{name}…', 'Antworte @{name}…', 'Sumagot kay @{name}…'],
+  ['Reply', 'رد', 'Antworten', 'Sumagot'],
+  ['Reply sent to @{name} ✉️', 'الرد اتبعت لـ @{name} ✉️', 'Antwort an @{name} gesendet ✉️', 'Naipadala ang sagot kay @{name} ✉️'],
+  ['Seen by', 'شافه', 'Gesehen von', 'Nakita ni'],
+  ['Nobody yet — your followers will see it soon 🍿', 'لسه محدش — المتابعين بتوعك هيشوفوه قريب 🍿', 'Noch niemand – deine Follower sehen es bald 🍿', 'Wala pa — makikita ito ng followers mo mamaya 🍿'],
+  ['Report pop', 'بلّغ عن البوب', 'Pop melden', 'I-report ang pop'],
+  ['Delete this pop?', 'تمسح البوب ده؟', 'Diesen Pop löschen?', 'Burahin ang pop na ito?'],
+  ['Pop deleted.', 'البوب اتمسح.', 'Pop gelöscht.', 'Nabura ang pop.'],
+  ['Report this pop for being mean, unsafe or spammy?', 'تبلّغ عن البوب ده عشان قليل الذوق أو مش آمن أو سبام؟', 'Diesen Pop als gemein, unsicher oder Spam melden?', 'I-report ang pop na ito dahil masama, hindi ligtas o spam?'],
+  ['New pop', 'بوب جديد', 'Neuer Pop', 'Bagong pop'],
+  ['Text', 'كلام', 'Text', 'Text'],
+  ['Photo', 'صورة', 'Foto', 'Litrato'],
+  ['Background', 'الخلفية', 'Hintergrund', 'Background'],
+  ['Background {n}', 'خلفية {n}', 'Hintergrund {n}', 'Background {n}'],
+  ['The people who follow you can see it for 24 hours.', 'اللي متابعينك يقدروا يشوفوه لمدة 24 ساعة.', 'Die Leute, die dir folgen, sehen ihn 24 Stunden lang.', 'Makikita ito ng mga sumusunod sa iyo sa loob ng 24 oras.'],
+  ['Share pop', 'نزّل البوب', 'Pop teilen', 'I-share ang pop'],
+  ['What’s popping? 🍿', 'إيه الجديد؟ 🍿', 'Was gibt’s Neues? 🍿', 'Anong bago? 🍿'],
+  ['Change photo', 'غيّر الصورة', 'Foto ändern', 'Palitan ang litrato'],
+  ['Add a caption…', 'اكتب تعليق…', 'Bildunterschrift hinzufügen…', 'Magdagdag ng caption…'],
+  ['Caption', 'التعليق', 'Bildunterschrift', 'Caption'],
+  ['Pick a photo', 'اختار صورة', 'Foto auswählen', 'Pumili ng litrato'],
+  ['Say something about it…', 'قول حاجة عنه…', 'Sag was dazu…', 'Magsabi tungkol dito…'],
+  ['Write something first!', 'اكتب حاجة الأول!', 'Schreib zuerst etwas!', 'Sumulat muna ng kahit ano!'],
+  ['Popped! Your followers can see it for 24 hours 🫧', 'اتنزّل! المتابعين بتوعك يقدروا يشوفوه 24 ساعة 🫧', 'Gepoppt! Deine Follower sehen ihn 24 Stunden lang 🫧', 'Na-pop! Makikita ito ng followers mo sa loob ng 24 oras 🫧'],
+  ['No pops right now.', 'مفيش بوبس دلوقتي.', 'Gerade keine Pops.', 'Walang pop ngayon.'],
+  ['{n} new', '{n} جديد', '{n} neu', '{n} bago'],
+  ['{n} views', '{n} مشاهدة', '{n} Aufrufe', '{n} view'],
+  ['You replied to their pop', 'رديت على البوب بتاعه', 'Du hast auf den Pop geantwortet', 'Sumagot ka sa pop nila'],
+  ['Replied to your pop', 'رد على البوب بتاعك', 'Hat auf deinen Pop geantwortet', 'Sumagot sa pop mo'],
+  ['pops today', 'بوبس النهارده', 'Pops heute', 'pops ngayon'],
+  ['New group', 'جروب جديد', 'Neue Gruppe', 'Bagong grupo'],
+  ['Start a group', 'اعمل جروب', 'Gruppe starten', 'Magsimula ng grupo'],
+  ['Muted', 'متكتّم', 'Stumm', 'Naka-mute'],
+  ['Hidden after reports', 'اتخبّى بعد بلاغات', 'Nach Meldungen ausgeblendet', 'Itinago dahil sa mga report'],
+  ['Group info', 'معلومات الجروب', 'Gruppeninfo', 'Info ng grupo'],
+  ['Say hi to the group 👋', 'قول أهلًا للجروب 👋', 'Sag Hallo zur Gruppe 👋', 'Mag-hi sa grupo 👋'],
+  ['Seen by everyone', 'الكل شافها', 'Von allen gesehen', 'Nakita ng lahat'],
+  ['Seen by {names}', 'شافها {names}', 'Gesehen von {names}', 'Nakita ni {names}'],
+  ['Add people', 'ضيف ناس', 'Leute hinzufügen', 'Magdagdag ng tao'],
+  ['Mute notifications', 'اكتم الإشعارات', 'Benachrichtigungen stummschalten', 'I-mute ang notifications'],
+  ['Leave group', 'اخرج من الجروب', 'Gruppe verlassen', 'Umalis sa grupo'],
+  ['Group muted 🔕', 'الجروب اتكتم 🔕', 'Gruppe stummgeschaltet 🔕', 'Naka-mute ang grupo 🔕'],
+  ['Group unmuted 🔔', 'الكتم اتشال من الجروب 🔔', 'Gruppe nicht mehr stumm 🔔', 'Hindi na naka-mute ang grupo 🔔'],
+  ['Leave “{name}”? You won’t get its messages anymore.', 'تخرج من «{name}»؟ مش هتوصلك رسايله تاني.', '„{name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.', 'Umalis sa “{name}”? Hindi mo na makukuha ang mga mensahe nito.'],
+  ['You left the group.', 'خرجت من الجروب.', 'Du hast die Gruppe verlassen.', 'Umalis ka na sa grupo.'],
+  ['Report this message for being mean, unsafe or spammy?', 'تبلّغ عن الرسالة دي عشان قليلة الذوق أو مش آمنة أو سبام؟', 'Diese Nachricht als gemein, unsicher oder Spam melden?', 'I-report ang mensaheng ito dahil masama, hindi ligtas o spam?'],
+  ['{n} members', '{n} عضو', '{n} Mitglieder', '{n} miyembro'],
+  ['Group messages', 'رسايل الجروبات', 'Gruppennachrichten', 'Mga mensahe sa grupo'],
+  ['group messages today', 'رسايل جروبات النهارده', 'Gruppennachrichten heute', 'mensahe sa grupo ngayon'],
+  ['reported group messages and pops', 'رسايل جروبات وبوبس متبلّغ عنها', 'gemeldete Gruppennachrichten und Pops', 'ni-report na mensahe sa grupo at pops'],
+  ['{by} created “{name}”', '{by} عمل «{name}»', '{by} hat „{name}“ erstellt', 'Ginawa ni {by} ang “{name}”'],
+  ['{by} added {names}', '{by} ضاف {names}', '{by} hat {names} hinzugefügt', 'Idinagdag ni {by} si {names}'],
+  ['{by} removed {names}', '{by} شال {names}', '{by} hat {names} entfernt', 'Tinanggal ni {by} si {names}'],
+  ['{by} left', '{by} خرج', '{by} ist ausgetreten', 'Umalis si {by}'],
+  ['{by} renamed the group to “{name}”', '{by} غيّر اسم الجروب لـ «{name}»', '{by} hat die Gruppe in „{name}“ umbenannt', 'Pinalitan ni {by} ang pangalan ng grupo ng “{name}”'],
+  ['{by} changed the group picture to {emoji}', '{by} غيّر صورة الجروب لـ {emoji}', '{by} hat das Gruppenbild zu {emoji} geändert', 'Pinalitan ni {by} ang larawan ng grupo ng {emoji}'],
+  ['Group picture', 'صورة الجروب', 'Gruppenbild', 'Larawan ng grupo'],
+  ['Pick people to add', 'اختار ناس تضيفهم', 'Wähle Leute zum Hinzufügen', 'Pumili ng mga idadagdag'],
+  ['Search people…', 'دوّر على ناس…', 'Leute suchen…', 'Maghanap ng tao…'],
+  ['Group name', 'اسم الجروب', 'Gruppenname', 'Pangalan ng grupo'],
+  ['e.g. Gaming squad', 'زي: شلة الجيمنج', 'z. B. Gaming-Truppe', 'hal. Gaming squad'],
+  ['Create group', 'اعمل الجروب', 'Gruppe erstellen', 'Gumawa ng grupo'],
+  ['Back', 'رجوع', 'Zurück', 'Bumalik'],
+  ['{n} of {max} spots taken', '{n} من {max} مكان متاخد', '{n} von {max} Plätzen belegt', '{n} sa {max} puwesto ang okupado'],
+  ['Add to group', 'ضيف للجروب', 'Zur Gruppe hinzufügen', 'Idagdag sa grupo'],
+  ['Name and picture', 'الاسم والصورة', 'Name und Bild', 'Pangalan at larawan'],
+  ['Members', 'الأعضاء', 'Mitglieder', 'Mga miyembro'],
+  ['Creator', 'صاحب الجروب', 'Ersteller', 'Gumawa'],
+  ['Remove', 'شيل', 'Entfernen', 'Tanggalin'],
+  ['This group is full (32 kernels)', 'الجروب ده مليان (32 حباية)', 'Diese Gruppe ist voll (32 Kerne)', 'Puno na ang grupong ito (32 kernel)'],
+  ['Remove @{name} from the group?', 'تشيل @{name} من الجروب؟', '@{name} aus der Gruppe entfernen?', 'Tanggalin si @{name} sa grupo?'],
+  ['Couldn’t add {names} (they don’t take messages from you).', 'مقدرناش نضيف {names} (مش بيستقبلوا رسايل منك).', '{names} konnte nicht hinzugefügt werden (nimmt keine Nachrichten von dir an).', 'Hindi naidagdag si {names} (hindi sila tumatanggap ng mensahe mula sa iyo).'],
+  ['Group created! Say hi 👋', 'الجروب اتعمل! قول أهلًا 👋', 'Gruppe erstellt! Sag Hallo 👋', 'Nagawa ang grupo! Mag-hi 👋'],
+  ['Saved!', 'اتحفظ!', 'Gespeichert!', 'Na-save!'],
+  ['Added {n} kernels', 'اتضاف {n} حباية', '{n} Kerne hinzugefügt', 'Naidagdag ang {n} kernel'],
+  ['{name} is typing…', '{name} بيكتب…', '{name} schreibt…', 'Nagta-type si {name}…'],
+  ['{n} people are typing…', '{n} بيكتبوا…', '{n} Leute schreiben…', '{n} tao ang nagta-type…'],
+  ['typing…', 'بيكتب…', 'schreibt…', 'nagta-type…'],
+  ['Record a voice note', 'سجّل فويس', 'Sprachnachricht aufnehmen', 'Mag-record ng voice note'],
+  ['Delete recording', 'امسح التسجيل', 'Aufnahme löschen', 'Burahin ang recording'],
+  ['Send voice note', 'ابعت الفويس', 'Sprachnachricht senden', 'Ipadala ang voice note'],
+  ['Voice note', 'فويس', 'Sprachnachricht', 'Voice note'],
+  ['Hold on — say a bit more 🎙️', 'استنى — قول كلام أكتر شوية 🎙️', 'Moment – sag ein bisschen mehr 🎙️', 'Teka — magsalita pa nang kaunti 🎙️'],
+  ['30 seconds max — sending it now 🎙️', '30 ثانية بالكتير — بنبعته دلوقتي 🎙️', 'Maximal 30 Sekunden – wird jetzt gesendet 🎙️', '30 segundo lang — ipapadala na ngayon 🎙️'],
+  ['Voice notes don’t work in this browser', 'الفويس مش شغال على المتصفح ده', 'Sprachnachrichten funktionieren in diesem Browser nicht', 'Hindi gumagana ang voice notes sa browser na ito'],
+  ['Allow the microphone to record voice notes 🎙️', 'اسمح بالمايك عشان تسجّل فويس 🎙️', 'Erlaube das Mikrofon, um Sprachnachrichten aufzunehmen 🎙️', 'Payagan ang mikropono para makapag-record ng voice notes 🎙️'],
+  ['That voice note is too long', 'الفويس ده طويل أوي', 'Diese Sprachnachricht ist zu lang', 'Masyadong mahaba ang voice note na iyan'],
+  ['Play voice note', 'شغّل الفويس', 'Sprachnachricht abspielen', 'I-play ang voice note'],
+  ['Playback speed', 'سرعة التشغيل', 'Wiedergabegeschwindigkeit', 'Bilis ng pag-play'],
+  ['Group not found', 'الجروب مش موجود', 'Gruppe nicht gefunden', 'Hindi nakita ang grupo'],
+  ['Give your group a name', 'اكتب اسم للجروب', 'Gib deiner Gruppe einen Namen', 'Bigyan ng pangalan ang grupo mo'],
+  ['That’s a lot of new groups today — try again tomorrow', 'جروبات جديدة كتير النهارده — جرّب بكرة', 'Das sind heute viele neue Gruppen – versuch es morgen wieder', 'Ang daming bagong grupo ngayon — subukan ulit bukas'],
+  ['Add at least one person who takes messages from you', 'ضيف شخص واحد على الأقل بيستقبل رسايل منك', 'Füge mindestens eine Person hinzu, die Nachrichten von dir annimmt', 'Magdagdag ng kahit isang tao na tumatanggap ng mensahe mula sa iyo'],
+  ['You can’t report yourself', 'مينفعش تبلّغ عن نفسك', 'Du kannst dich nicht selbst melden', 'Hindi mo puwedeng i-report ang sarili mo'],
+  ['Only the group’s creator can remove people', 'صاحب الجروب بس اللي يقدر يشيل ناس', 'Nur der Ersteller der Gruppe kann Leute entfernen', 'Ang gumawa lang ng grupo ang puwedeng magtanggal ng tao'],
+  ['They’re not in this group', 'هو مش في الجروب ده', 'Diese Person ist nicht in der Gruppe', 'Wala sila sa grupong ito'],
+  ['That voice note didn’t work — try recording again', 'الفويس ده مشتغلش — جرّب تسجّل تاني', 'Diese Sprachnachricht hat nicht geklappt – nimm sie nochmal auf', 'Hindi gumana ang voice note — subukang mag-record ulit'],
+  ['This voice note is gone', 'الفويس ده اختفى', 'Diese Sprachnachricht ist weg', 'Wala na ang voice note na ito'],
+  ['That’s plenty of pops for today — come back tomorrow!', 'كفاية بوبس النهارده — تعالى بكرة!', 'Das sind genug Pops für heute – komm morgen wieder!', 'Sapat na ang pops para ngayon — bumalik bukas!'],
+  ['Pick what to pop', 'اختار هتنزّل إيه', 'Wähle, was du poppen willst', 'Piliin kung ano ang ipo-pop'],
+  ['That story isn’t on kerNEl anymore', 'الخبر ده مبقاش على kerNEl', 'Diese Story ist nicht mehr auf kerNEl', 'Wala na sa kerNEl ang balitang iyan'],
 ];
 addStrings(MAIN_STRINGS);
 
@@ -5203,21 +5526,426 @@ function initCodme(api) {
 return { initCodme };
 })();
 
+// ===== voice.js =====
+__m["voice"] = (() => {
+// 🎙️ Voice notes: record up to 30 seconds (with a live level meter), and play them back in chats.
+const { esc } = __m["utils"];
+const { auth } = __m["auth"];
+const { t } = __m["i18n"];
+
+const VOICE_MAX_MS = 30_000;
+const MAX_BYTES = 240_000;
+const PEAKS = 32;
+
+const canRecord = () => !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+const clock = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+function resample(list, n) {
+  if (!list.length) return Array(n).fill(0);
+  return Array.from({ length: n }, (_, i) => {
+    const a = Math.floor((i * list.length) / n);
+    const b = Math.max(a + 1, Math.floor(((i + 1) * list.length) / n));
+    return Math.max(...list.slice(a, b));
+  });
+}
+
+const blobToDataUrl = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+
+/**
+ * Start recording. Returns { stop(), cancel() }; stop() resolves to { voice, voiceMs, voicePeaks } (ready to send) or null if too short.
+ * onLevel(0..1) runs about 10 times a second, onTick(ms) too; onMax() when 30 seconds are up (recording stops by itself).
+ */
+async function recordVoice({ onLevel, onTick, onMax } = {}) {
+  if (!canRecord()) throw new Error(t('Voice notes don’t work in this browser'));
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  } catch {
+    throw new Error(t('Allow the microphone to record voice notes 🎙️'));
+  }
+  const type = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'].find((x) => MediaRecorder.isTypeSupported?.(x)) || '';
+  const rec = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), audioBitsPerSecond: 32_000 });
+  const chunks = [];
+  rec.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
+  let ctx = null;
+  let analyser = null;
+  let buf = null;
+  try {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    ctx.createMediaStreamSource(stream).connect(analyser);
+    buf = new Uint8Array(analyser.fftSize);
+  } catch { /* no meter, still records */ }
+  const levels = [];
+  const t0 = performance.now();
+  let ended = 0;
+  rec.start(250);
+  const stopped = new Promise((res) => { rec.onstop = res; });
+  const cleanup = () => {
+    clearInterval(timer);
+    stream.getTracks().forEach((tr) => tr.stop());
+    ctx?.close().catch(() => {});
+  };
+  const finish = () => {
+    if (ended) return;
+    ended = performance.now();
+    if (rec.state !== 'inactive') rec.stop();
+  };
+  const timer = setInterval(() => {
+    let lvl = 0;
+    if (analyser) {
+      analyser.getByteTimeDomainData(buf);
+      let sum = 0;
+      for (const v of buf) { const x = (v - 128) / 128; sum += x * x; }
+      lvl = Math.min(1, Math.sqrt(sum / buf.length) * 5);
+    }
+    levels.push(lvl);
+    onLevel?.(lvl);
+    const ms = performance.now() - t0;
+    onTick?.(Math.min(ms, VOICE_MAX_MS));
+    if (ms >= VOICE_MAX_MS && !ended) { finish(); onMax?.(); }
+  }, 100);
+
+  return {
+    get ms() { return Math.min(VOICE_MAX_MS, (ended || performance.now()) - t0); },
+    async stop() {
+      finish();
+      await stopped;
+      cleanup();
+      const ms = Math.min(VOICE_MAX_MS + 400, ended - t0);
+      if (ms < 700) return null;
+      const blob = new Blob(chunks, { type: rec.mimeType || type || 'audio/webm' });
+      if (blob.size > MAX_BYTES) throw new Error(t('That voice note is too long'));
+      const peaks = resample(levels, PEAKS).map((x) => Math.round(Math.min(1, x) * 100));
+      return { voice: await blobToDataUrl(blob), voiceMs: Math.round(ms), voicePeaks: peaks };
+    },
+    cancel() { finish(); stopped.then(cleanup); },
+  };
+}
+
+// ---------------- playback ----------------
+let audio = null;
+let playing = '';      // key of the voice note that's playing
+let speed = 1;
+let frame = 0;
+
+/** A voice note bubble. */
+function voiceHTML(v) {
+  if (!v?.key) return '';
+  const peaks = resample(v.peaks?.length ? v.peaks : Array.from({ length: 16 }, (_, i) => 25 + ((i * 37) % 55)), 28);
+  const bars = peaks.map((p) => `<i style="--h:${Math.max(14, p)}%"></i>`).join('');
+  return `<div class="vn${playing === v.key ? ' playing' : ''}" data-vkey="${esc(v.key)}" data-ms="${Number(v.ms) || 0}">
+    <button type="button" class="vn-play" data-vplay aria-label="${esc(t('Play voice note'))}"><span aria-hidden="true">${playing === v.key && audio && !audio.paused ? '❚❚' : '▶'}</span></button>
+    <span class="vn-wave" data-vseek aria-hidden="true">${bars}</span>
+    <span class="vn-time">${clock(v.ms)}</span>
+    <button type="button" class="vn-speed" data-vspeed aria-label="${esc(t('Playback speed'))}">${speed}×</button>
+  </div>`;
+}
+
+function paint() {
+  cancelAnimationFrame(frame);
+  document.querySelectorAll('.vn').forEach((el) => {
+    const on = el.dataset.vkey === playing && audio;
+    el.classList.toggle('playing', !!on);
+    const btn = el.querySelector('.vn-play span');
+    if (btn) btn.textContent = on && !audio.paused ? '❚❚' : '▶';
+    const total = Number(el.dataset.ms) || 0;
+    const dur = on && Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration * 1000 : total;
+    const pos = on ? audio.currentTime * 1000 : 0;
+    const bars = el.querySelectorAll('.vn-wave i');
+    const lit = on ? Math.round(Math.min(1, pos / (dur || 1)) * bars.length) : 0;
+    bars.forEach((b, i) => b.classList.toggle('on', i < lit));
+    const time = el.querySelector('.vn-time');
+    if (time) time.textContent = on && pos > 0 ? clock(pos) : clock(total);
+    const sp = el.querySelector('.vn-speed');
+    if (sp) sp.textContent = `${speed}×`;
+  });
+  if (audio && !audio.paused) frame = requestAnimationFrame(paint);
+}
+
+function play(key, at = null) {
+  if (playing !== key || !audio) {
+    audio?.pause();
+    audio = new Audio(`${auth.apiBase}/api/voice/${encodeURIComponent(key)}`);
+    audio.preload = 'auto';
+    playing = key;
+    audio.addEventListener('ended', () => { playing = ''; audio = null; paint(); });
+    audio.addEventListener('error', () => { playing = ''; audio = null; paint(); });
+    audio.addEventListener('pause', paint);
+    audio.addEventListener('play', paint);
+  }
+  audio.playbackRate = speed;
+  if (at != null) {
+    const seek = () => { if (Number.isFinite(audio.duration)) audio.currentTime = at * audio.duration; };
+    if (audio.readyState >= 1) seek(); else audio.addEventListener('loadedmetadata', seek, { once: true });
+  }
+  audio.play().catch(() => {});
+  paint();
+}
+
+/** Stop whatever is playing (e.g. when a chat closes). */
+function stopVoice() { audio?.pause(); audio = null; playing = ''; paint(); }
+
+let wired = false;
+function initVoicePlayer() {
+  if (wired) return;
+  wired = true;
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const vn = el?.closest('.vn');
+    if (!vn) return;
+    e.stopPropagation();
+    const key = vn.dataset.vkey;
+    if (el.closest('[data-vspeed]')) {
+      speed = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1;
+      if (audio) audio.playbackRate = speed;
+      paint();
+      return;
+    }
+    const wave = el.closest('[data-vseek]');
+    if (wave) {
+      const r = wave.getBoundingClientRect();
+      const rtl = getComputedStyle(wave).direction === 'rtl';
+      const x = Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)));
+      play(key, rtl ? 1 - x : x);
+      return;
+    }
+    if (el.closest('[data-vplay]')) {
+      if (playing === key && audio && !audio.paused) audio.pause(); else play(key);
+    }
+  }, true);
+}
+
+return { VOICE_MAX_MS, canRecord, clock, recordVoice, voiceHTML, stopVoice, initVoicePlayer };
+})();
+
+// ===== groups.js =====
+__m["groups"] = (() => {
+// 👥 Group chats: the "new group" and "group settings" dialogs, plus small helpers the Messages view uses.
+const { $$, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+
+const GROUP_EMOJIS = ['👥', '🍿', '🎮', '🚀', '💻', '🤖', '📱', '🎧', '⚽', '📚', '🔥', '💡'];
+const MAX_MEMBERS = 32;
+
+/** The group's picture: its emoji, with two members' faces peeking in. */
+function groupAvatarHTML(g, { cls = '' } = {}) {
+  const faces = (g.faces || []).slice(0, 2).map((f, i) => lookHTML(f, { cls: `gav-face gav-f${i + 1}` })).join('');
+  return `<span class="gav ${cls}" aria-hidden="true"><span class="gav-emoji">${esc(g.emoji || '👥')}</span>${faces}</span>`;
+}
+
+const names = (list) => (list || []).map((n) => `@${n}`).join(', ');
+
+/** "@azzy added @kei" and friends. */
+function systemText(s = {}) {
+  const by = `@${s.by || '?'}`;
+  if (s.t === 'created') return t('{by} created “{name}”', { by, name: s.name || '' });
+  if (s.t === 'added') return t('{by} added {names}', { by, names: names(s.who) });
+  if (s.t === 'removed') return t('{by} removed {names}', { by, names: names(s.who) });
+  if (s.t === 'left') return t('{by} left', { by });
+  if (s.t === 'renamed') return t('{by} renamed the group to “{name}”', { by, name: s.name || '' });
+  if (s.t === 'emoji') return t('{by} changed the group picture to {emoji}', { by, emoji: s.emoji || '👥' });
+  return '';
+}
+
+function initGroupTools({ openProfile, findPeople } = {}) {
+  const D = document.createElement('dialog');
+  D.className = 'modal group-dialog';
+  document.body.append(D);
+
+  let mode = 'create';         // create | settings | add
+  let state = null;            // { group, members } in settings
+  let hooks = {};
+  let picked = new Map();      // username → person
+  let results = [];
+  let q = '';
+  let seq = 0;
+  let timer = 0;
+  let form = { name: '', emoji: '👥' };
+
+  const emojiPicker = () => `<div class="gd-emojis" role="radiogroup" aria-label="${esc(t('Group picture'))}">${GROUP_EMOJIS.map((e) => `<button type="button" role="radio" data-gd-emoji="${e}" aria-checked="${form.emoji === e}">${e}</button>`).join('')}</div>`;
+  const pickerHTML = (already = new Set()) => `
+    <div class="gd-picked">${[...picked.values()].map((p) => `<button type="button" class="chip gd-chip" data-gd-unpick="${esc(p.username)}">${lookHTML(p)}<span dir="auto">${esc(p.nickname)}</span> ✕</button>`).join('') || `<span class="muted small">${t('Pick people to add')}</span>`}</div>
+    <label class="people-search"><span class="search-icon" aria-hidden="true">🔍</span><input data-gd-search type="search" placeholder="${esc(t('Search people…'))}" autocomplete="off" value="${esc(q)}"></label>
+    <div class="gd-results">${results.filter((p) => !p.me && !already.has(p.username)).map((p) => `<button type="button" class="gd-person" data-gd-pick="${esc(p.username)}" aria-pressed="${picked.has(p.username)}">
+        ${lookHTML(p, { active: p.active })}<span class="person-text"><b dir="auto">${esc(p.nickname)}</b><small>@${esc(p.username)}${p.followsYou ? ` · ${esc(t('follows you'))}` : ''}</small></span><span class="gd-check" aria-hidden="true">${picked.has(p.username) ? '✓' : ''}</span></button>`).join('')
+      || `<p class="muted small">${q ? t('No kernels found for “{q}”', { q: esc(q) }) : t('Looking…')}</p>`}</div>`;
+
+  function paint() {
+    if (mode === 'create') {
+      D.innerHTML = `<button type="button" class="modal-x" data-gd="close" aria-label="${esc(t('Close'))}">✕</button>
+        <h2>👥 ${t('New group')}</h2>
+        <label class="field"><span>${t('Group name')}</span><input data-gd-name maxlength="40" dir="auto" placeholder="${esc(t('e.g. Gaming squad'))}" value="${esc(form.name)}"></label>
+        ${emojiPicker()}
+        ${pickerHTML()}
+        <button type="button" class="btn btn-primary btn-block" data-gd="create" ${form.name.trim() && picked.size ? '' : 'disabled'}>👥 ${t('Create group')} ${picked.size ? `(${picked.size + 1})` : ''}</button>`;
+    } else if (mode === 'add') {
+      const already = new Set(state.members.map((m) => m.username));
+      D.innerHTML = `<button type="button" class="modal-x" data-gd="back" aria-label="${esc(t('Back'))}">‹</button>
+        <h2>➕ ${t('Add people')}</h2>
+        <p class="muted small">${t('{n} of {max} spots taken', { n: state.members.length, max: MAX_MEMBERS })}</p>
+        ${pickerHTML(already)}
+        <button type="button" class="btn btn-primary btn-block" data-gd="add" ${picked.size ? '' : 'disabled'}>➕ ${t('Add to group')}</button>`;
+    } else {
+      const g = state.group;
+      D.innerHTML = `<button type="button" class="modal-x" data-gd="close" aria-label="${esc(t('Close'))}">✕</button>
+        <div class="gd-top"><span class="gav gav-lg"><span class="gav-emoji">${esc(g.emoji)}</span></span><h2 dir="auto">${esc(g.name)}</h2><p class="muted small">${tn(state.members.length, '{n} member', '{n} members')}</p></div>
+        <details class="gd-edit"><summary>✏️ ${t('Name and picture')}</summary>
+          <label class="field"><span>${t('Group name')}</span><input data-gd-name maxlength="40" dir="auto" value="${esc(form.name)}"></label>
+          ${emojiPicker()}
+          <button type="button" class="btn btn-sm btn-primary" data-gd="save">${t('Save')}</button></details>
+        <label class="check gd-mute"><input type="checkbox" data-gd-mute ${g.muted ? 'checked' : ''}> 🔕 ${t('Mute notifications')}</label>
+        <h3 class="mini-title">${t('Members')} <small>${state.members.length}</small></h3>
+        <div class="gd-members">${state.members.map((m) => `<div class="person">
+            <button type="button" class="person-main" data-gd-user="${esc(m.username)}">${lookHTML(m, { active: m.active })}<span class="person-text"><b dir="auto">${esc(m.me ? t('You') : m.nickname)}</b><small>@${esc(m.username)}${m.owner ? ` · 👑 ${esc(t('Creator'))}` : ''}</small></span></button>
+            ${g.owner && !m.me ? `<button type="button" class="btn btn-sm btn-ghost" data-gd-remove="${esc(m.username)}">${t('Remove')}</button>` : ''}</div>`).join('')}</div>
+        ${state.members.length < MAX_MEMBERS ? `<button type="button" class="btn btn-ghost btn-block" data-gd="to-add">➕ ${t('Add people')}</button>` : ''}
+        <button type="button" class="btn btn-ghost btn-block gd-leave" data-gd="leave">🚪 ${t('Leave group')}</button>`;
+    }
+  }
+
+  async function search() {
+    const my = ++seq;
+    try { const found = await findPeople(q); if (my === seq) { results = found; paintKeepFocus(); } } catch { if (my === seq) { results = []; paintKeepFocus(); } }
+  }
+  function paintKeepFocus() {
+    const had = document.activeElement?.matches?.('[data-gd-search]');
+    const pos = had ? document.activeElement.selectionStart : null;
+    paint();
+    if (had) { const s = D.querySelector('[data-gd-search]'); s?.focus(); if (pos != null) s?.setSelectionRange(pos, pos); }
+  }
+
+  D.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.matches('[data-gd-search]')) { q = el.value.trim().replace(/^@+/, ''); clearTimeout(timer); timer = setTimeout(search, 220); }
+    if (el.matches('[data-gd-name]')) {
+      form.name = el.value;
+      const b = D.querySelector('[data-gd="create"]');
+      if (b) b.disabled = !(form.name.trim() && picked.size);
+    }
+  });
+  D.addEventListener('change', async (e) => {
+    if (!e.target.matches('[data-gd-mute]')) return;
+    const muted = e.target.checked;
+    try { await auth.api('/api/groups/mute', { method: 'POST', body: { group: state.group.id, muted } }); state.group.muted = muted; hooks.onChanged?.(); toast(muted ? t('Group muted 🔕') : t('Group unmuted 🔔'), { emoji: muted ? '🔕' : '🔔' }); } catch (err) { e.target.checked = !muted; toast(tServer(err.message), { emoji: '😵' }); }
+  });
+
+  D.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const em = el.closest('[data-gd-emoji]');
+    if (em) { form.emoji = em.dataset.gdEmoji; $$('[data-gd-emoji]', D).forEach((b) => b.setAttribute('aria-checked', String(b === em))); return; }
+    const pk = el.closest('[data-gd-pick]');
+    if (pk) {
+      const p = results.find((x) => x.username === pk.dataset.gdPick);
+      if (picked.has(p.username)) picked.delete(p.username);
+      else if (picked.size + (state?.members.length || 1) >= MAX_MEMBERS) toast(t('This group is full (32 kernels)'), { emoji: '👥' });
+      else picked.set(p.username, p);
+      paintKeepFocus();
+      return;
+    }
+    const up = el.closest('[data-gd-unpick]');
+    if (up) { picked.delete(up.dataset.gdUnpick); paintKeepFocus(); return; }
+    const u = el.closest('[data-gd-user]');
+    if (u) { D.close(); openProfile?.(u.dataset.gdUser); return; }
+    const rm = el.closest('[data-gd-remove]');
+    if (rm) {
+      if (!confirm(t('Remove @{name} from the group?', { name: rm.dataset.gdRemove }))) return;
+      try { await auth.api('/api/groups/remove', { method: 'POST', body: { group: state.group.id, username: rm.dataset.gdRemove } }); state.members = state.members.filter((m) => m.username !== rm.dataset.gdRemove); paint(); hooks.onChanged?.(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const b = el.closest('[data-gd]');
+    if (!b) return;
+    const what = b.dataset.gd;
+    if (what === 'close') { D.close(); return; }
+    if (what === 'back') { mode = 'settings'; picked = new Map(); paint(); return; }
+    if (what === 'to-add') { mode = 'add'; picked = new Map(); q = ''; results = []; paint(); search(); return; }
+    b.disabled = true;
+    try {
+      if (what === 'create') {
+        const r = await auth.api('/api/groups', { method: 'POST', body: { name: form.name.trim(), emoji: form.emoji, members: [...picked.keys()] } });
+        D.close();
+        sfx.ding();
+        burstFrom(document.body, { emojis: ['👥', '🎉', '✨'], count: 16 });
+        if (r.skipped?.length) toast(t('Couldn’t add {names} (they don’t take messages from you).', { names: names(r.skipped) }), { emoji: '👥', ms: 6000 });
+        else toast(t('Group created! Say hi 👋'), { emoji: '👥' });
+        hooks.onCreated?.(r.group);
+      } else if (what === 'add') {
+        const r = await auth.api('/api/groups/add', { method: 'POST', body: { group: state.group.id, usernames: [...picked.keys()] } });
+        if (r.added?.length) toast(tn(r.added.length, 'Added {n} kernel', 'Added {n} kernels'), { emoji: '➕' });
+        if (r.skipped?.length) toast(t('Couldn’t add {names} (they don’t take messages from you).', { names: names(r.skipped) }), { emoji: '👥', ms: 6000 });
+        D.close();
+        hooks.onChanged?.();
+      } else if (what === 'save') {
+        await auth.api('/api/groups/update', { method: 'POST', body: { group: state.group.id, name: form.name.trim(), emoji: form.emoji } });
+        state.group.name = form.name.trim();
+        state.group.emoji = form.emoji;
+        paint();
+        hooks.onChanged?.();
+        toast(t('Saved!'), { emoji: '✅' });
+      } else if (what === 'leave') {
+        if (!confirm(t('Leave “{name}”? You won’t get its messages anymore.', { name: state.group.name }))) { b.disabled = false; return; }
+        await auth.api('/api/groups/remove', { method: 'POST', body: { group: state.group.id } });
+        D.close();
+        toast(t('You left the group.'), { emoji: '🚪' });
+        hooks.onLeft?.();
+      }
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    if (b.isConnected) b.disabled = false;
+  });
+
+  return {
+    create(onCreated) {
+      if (!auth.user) return;
+      mode = 'create';
+      hooks = { onCreated };
+      picked = new Map();
+      q = '';
+      results = [];
+      form = { name: '', emoji: '👥' };
+      paint();
+      D.showModal();
+      search();
+      setTimeout(() => D.querySelector('[data-gd-name]')?.focus(), 80);
+    },
+    settings(s, h) {
+      mode = 'settings';
+      state = { group: { ...s.group }, members: [...s.members] };
+      hooks = h || {};
+      form = { name: s.group.name, emoji: s.group.emoji };
+      picked = new Map();
+      paint();
+      D.showModal();
+    },
+    addPeople(s, h) { this.settings(s, h); mode = 'add'; q = ''; results = []; paint(); search(); },
+  };
+}
+
+return { GROUP_EMOJIS, groupAvatarHTML, systemText, initGroupTools };
+})();
+
 // ===== dm.js =====
 __m["dm"] = (() => {
-// ✉️ kerNEl Messages: private chats with message requests, "Seen", reactions, 🔥 streaks and shared stories.
-// Also 🔍 people search (in Messages and on the Me tab).
+// ✉️ kerNEl Messages: private chats with message requests, "Seen", reactions, 🔥 streaks and shared stories,
+// 👥 group chats, ✍️ "typing…", 🎙️ voice notes and 🫧 pops at the top. Also 🔍 people search (in Messages and on the Me tab).
 const { $, $$, esc, timeAgo, toast, safeUrl } = __m["utils"];
 const { catById } = __m["news"];
 const { auth } = __m["auth"];
 const { sfx, burstFrom } = __m["fun"];
 const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML } = __m["look"];
+const { canRecord, recordVoice, voiceHTML, initVoicePlayer, stopVoice, clock, VOICE_MAX_MS } = __m["voice"];
+const { groupAvatarHTML, systemText, initGroupTools } = __m["groups"];
 
 const REACTS = ['❤️', '😂', '🔥', '👍', '😮', '😢'];
 const INBOX_MS = 8000;    // refresh the inbox while it's open
 const CONVO_MS = 2500;    // refresh a conversation while it's open
 const BADGE_MS = 40000;   // light check for new messages
+const TYPING_PING_MS = 3000;
 
 const activeText = (p) => (p.active ? t('Active now') : p.lastActive ? t('Active {when}', { when: timeAgo(p.lastActive) }) : '');
 const findPeople = async (q) => (await auth.api(`/api/users/search?q=${encodeURIComponent(q || '')}`)).people;
@@ -5279,7 +6007,11 @@ function mountPeopleSearch({ input, results, onMessage, onFollow }) {
 
 const SKELETON = () => `
   <div class="dm-view" data-view="inbox">
-    <label class="people-search dm-search"><span class="sr-only">${t('Search people')}</span><span class="search-icon" aria-hidden="true">🔍</span><input id="dmSearch" type="search" placeholder="${esc(t('Search people to message…'))}" autocomplete="off" enterkeyhint="search"></label>
+    <div class="dm-pops" id="dmPops"><div id="popsRow"></div></div>
+    <div class="dm-searchbar">
+      <label class="people-search dm-search"><span class="sr-only">${t('Search people')}</span><span class="search-icon" aria-hidden="true">🔍</span><input id="dmSearch" type="search" placeholder="${esc(t('Search people to message…'))}" autocomplete="off" enterkeyhint="search"></label>
+      <button type="button" class="icon-btn dm-newgroup" data-dm="new-group" title="${esc(t('New group'))}" aria-label="${esc(t('New group'))}">👥<small>+</small></button>
+    </div>
     <div class="dm-share-hint" id="dmShareHint" hidden></div>
     <div class="dm-list" id="dmList"></div>
   </div>
@@ -5298,8 +6030,16 @@ const SKELETON = () => `
     <form class="chat-form dm-form" id="dmForm">
       <label class="sr-only" for="dmInput">${t('Message')}</label>
       <input id="dmInput" maxlength="1000" autocomplete="off" placeholder="${esc(t('Message…'))}" enterkeyhint="send">
+      <button type="button" class="icon-btn dm-mic" data-dm="mic" title="${esc(t('Record a voice note'))}" aria-label="${esc(t('Record a voice note'))}">🎙️</button>
       <button type="submit" class="send-btn" aria-label="${esc(t('Send'))}">➤</button>
     </form>
+    <div class="dm-rec" id="dmRec" hidden>
+      <button type="button" class="icon-btn" data-dm="rec-cancel" aria-label="${esc(t('Delete recording'))}">🗑️</button>
+      <span class="rec-dot" aria-hidden="true"></span>
+      <span class="rec-time" id="dmRecTime">0:00</span>
+      <span class="rec-meter" id="dmRecMeter" aria-hidden="true"></span>
+      <button type="button" class="send-btn" data-dm="rec-send" aria-label="${esc(t('Send voice note'))}">➤</button>
+    </div>
   </div>
   <div class="chat-guest" data-view="guest" hidden>
     <p>${t('Sign in to message people privately ✉️')}</p>
@@ -5307,8 +6047,9 @@ const SKELETON = () => `
     <button type="button" class="btn btn-ghost" data-cm="signin">${t('Sign in')}</button>
   </div>`;
 
-function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challenge }) {
+function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challenge, pops, openProfile }) {
   pane.innerHTML = SKELETON();
+  initVoicePlayer();
   const inbox = pane.querySelector('[data-view="inbox"]');
   const convo = pane.querySelector('[data-view="convo"]');
   const guest = pane.querySelector('[data-view="guest"]');
@@ -5317,13 +6058,17 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const log = $('#dmLog');
   const form = $('#dmForm');
   const input = $('#dmInput');
+  const recBar = $('#dmRec');
+  pops?.mountRow($('#popsRow'));
+  const groupTools = initGroupTools({ openProfile, findPeople });
 
   let visible = false;
   let threads = [];
+  let groups = [];
   let loaded = false;
   let counts = { unread: 0, requests: 0 };
   let showRequests = false;
-  let cur = null;             // the open conversation
+  let cur = null;             // the open conversation: { kind: 'dm' | 'group', id, … }
   let msgs = new Map();
   let since = 0;
   let theirRead = 0;
@@ -5335,7 +6080,10 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   let timer = 0;
   let busy = false;
   let searchTimer = 0;
+  let typingSent = 0;         // when we last told the server we're typing
+  let recording = null;       // an active voice recording
 
+  const isGroup = () => cur?.kind === 'group';
   const view = (name) => { inbox.hidden = name !== 'inbox'; convo.hidden = name !== 'convo'; guest.hidden = name !== 'guest'; };
   const storyOf = (s) => ({ key: s.key, title: s.title, url: s.url, source: s.source, cat: s.cat, image: s.image, domain: s.domain, time: s.time });
 
@@ -5349,30 +6097,46 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   // ---------------- inbox ----------------
   const lastText = (th) => {
     if (!th.last) return '';
-    const body = th.last.deleted ? t('Message deleted') : th.last.duel ? `⚔️ ${t('Quiz Duel challenge')}` : th.last.story && !th.last.text ? `📰 ${t('Shared a story')}` : th.last.text;
-    return th.last.mine ? `${t('You')}: ${body}` : body;
+    const l = th.last;
+    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    return l.mine ? `${t('You')}: ${body}` : body;
+  };
+  const groupLast = (g) => {
+    const l = g.last;
+    if (!l) return tn(g.members, '{n} member', '{n} members');
+    if (l.kind === 'system') return systemText(l.text);
+    const body = l.deleted ? t('Message deleted') : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    return `${l.mine ? t('You') : `@${l.from}`}: ${body}`;
   };
   const threadRow = (th) => `<button type="button" class="dm-row${th.unread ? ' unread' : ''}" data-thread="${th.id}">
     ${lookHTML(th.other, { active: th.other.active })}
     <span class="dm-row-text"><b dir="auto">${esc(th.other.nickname)}</b><span class="dm-last" dir="auto">${esc(lastText(th))}</span></span>
     <span class="dm-meta"><time>${timeAgo(th.lastAt)}</time>${th.unread ? `<span class="dm-unread">${th.unread > 9 ? '9+' : th.unread}</span>` : th.streak >= 2 ? `<span class="dm-streak">🔥${th.streak}</span>` : th.pending && th.last?.mine ? `<small>${t('Request sent')}</small>` : ''}</span>
   </button>`;
+  const groupRow = (g) => `<button type="button" class="dm-row${g.unread && !g.muted ? ' unread' : ''}" data-group="${g.id}">
+    ${groupAvatarHTML(g)}
+    <span class="dm-row-text"><b dir="auto">${esc(g.name)}</b><span class="dm-last" dir="auto">${esc(groupLast(g))}</span></span>
+    <span class="dm-meta"><time>${timeAgo(g.lastAt)}</time>${g.unread ? `<span class="dm-unread${g.muted ? ' muted' : ''}">${g.unread > 9 ? '9+' : g.unread}</span>` : g.muted ? `<small title="${esc(t('Muted'))}">🔕</small>` : ''}</span>
+  </button>`;
 
   function renderInbox() {
     if (!auth.user) return view('guest');
     view('inbox');
+    $('#dmPops').hidden = !!query || showRequests || !pops;
     const hint = $('#dmShareHint');
     hint.hidden = !share;
     if (share) hint.innerHTML = `<span>📰 ${t('Pick who to send “{title}” to', { title: esc(share.title.slice(0, 70)) })}</span><button type="button" class="icon-btn" data-dm="unshare" aria-label="${esc(t('Don’t share this story'))}">✕</button>`;
     if (query) {
-      list.innerHTML = results === null
+      const q = query.toLowerCase();
+      const gs = groups.filter((g) => g.name.toLowerCase().includes(q));
+      list.innerHTML = (gs.length ? gs.map(groupRow).join('') : '') + (results === null
         ? `<p class="muted small dm-note">${t('Looking…')}</p>`
-        : results.length ? results.map((p) => personHTML(p, { pick: 'data-dmto' })).join('') : `<p class="muted small dm-note">${t('No kernels found for “{q}”', { q: esc(query) })}</p>`;
+        : results.length ? results.map((p) => personHTML(p, { pick: 'data-dmto' })).join('') : gs.length ? '' : `<p class="muted small dm-note">${t('No kernels found for “{q}”', { q: esc(query) })}</p>`);
       return;
     }
     if (!loaded) { list.innerHTML = '<div class="chat-empty"><span class="spin">✉️</span></div>'; return; }
     const reqs = threads.filter((x) => x.request);
-    const main = threads.filter((x) => !x.request);
+    const main = [...threads.filter((x) => !x.request).map((x) => ({ at: x.lastAt, html: threadRow(x) })), ...groups.map((g) => ({ at: g.lastAt, html: groupRow(g) }))].sort((a, b) => b.at - a.at);
     let html = '';
     if (showRequests) {
       html += `<button type="button" class="dm-reqbar" data-dm="requests-close">‹ ${t('Message requests')}</button>
@@ -5380,9 +6144,9 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       html += reqs.length ? reqs.map(threadRow).join('') : `<p class="muted small dm-note">${t('No requests right now.')}</p>`;
     } else {
       if (reqs.length) html += `<button type="button" class="dm-reqbar" data-dm="requests">📨 ${tn(reqs.length, '{n} message request', '{n} message requests')} <span aria-hidden="true">›</span></button>`;
-      if (main.length) html += main.map(threadRow).join('');
+      if (main.length) html += main.map((x) => x.html).join('');
       else {
-        html += `<div class="chat-empty dm-empty"><span>✉️</span><p>${t('No messages yet. Search for someone to say hi 👋')}</p></div>`;
+        html += `<div class="chat-empty dm-empty"><span>✉️</span><p>${t('No messages yet. Search for someone to say hi 👋')}</p><button type="button" class="btn btn-ghost btn-sm" data-dm="new-group">👥 ${t('Start a group')}</button></div>`;
         if (suggestions?.length) html += `<p class="muted small dm-note">${t('Suggested for you')}</p>${suggestions.map((p) => personHTML(p, { pick: 'data-dmto' })).join('')}`;
         else if (suggestions === null) loadSuggestions();
       }
@@ -5401,6 +6165,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     try {
       const r = await auth.api('/api/dm');
       threads = r.threads;
+      groups = r.groups || [];
       counts = { unread: r.unread, requests: r.requests };
       loaded = true;
       paintBadge();
@@ -5433,65 +6198,136 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     return `<button type="button" class="dm-story" data-dstory="${id}">${pic}<span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}</small></span></button>`;
   };
   const duelCardHTML = (m) => `<button type="button" class="dm-duel" data-dduel="${m.duel}"><span class="dm-duel-icon" aria-hidden="true">⚔️</span><span><b>${m.mine ? t('You sent a Quiz Duel challenge') : t('Quiz Duel challenge!')}</b><small>${t('5 questions from today’s news · tap to play')}</small></span></button>`;
-  const msgHTML = (m) => `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}">
-      <div class="dm-bubble${m.deleted ? ' deleted' : ''}${(m.story || m.duel) && !m.text ? ' only-story' : ''}" dir="auto">${m.deleted ? `<i>${t('Message deleted')}</i>` : `${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`}</div>
-      ${m.myReact || m.theirReact ? `<span class="dm-reacts">${esc([m.theirReact, m.myReact].filter(Boolean).join(''))}</span>` : ''}
-      ${m.deleted ? '' : `<div class="dm-actions glass">${REACTS.map((e) => `<button type="button" data-dreact="${e}" aria-pressed="${m.myReact === e}">${e}</button>`).join('')}${m.mine ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>` : ''}</div>`}
+  const popReplyHTML = (p, mine) => {
+    const thumb = p.kind === 'photo' && p.photo
+      ? `<img src="${esc(`${auth.apiBase}/api/pops/photo/${encodeURIComponent(p.photo)}`)}" alt="" loading="lazy" onerror="this.remove()">`
+      : p.kind === 'story' ? '<span aria-hidden="true">📰</span>' : `<span dir="auto">${esc(p.text.slice(0, 24))}</span>`;
+    return `<span class="dm-popreply"><span class="dm-popthumb pop-bg-${(Number(p.bg) || 0) % 8}">${thumb}</span><small>🫧 ${mine ? t('You replied to their pop') : t('Replied to your pop')}${p.story ? `<br><span dir="auto">${esc(p.story.slice(0, 60))}</span>` : ''}</small></span>`;
+  };
+  const bubbleInner = (m) => {
+    if (m.deleted) return `<i>${t('Message deleted')}</i>`;
+    if (m.hidden) return `<i>🚩 ${t('Hidden after reports')}</i>`;
+    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`;
+  };
+  const reactsHTML = (m) => {
+    if (isGroup()) {
+      const e = Object.entries(m.reacts || {});
+      return e.length ? `<span class="dm-reacts">${e.map(([k, n]) => `${esc(k)}${n > 1 ? `<small>${n}</small>` : ''}`).join('')}</span>` : '';
+    }
+    return m.myReact || m.theirReact ? `<span class="dm-reacts">${esc([m.theirReact, m.myReact].filter(Boolean).join(''))}</span>` : '';
+  };
+  const msgHTML = (m, from = '') => {
+    if (m.kind === 'system') return `<div class="dm-sys" dir="auto">${esc(systemText(m.system))}</div>`;
+    const gone = m.deleted || m.hidden;
+    const card = (m.story || m.duel) && !m.text && !m.voice;
+    const actions = m.mine
+      ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
+      : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
+    return `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}">${from}
+      <div class="dm-bubble${gone ? ' deleted' : ''}${card ? ' only-story' : ''}${m.voice && !m.text && !gone ? ' only-voice' : ''}" dir="auto">${bubbleInner(m)}</div>
+      ${reactsHTML(m)}
+      ${gone ? '' : `<div class="dm-actions glass">${REACTS.map((e) => `<button type="button" data-dreact="${e}" aria-pressed="${m.myReact === e}">${e}</button>`).join('')}${actions}</div>`}
     </div>`;
+  };
+
+  function headerHTML() {
+    if (isGroup()) {
+      const g = cur.group;
+      const faces = cur.members.filter((m) => !m.me).slice(0, 2);
+      const typing = cur.typing?.length
+        ? (cur.typing.length === 1 ? t('{name} is typing…', { name: cur.typing[0].nickname }) : t('{n} people are typing…', { n: cur.typing.length }))
+        : cur.members.length ? tn(cur.members.length, '{n} member', '{n} members') : '';
+      return `${groupAvatarHTML({ ...g, faces })}<span><b dir="auto">${esc(g.name)}${g.muted ? ' 🔕' : ''}</b><small class="${cur.typing?.length ? 'is-typing' : ''}">${esc(typing)}</small></span>`;
+    }
+    const o = cur.other;
+    return `${lookHTML(o, { active: o.active })}<span><b dir="auto">${esc(o.nickname)}</b><small class="${cur.typing ? 'is-typing' : ''}">${esc(cur.typing ? t('typing…') : activeText(o) || `@${o.username}`)}</small></span>`;
+  }
 
   function renderConvo(scrollToEnd = false) {
     if (!cur) return;
-    const o = cur.other;
     const who = $('#dmWho');
-    who.dataset.user = o.username;
-    who.innerHTML = `${lookHTML(o, { active: o.active })}<span><b dir="auto">${esc(o.nickname)}</b><small>${esc(activeText(o) || `@${o.username}`)}</small></span>`;
-    $('#dmDuelBtn').hidden = !!(cur.blocked || cur.blockedMe || cur.request || (!cur.id && cur.canMessage === false));
+    who.innerHTML = headerHTML();
+    if (isGroup()) { delete who.dataset.user; who.dataset.dm = 'group-info'; who.title = t('Group info'); } else { who.dataset.user = cur.other.username; delete who.dataset.dm; who.title = ''; }
+    $('#dmDuelBtn').hidden = isGroup() || !!(cur.blocked || cur.blockedMe || cur.request || (!cur.id && cur.canMessage === false));
     const st = $('#dmStreak');
-    st.hidden = !(cur.streak >= 1);
-    st.textContent = `🔥${cur.streak}`;
-    st.title = t('{n}-day message streak — message each other every day to keep it going!', { n: cur.streak });
+    st.hidden = isGroup() || !(cur.streak >= 1);
+    st.textContent = `🔥${cur.streak || 0}`;
+    st.title = t('{n}-day message streak — message each other every day to keep it going!', { n: cur.streak || 0 });
     const near = log.scrollHeight - log.scrollTop - log.clientHeight < 90;
     const sorted = [...msgs.values()].sort((a, b) => a.id - b.id);
-    const lastMine = [...sorted].reverse().find((m) => m.mine && !m.deleted);
+    const lastMine = [...sorted].reverse().find((m) => m.mine && !m.deleted && m.kind !== 'system');
     let html = '';
     let prev = null;
     for (const m of sorted) {
       if (!prev || new Date(prev.created).toDateString() !== new Date(m.created).toDateString() || m.created - prev.created > 3600e3) html += `<div class="dm-time">${esc(fmtWhen(m.created))}</div>`;
-      html += msgHTML(m);
-      if (m === lastMine && cur.id) html += `<div class="dm-status">${m.id <= theirRead ? `${t('Seen')} ✓✓` : t('Sent')}</div>`;
+      let from = '';
+      if (isGroup() && !m.mine && m.kind !== 'system' && (prev?.from !== m.from || prev?.kind === 'system' || m.created - prev.created > 3600e3)) {
+        const a = cur.authors[m.from] || cur.members.find((x) => x.username === m.from) || { username: m.from, nickname: m.from };
+        from = `<button type="button" class="dm-from" data-user="${esc(m.from || '')}">${lookHTML(a)}<b dir="auto">${esc(a.nickname)}</b></button>`;
+      }
+      html += msgHTML(m, from);
+      if (m === lastMine && cur.id) html += `<div class="dm-status">${seenText(m)}</div>`;
       prev = m;
     }
     if (!sorted.length) {
-      html = `<div class="dm-hello">${lookHTML(o, { cls: 'avatar-lg' })}<b dir="auto">${esc(o.nickname)}</b><small>@${esc(o.username)}</small>${o.bio ? `<p dir="auto">${esc(o.bio)}</p>` : ''}
-        <button type="button" class="btn btn-ghost btn-sm" data-user="${esc(o.username)}">${t('View profile')}</button></div>`;
+      if (isGroup()) html = `<div class="dm-hello">${groupAvatarHTML({ ...cur.group, faces: [] }, { cls: 'gav-lg' })}<b dir="auto">${esc(cur.group.name)}</b><p>${t('Say hi to the group 👋')}</p></div>`;
+      else {
+        const o = cur.other;
+        html = `<div class="dm-hello">${lookHTML(o, { cls: 'avatar-lg' })}<b dir="auto">${esc(o.nickname)}</b><small>@${esc(o.username)}</small>${o.bio ? `<p dir="auto">${esc(o.bio)}</p>` : ''}
+          <button type="button" class="btn btn-ghost btn-sm" data-user="${esc(o.username)}">${t('View profile')}</button></div>`;
+      }
     }
+    const typers = isGroup() ? cur.typing || [] : cur.typing ? [cur.other] : [];
+    if (typers.length) html += `<div class="dmsg dm-typing-row" aria-label="${esc(t('typing…'))}">${isGroup() ? lookHTML(typers[0]) : ''}<div class="dm-bubble dm-typing"><i></i><i></i><i></i></div></div>`;
     log.innerHTML = html;
     if (scrollToEnd || near) log.scrollTop = log.scrollHeight;
     paintComposer();
   }
 
+  function seenText(m) {
+    if (!isGroup()) return m.id <= theirRead ? `${t('Seen')} ✓✓` : t('Sent');
+    const others = cur.members.filter((x) => !x.me);
+    const seen = others.filter((x) => x.readId >= m.id);
+    if (!seen.length) return t('Sent');
+    if (seen.length === others.length) return `${t('Seen by everyone')} ✓✓`;
+    return `${t('Seen by {names}', { names: seen.slice(0, 3).map((x) => x.nickname).join(', ') + (seen.length > 3 ? ` +${seen.length - 3}` : '') })} ✓✓`;
+  }
+
   function paintComposer() {
     const b = $('#dmBanner');
-    const name = esc(cur.other.username);
     let html = '';
     let canType = true;
-    if (cur.blocked) { html = `<p>${t('You blocked @{name}.', { name })}</p><div class="dm-banner-btns"><button type="button" class="btn btn-sm btn-ghost" data-dm="unblock">${t('Unblock')}</button></div>`; canType = false; }
-    else if (cur.blockedMe) { html = `<p>${t('You can’t reply to this conversation.')}</p>`; canType = false; }
-    else if (cur.request) {
-      html = `<p>${t('@{name} wants to message you. They won’t know you’ve seen it until you accept.', { name })}</p>
-        <div class="dm-banner-btns"><button type="button" class="btn btn-sm btn-primary" data-dm="accept">${t('Accept')}</button><button type="button" class="btn btn-sm btn-ghost" data-dm="delete-chat">${t('Delete')}</button><button type="button" class="btn btn-sm btn-ghost" data-dm="block">${t('Block')}</button></div>`;
-      canType = false;
-    } else if (!cur.id && cur.canMessage === false) { html = `<p>${t('@{name} isn’t taking messages from you right now.', { name })}</p>`; canType = false; }
-    else if (cur.id && cur.pending) html = `<p class="small">${t('Message request sent. You can send up to 3 messages until @{name} accepts.', { name })}</p>`;
+    if (!isGroup()) {
+      const name = esc(cur.other.username);
+      if (cur.blocked) { html = `<p>${t('You blocked @{name}.', { name })}</p><div class="dm-banner-btns"><button type="button" class="btn btn-sm btn-ghost" data-dm="unblock">${t('Unblock')}</button></div>`; canType = false; }
+      else if (cur.blockedMe) { html = `<p>${t('You can’t reply to this conversation.')}</p>`; canType = false; }
+      else if (cur.request) {
+        html = `<p>${t('@{name} wants to message you. They won’t know you’ve seen it until you accept.', { name })}</p>
+          <div class="dm-banner-btns"><button type="button" class="btn btn-sm btn-primary" data-dm="accept">${t('Accept')}</button><button type="button" class="btn btn-sm btn-ghost" data-dm="delete-chat">${t('Delete')}</button><button type="button" class="btn btn-sm btn-ghost" data-dm="block">${t('Block')}</button></div>`;
+        canType = false;
+      } else if (!cur.id && cur.canMessage === false) { html = `<p>${t('@{name} isn’t taking messages from you right now.', { name })}</p>`; canType = false; }
+      else if (cur.id && cur.pending) html = `<p class="small">${t('Message request sent. You can send up to 3 messages until @{name} accepts.', { name })}</p>`;
+    }
     b.innerHTML = html;
     b.hidden = !html;
-    form.hidden = !canType;
+    form.hidden = !canType || !!recording;
+    recBar.hidden = !recording || !canType;
+    form.classList.toggle('has-text', !!input.value.trim() || !!share);
+    $('.dm-mic', form).hidden = !canRecord();
     const sh = $('#dmShare');
     sh.hidden = !(share && canType);
     if (share && canType) sh.innerHTML = `${storyHTML(share, 'pending')}<button type="button" class="icon-btn" data-dm="unshare" aria-label="${esc(t('Don’t share this story'))}">✕</button>`;
   }
 
   function paintMenu() {
+    if (isGroup()) {
+      $('#dmMenu').innerHTML = `
+        <button type="button" role="menuitem" data-dm="group-info">👥 ${t('Group info')}</button>
+        <button type="button" role="menuitem" data-dm="group-add">➕ ${t('Add people')}</button>
+        <button type="button" role="menuitem" data-dm="${cur.group.muted ? 'group-unmute' : 'group-mute'}">${cur.group.muted ? `🔔 ${t('Unmute')}` : `🔕 ${t('Mute notifications')}`}</button>
+        <button type="button" role="menuitem" data-dm="group-leave">🚪 ${t('Leave group')}</button>`;
+      return;
+    }
     const o = cur.other;
     $('#dmMenu').innerHTML = `
       <button type="button" role="menuitem" data-user="${esc(o.username)}">👤 ${t('View profile')}</button>
@@ -5503,39 +6339,58 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if (!cur?.id || busy) return;
     busy = true;
     const id = cur.id;
+    const kind = cur.kind;
     try {
-      const r = await auth.api(`/api/dm/${id}?since=${fresh ? 0 : since}`);
-      if (!cur || cur.id !== id) return;
+      const r = await auth.api(`${kind === 'group' ? '/api/groups' : '/api/dm'}/${id}?since=${fresh ? 0 : since}`);
+      if (!cur || cur.id !== id || cur.kind !== kind) return;
       if (fresh) msgs = new Map();
       let incoming = 0;
-      for (const m of r.messages) { if (!fresh && !msgs.has(m.id) && !m.mine) incoming++; msgs.set(m.id, m); }
+      for (const m of r.messages) { if (!fresh && !msgs.has(m.id) && !m.mine && m.kind !== 'system') incoming++; msgs.set(m.id, m); }
       since = r.now;
-      theirRead = r.theirRead;
-      cur = { ...cur, ...r.thread };
+      if (kind === 'group') cur = { ...cur, group: { ...cur.group, ...r.group }, members: r.members, authors: { ...cur.authors, ...r.authors }, typing: r.typing };
+      else { theirRead = r.theirRead; cur = { ...cur, ...r.thread, typing: !!r.typing }; }
       renderConvo(fresh);
       if (incoming) sfx.blip();
       if (r.messages.length && !cur.request) { // reading clears the badge
-        const th = threads.find((x) => x.id === id);
-        if (th?.unread) { counts.unread = Math.max(0, counts.unread - th.unread); th.unread = 0; paintBadge(); }
+        const row = kind === 'group' ? groups.find((x) => x.id === id) : threads.find((x) => x.id === id);
+        if (row?.unread) { if (!row.muted) counts.unread = Math.max(0, counts.unread - row.unread); row.unread = 0; paintBadge(); }
       }
     } catch (e) {
       if (e.status === 404) { cur = null; renderInbox(); loadThreads(); }
     } finally { busy = false; }
   }
 
-  function openThread(id, other = null) {
-    const th = threads.find((x) => x.id === id);
-    cur = { id, other: other || th?.other, streak: th?.streak || 0, request: !!th?.request, pending: !!th?.pending, blocked: false, blockedMe: false };
+  function startConvo(next) {
+    cancelRecording();
+    stopVoice();
+    cur = next;
     msgs = new Map();
     since = 0;
     theirRead = 0;
     selected = 0;
+    typingSent = 0;
     view('convo');
+  }
+
+  function openThread(id, other = null) {
+    const th = threads.find((x) => x.id === id);
+    startConvo({ kind: 'dm', id, other: other || th?.other, streak: th?.streak || 0, request: !!th?.request, pending: !!th?.pending, blocked: false, blockedMe: false, typing: false });
     log.innerHTML = '<div class="chat-empty"><span class="spin">✉️</span></div>';
     paintComposer();
     pollConvo({ fresh: true });
     schedule();
     if (!cur.request) setTimeout(() => input.focus({ preventScroll: true }), 120);
+  }
+
+  function openGroup(id) {
+    const g = groups.find((x) => x.id === id);
+    startConvo({ kind: 'group', id, group: g ? { id, name: g.name, emoji: g.emoji, muted: g.muted } : { id, name: '…', emoji: '👥', muted: false }, members: [], authors: {}, typing: [] });
+    log.innerHTML = '<div class="chat-empty"><span class="spin">👥</span></div>';
+    renderConvo(true);
+    log.innerHTML = '<div class="chat-empty"><span class="spin">👥</span></div>';
+    pollConvo({ fresh: true });
+    schedule();
+    setTimeout(() => input.focus({ preventScroll: true }), 120);
   }
 
   async function openWith(username, person = null) {
@@ -5550,19 +6405,48 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       try { other = { ...(other || {}), ...(await auth.api(`/api/users/${encodeURIComponent(username)}`)) }; } catch (e) { toast(tServer(e.message), { emoji: '🤷' }); return; }
     }
     if (other.me) return;
-    cur = { id: null, other, streak: 0, request: false, pending: false, blocked: !!other.blocked, blockedMe: false, canMessage: other.canMessage !== false };
-    msgs = new Map();
-    since = 0;
-    theirRead = 0;
-    view('convo');
+    startConvo({ kind: 'dm', id: null, other, streak: 0, request: false, pending: false, blocked: !!other.blocked, blockedMe: false, canMessage: other.canMessage !== false, typing: false });
     renderConvo(true);
     if (cur.canMessage) setTimeout(() => input.focus({ preventScroll: true }), 120);
   }
 
   function back() {
+    cancelRecording();
+    stopVoice();
+    if (cur?.id && typingSent) sendTyping(false);
     cur = null;
     $('#dmMenu').hidden = true;
     renderInbox();
+    loadThreads();
+    schedule();
+  }
+
+  /** Send a message (text and/or a shared story, or a voice note) to the open chat. */
+  async function send(extra = {}) {
+    const text = extra.voice ? '' : input.value.trim();
+    const story = extra.voice ? null : share;
+    const before = cur.streak || 0;
+    const target = cur;
+    const payload = { text, storyKey: story?.key, ...extra };
+    let r;
+    if (isGroup()) r = await auth.api(`/api/groups/${cur.id}/messages`, { method: 'POST', body: payload });
+    else r = await auth.api('/api/dm', { method: 'POST', body: cur.id ? { thread: cur.id, ...payload } : { to: cur.other.username, ...payload } });
+    if (cur !== target) return;
+    if (!isGroup()) {
+      if (!cur.id) cur.id = r.thread;
+      cur.streak = r.streak;
+      cur.pending = r.pending;
+    }
+    msgs.set(r.message.id, r.message);
+    typingSent = 0;
+    if (!extra.voice) { input.value = ''; share = null; }
+    renderConvo(true);
+    sfx.pop();
+    if (!isGroup() && r.streak >= 2 && r.streak > before) {
+      toast(t('🔥 {n}-day streak with @{name}! Keep it going tomorrow.', { n: r.streak, name: cur.other.username }), { emoji: '🔥' });
+      burstFrom($('#dmStreak'), { emojis: ['🔥'], count: 12 });
+    }
+    onSent?.();
     loadThreads();
     schedule();
   }
@@ -5573,26 +6457,9 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if ((!text && !share) || !cur) return;
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
-    const before = cur.streak || 0;
     try {
-      const body = cur.id ? { thread: cur.id, text, storyKey: share?.key } : { to: cur.other.username, text, storyKey: share?.key };
-      const r = await auth.api('/api/dm', { method: 'POST', body });
-      if (!cur.id) cur.id = r.thread;
-      msgs.set(r.message.id, r.message);
-      cur.streak = r.streak;
-      cur.pending = r.pending;
-      input.value = '';
-      share = null;
-      renderConvo(true);
-      sfx.pop();
+      await send();
       burstFrom(btn, { emojis: ['✉️', '💬', '✨'], count: 6, spread: 50 });
-      if (r.streak >= 2 && r.streak > before) {
-        toast(t('🔥 {n}-day streak with @{name}! Keep it going tomorrow.', { n: r.streak, name: cur.other.username }), { emoji: '🔥' });
-        burstFrom($('#dmStreak'), { emojis: ['🔥'], count: 12 });
-      }
-      onSent?.();
-      loadThreads();
-      schedule();
     } catch (err) {
       toast(tServer(err.message), { emoji: err.status === 403 ? '🚫' : '😵', type: 'error', ms: 6000 });
       sfx.buzz();
@@ -5602,7 +6469,70 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     }
   });
 
+  // ---------------- ✍️ typing ----------------
+  function sendTyping(on) {
+    if (!cur?.id) return;
+    typingSent = on ? Date.now() : 0;
+    const body = isGroup() ? { group: cur.id, stop: !on } : { thread: cur.id, stop: !on };
+    auth.api(isGroup() ? '/api/groups/typing' : '/api/dm/typing', { method: 'POST', body }).catch(() => {});
+  }
+  input.addEventListener('input', () => {
+    form.classList.toggle('has-text', !!input.value.trim() || !!share);
+    if (!cur?.id) return;
+    if (input.value.trim()) { if (Date.now() - typingSent > TYPING_PING_MS) sendTyping(true); } else if (typingSent) sendTyping(false);
+  });
+  input.addEventListener('blur', () => { if (typingSent && Date.now() - typingSent < 6000 && !input.value.trim()) sendTyping(false); });
+
+  // ---------------- 🎙️ voice notes ----------------
+  const meter = $('#dmRecMeter');
+  async function startRecording() {
+    if (recording || !cur) return;
+    stopVoice();
+    meter.innerHTML = '';
+    $('#dmRecTime').textContent = `0:00 / ${clock(VOICE_MAX_MS)}`;
+    try {
+      recording = 'starting';
+      const r = await recordVoice({
+        onLevel: (lvl) => {
+          const bar = document.createElement('i');
+          bar.style.setProperty('--h', `${Math.max(10, Math.round(lvl * 100))}%`);
+          meter.append(bar);
+          while (meter.children.length > 40) meter.firstChild.remove();
+        },
+        onTick: (ms) => { $('#dmRecTime').textContent = `${clock(ms)} / ${clock(VOICE_MAX_MS)}`; },
+        onMax: () => finishRecording(true),
+      });
+      if (recording !== 'starting') { r.cancel(); return; } // cancelled while asking for the mic
+      recording = r;
+      sfx.blip();
+      paintComposer();
+    } catch (err) {
+      recording = null;
+      paintComposer();
+      toast(err.message, { emoji: '🎙️', ms: 5000 });
+    }
+  }
+  async function finishRecording(auto = false) {
+    const r = recording;
+    if (!r || r === 'starting') return;
+    recording = null;
+    paintComposer();
+    try {
+      const clip = await r.stop();
+      if (!clip) { toast(t('Hold on — say a bit more 🎙️'), { emoji: '🎙️' }); return; }
+      if (auto) toast(t('30 seconds max — sending it now 🎙️'), { emoji: '🎙️' });
+      await send(clip);
+    } catch (err) { toast(tServer(err.message), { emoji: '😵', type: 'error' }); sfx.buzz(); }
+  }
+  function cancelRecording() {
+    if (!recording) return;
+    if (recording !== 'starting') recording.cancel();
+    recording = null;
+    if (cur) paintComposer();
+  }
+
   async function act(what) {
+    if (isGroup()) return groupAct(what);
     const o = cur?.other;
     if (!o) return;
     try {
@@ -5641,15 +6571,45 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
   }
 
+  async function groupAct(what) {
+    const g = cur.group;
+    const hooks = { onChanged: () => pollConvo({ fresh: true }), onLeft: () => { groups = groups.filter((x) => x.id !== g.id); back(); } };
+    try {
+      if (what === 'group-info') groupTools.settings({ group: g, members: cur.members }, hooks);
+      else if (what === 'group-add') groupTools.addPeople({ group: g, members: cur.members }, hooks);
+      else if (what === 'group-mute' || what === 'group-unmute') {
+        const muted = what === 'group-mute';
+        await auth.api('/api/groups/mute', { method: 'POST', body: { group: g.id, muted } });
+        cur.group.muted = muted;
+        const row = groups.find((x) => x.id === g.id);
+        if (row) row.muted = muted;
+        renderConvo();
+        toast(muted ? t('Group muted 🔕') : t('Group unmuted 🔔'), { emoji: muted ? '🔕' : '🔔' });
+      } else if (what === 'group-leave') {
+        if (!confirm(t('Leave “{name}”? You won’t get its messages anymore.', { name: g.name }))) return;
+        await auth.api('/api/groups/remove', { method: 'POST', body: { group: g.id } });
+        toast(t('You left the group.'), { emoji: '🚪' });
+        hooks.onLeft();
+      }
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  }
+
   async function react(id, emoji) {
     const m = msgs.get(id);
-    if (!m) return;
+    if (!m || m.hidden) return;
     const next = m.myReact === emoji ? null : emoji;
-    msgs.set(id, { ...m, myReact: next });
+    const optimistic = { ...m, myReact: next };
+    if (isGroup()) {
+      const reacts = { ...(m.reacts || {}) };
+      if (m.myReact) { reacts[m.myReact] = (reacts[m.myReact] || 1) - 1; if (!reacts[m.myReact]) delete reacts[m.myReact]; }
+      if (next) reacts[next] = (reacts[next] || 0) + 1;
+      optimistic.reacts = reacts;
+    }
+    msgs.set(id, optimistic);
     selected = 0;
     renderConvo();
     try {
-      const r = await auth.api('/api/dm/react', { method: 'POST', body: { id, emoji: next } });
+      const r = await auth.api(isGroup() ? '/api/groups/react' : '/api/dm/react', { method: 'POST', body: { id, emoji: next } });
       msgs.set(id, r.message);
       renderConvo();
       if (next) { const el = log.querySelector(`[data-mid="${id}"] .dm-reacts`); if (el) burstFrom(el, { emojis: [next], count: 6, spread: 34 }); sfx.pop(); }
@@ -5663,6 +6623,8 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if (!el.closest('[data-dm="menu"]') && !menu.hidden && !el.closest('#dmMenu')) menu.hidden = true;
     const th = el.closest('[data-thread]');
     if (th) return openThread(Number(th.dataset.thread));
+    const gr = el.closest('[data-group]');
+    if (gr) return openGroup(Number(gr.dataset.group));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
     const dd = el.closest('[data-dduel]');
@@ -5679,23 +6641,39 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if (d) {
       const what = d.dataset.dm;
       if (what === 'back') return back();
+      if (what === 'new-group') return groupTools.create(async (id) => { query = ''; search.value = ''; await loadThreads(); openGroup(id); });
       if (what === 'duel') return challenge?.(cur.other.username, cur.other);
       if (what === 'menu') { paintMenu(); menu.hidden = !menu.hidden; return; }
       if (what === 'requests' || what === 'requests-close') { showRequests = what === 'requests'; return renderInbox(); }
       if (what === 'unshare') { share = null; return cur ? paintComposer() : renderInbox(); }
+      if (what === 'mic') return startRecording();
+      if (what === 'rec-cancel') return cancelRecording();
+      if (what === 'rec-send') return finishRecording();
       if (what === 'del-msg') {
         const id = Number(d.closest('[data-mid]').dataset.mid);
         if (!confirm(t('Delete this message for everyone?'))) return;
-        try { await auth.api(`/api/dm/messages/${id}`, { method: 'DELETE' }); msgs.set(id, { ...msgs.get(id), deleted: true, text: '', story: null }); selected = 0; renderConvo(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+        try {
+          await auth.api(isGroup() ? `/api/groups/messages/${id}` : `/api/dm/messages/${id}`, { method: 'DELETE' });
+          msgs.set(id, { ...msgs.get(id), deleted: true, text: '', story: null, voice: null, pop: null });
+          selected = 0;
+          renderConvo();
+        } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+        return;
+      }
+      if (what === 'report-msg') {
+        const id = Number(d.closest('[data-mid]').dataset.mid);
+        if (!confirm(t('Report this message for being mean, unsafe or spammy?'))) return;
+        try { await auth.api('/api/groups/report', { method: 'POST', body: { id } }); selected = 0; renderConvo(); toast(t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' }); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
         return;
       }
       menu.hidden = true;
       return act(what);
     }
     const bubble = el.closest('.dmsg');
-    if (bubble && !el.closest('.dm-actions')) {
+    if (bubble && !el.closest('.dm-actions') && !bubble.classList.contains('dm-typing-row')) {
       const id = Number(bubble.dataset.mid);
-      if (msgs.get(id)?.deleted) return;
+      const m = msgs.get(id);
+      if (!m || m.deleted || m.hidden) return;
       selected = selected === id ? 0 : id;
       $$('.dmsg.sel', log).forEach((x) => x.classList.remove('sel'));
       if (selected) bubble.classList.add('sel');
@@ -5703,7 +6681,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   });
   log.addEventListener('dblclick', (e) => { // double-tap a message to ❤️ it
     const bubble = e.target instanceof Element && e.target.closest('.dmsg');
-    if (bubble && !bubble.querySelector('.deleted')) { e.preventDefault(); react(Number(bubble.dataset.mid), '❤️'); }
+    if (bubble && bubble.dataset.mid && !bubble.querySelector('.deleted') && !e.target.closest('.vn')) { e.preventDefault(); react(Number(bubble.dataset.mid), '❤️'); }
   });
   input.addEventListener('keydown', (e) => { if (e.key === 'Escape' && cur) { e.stopPropagation(); back(); } });
 
@@ -5728,7 +6706,9 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   setTimeout(pollBadge, 3500);
 
   function reset() {
-    threads = []; loaded = false; counts = { unread: 0, requests: 0 }; cur = null; msgs = new Map(); share = null; suggestions = null; query = ''; search.value = '';
+    cancelRecording();
+    stopVoice();
+    threads = []; groups = []; loaded = false; counts = { unread: 0, requests: 0 }; cur = null; msgs = new Map(); share = null; suggestions = null; query = ''; search.value = '';
     paintBadge();
     if (visible) renderInbox();
   }
@@ -5739,11 +6719,16 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     show() {
       visible = true;
       if (!auth.user) { view('guest'); return; }
-      if (cur) { view('convo'); if (cur.id) pollConvo({ fresh: !msgs.size }); else renderConvo(true); } else { renderInbox(); loadThreads(); }
+      if (cur) { view('convo'); if (cur.id) pollConvo({ fresh: !msgs.size }); else renderConvo(true); } else { renderInbox(); loadThreads(); pops?.refresh(); }
       schedule();
     },
-    hide() { visible = false; clearTimeout(timer); $('#dmMenu').hidden = true; },
+    hide() { visible = false; clearTimeout(timer); $('#dmMenu').hidden = true; cancelRecording(); stopVoice(); },
     openWith,
+    async openGroup(id) {
+      if (!auth.user) { openAuth('signin'); return; }
+      if (!loaded) await loadThreads();
+      openGroup(Number(id));
+    },
     shareStory(item) {
       share = storyOf(item);
       if (cur && !cur.blocked && !cur.request) { view('convo'); paintComposer(); return; }
@@ -5751,12 +6736,495 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       renderInbox();
       setTimeout(() => search.focus({ preventScroll: true }), 150);
     },
-    inbox() { cur = null; showRequests = false; renderInbox(); loadThreads(); },
+    inbox() { if (cur) back(); showRequests = false; renderInbox(); loadThreads(); },
     refreshBadge: pollBadge,
   };
 }
 
 return { activeText, findPeople, personHTML, mountPeopleSearch, initDM };
+})();
+
+// ===== pops.js =====
+__m["pops"] = (() => {
+// 🫧 Pops: 24-hour posts for the people who follow you — a text card, a photo or a kerNEl story.
+// A row of rings at the top of Messages, a full-screen viewer (tap to skip, hold to pause), replies and reactions.
+const { $$, esc, timeAgo, toast, safeUrl } = __m["utils"];
+const { catById } = __m["news"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+
+const BACKGROUNDS = 8;
+const ROW_MS = 60_000;
+const PHOTO_SIDE = 1080;
+const PHOTO_BYTES = 430_000;
+
+const showMs = (p) => (p.kind === 'text' ? Math.min(10_000, 4500 + p.text.length * 35) : p.kind === 'story' ? 8000 : 6000);
+const photoSrc = (key) => `${auth.apiBase}/api/pops/photo/${encodeURIComponent(key)}`;
+const sizeClass = (s) => (s.length < 40 ? 'big' : s.length < 110 ? 'mid' : 'small');
+
+/** Shrink a picked photo to at most 1080 px on its long side and about 430 KB. */
+async function shrinkPhoto(file) {
+  if (!file || !/^image\//.test(file.type)) throw new Error(t('That photo didn’t work — try a JPG or PNG'));
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(t('That photo didn’t work — try a JPG or PNG'))); i.src = url; });
+    for (const [side, q] of [[PHOTO_SIDE, 0.82], [PHOTO_SIDE, 0.68], [860, 0.66], [700, 0.6]]) {
+      const k = Math.min(1, side / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k));
+      c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const g = c.getContext('2d');
+      g.fillStyle = '#000';
+      g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      const data = c.toDataURL('image/jpeg', q);
+      if ((data.length - 23) * 0.75 <= PHOTO_BYTES) return data;
+    }
+    throw new Error(t('That photo is too big'));
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function initPops({ openAuth, openStory, openProfile } = {}) {
+  let rings = [];
+  let reacts = ['🔥', '😂', '😮', '❤️', '👏', '🍿'];
+  let loaded = false;
+  let loadedAt = 0;
+  const rows = new Set();
+
+  // ---------------- the row of rings ----------------
+  const meLook = () => ({ ...auth.getProfile(), username: auth.user?.username });
+  function rowHTML() {
+    const mine = rings.find((r) => r.me);
+    const others = rings.filter((r) => !r.me);
+    const meItem = `<div class="pop-item pop-me">
+        <button type="button" class="pop-avatar" ${mine ? 'data-pop-ring="me"' : 'data-pop-new'} aria-label="${esc(mine ? t('See your pop') : t('Add a pop'))}">
+          <span class="pop-ring ${mine ? 'seen' : 'none'}">${lookHTML(mine ? mine.user : meLook())}</span></button>
+        <button type="button" class="pop-plus" data-pop-new aria-label="${esc(t('Add a pop'))}">+</button>
+        <small>${t('Your pop')}</small></div>`;
+    return `<div class="pops-strip" role="list">${meItem}${others.map((r) => `<div class="pop-item" role="listitem">
+        <button type="button" class="pop-avatar" data-pop-ring="${esc(r.user.username)}" aria-label="${esc(t('Pops from {name}', { name: r.user.nickname }))}${r.unseen ? ` (${esc(tn(r.unseen, '{n} new', '{n} new'))})` : ''}">
+          <span class="pop-ring ${r.unseen ? 'unseen' : 'seen'}">${lookHTML(r.user)}</span></button>
+        <small dir="auto">${esc(r.user.nickname)}</small></div>`).join('')}</div>`;
+  }
+  function paintRows() {
+    for (const el of rows) {
+      if (!el.isConnected) { rows.delete(el); continue; }
+      el.hidden = !auth.user;
+      if (auth.user) el.innerHTML = rowHTML();
+    }
+  }
+  async function load(force = false) {
+    if (!auth.user || (!force && Date.now() - loadedAt < 15_000)) { paintRows(); return; }
+    loadedAt = Date.now();
+    try {
+      const r = await auth.api('/api/pops');
+      rings = r.rings;
+      reacts = r.reacts || reacts;
+      loaded = true;
+    } catch { /* offline: keep what we had */ }
+    paintRows();
+  }
+  setInterval(() => { if (!document.hidden && [...rows].some((el) => el.isConnected && el.offsetParent)) load(true); }, ROW_MS);
+  auth.addEventListener('signin', () => { rings = []; loaded = false; load(true); });
+  auth.addEventListener('signout', () => { rings = []; loaded = false; paintRows(); });
+
+  function mountRow(el) {
+    rows.add(el);
+    el.classList.add('pops-row');
+    el.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target : null;
+      if (b?.closest('[data-pop-new]')) return compose();
+      const ring = b?.closest('[data-pop-ring]');
+      if (ring) {
+        const name = ring.dataset.popRing;
+        const i = rings.findIndex((r) => (name === 'me' ? r.me : r.user.username === name));
+        if (i >= 0) openViewer(rings, i);
+      }
+    });
+    paintRows();
+    if (!loaded) load(true);
+  }
+
+  // ---------------- the viewer ----------------
+  const V = document.createElement('dialog');
+  V.className = 'pop-viewer';
+  V.setAttribute('aria-label', t('Pops'));
+  V.innerHTML = `<div class="pv-stage">
+      <div class="pv-bars" aria-hidden="true"></div>
+      <header class="pv-head">
+        <button type="button" class="pv-who" data-pv="who"></button>
+        <span class="pv-spacer"></span>
+        <button type="button" class="pv-btn" data-pv="pause" aria-label="${esc(t('Pause'))}">❚❚</button>
+        <button type="button" class="pv-btn" data-pv="menu" aria-label="${esc(t('More options'))}" aria-haspopup="menu">⋯</button>
+        <button type="button" class="pv-btn" data-pv="close" aria-label="${esc(t('Close'))}">✕</button>
+        <div class="pv-menu glass" role="menu" hidden></div>
+      </header>
+      <div class="pv-body" data-pv-tap></div>
+      <footer class="pv-foot"></footer>
+      <div class="pv-sheet" hidden></div>
+    </div>`;
+  document.body.append(V);
+  const bars = V.querySelector('.pv-bars');
+  const body = V.querySelector('.pv-body');
+  const foot = V.querySelector('.pv-foot');
+  const who = V.querySelector('.pv-who');
+  const menu = V.querySelector('.pv-menu');
+  const sheet = V.querySelector('.pv-sheet');
+
+  let list = [];       // rings being shown
+  let ri = 0;          // ring index
+  let pi = 0;          // pop index in that ring
+  let started = 0;     // when the current pop started (minus paused time)
+  let pausedAt = 0;
+  let holds = 0;       // reasons to pause: typing, menu, sheet, holding
+  let raf = 0;
+  const reasons = new Set();
+
+  const ring = () => list[ri];
+  const pop = () => ring()?.pops[pi];
+  const pause = (why) => { if (!reasons.size) pausedAt = performance.now(); reasons.add(why); paintPause(); };
+  const resume = (why) => {
+    if (!reasons.delete(why)) return;
+    if (!reasons.size && pausedAt) { started += performance.now() - pausedAt; pausedAt = 0; }
+    paintPause();
+  };
+  const paintPause = () => { const b = V.querySelector('[data-pv="pause"]'); b.textContent = reasons.has('button') ? '▶' : '❚❚'; b.setAttribute('aria-label', reasons.has('button') ? t('Play') : t('Pause')); };
+
+  function tick() {
+    cancelAnimationFrame(raf);
+    if (!V.open) return;
+    const p = pop();
+    if (!p) return;
+    const now = reasons.size ? pausedAt : performance.now();
+    const k = Math.min(1, (now - started) / showMs(p));
+    const cur = bars.children[pi];
+    if (cur) cur.style.setProperty('--k', String(k));
+    if (k >= 1) { next(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function bodyHTML(p) {
+    if (p.kind === 'text') return `<div class="pv-text pop-bg-${p.bg % BACKGROUNDS}"><p dir="auto" class="${sizeClass(p.text)}">${esc(p.text).replace(/\n/g, '<br>')}</p></div>`;
+    if (p.kind === 'photo') {
+      return `<div class="pv-photo"><img src="${esc(photoSrc(p.photo))}" alt="" draggable="false" onerror="this.closest('.pv-photo').classList.add('gone')"><span class="pv-gone">🫧 ${t('That pop is gone')}</span>
+        ${p.text ? `<p class="pv-caption" dir="auto">${esc(p.text)}</p>` : ''}</div>`;
+    }
+    const s = p.story || {};
+    const c = catById(s.cat);
+    const pic = s.image && safeUrl(s.image) !== '#' ? `<img src="${esc(safeUrl(s.image))}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="pv-story-emoji" aria-hidden="true">${c.emoji}</span>`;
+    return `<div class="pv-storywrap pop-bg-${p.bg % BACKGROUNDS}">
+        ${p.text ? `<p class="pv-say" dir="auto">${esc(p.text)}</p>` : ''}
+        <button type="button" class="pv-story" data-pv="read">${pic}<span><small>${c.emoji} ${esc(t(c.label))}</small><b dir="auto">${esc(s.title || '')}</b><small>${esc(s.source || s.domain || '')}</small><span class="pv-read">${t('Read the story')} ›</span></span></button>
+      </div>`;
+  }
+
+  function footHTML(r, p) {
+    if (r.me) {
+      return `<button type="button" class="pv-chip" data-pv="viewers">👁 ${tn(p.views || 0, '{n} view', '{n} views')}</button>
+        ${p.hidden ? `<span class="pv-chip warn">🚩 ${t('Hidden after reports')}</span>` : ''}
+        <span class="pv-spacer"></span>
+        <button type="button" class="pv-chip" data-pv="add">＋ ${t('Add')}</button>
+        <button type="button" class="pv-chip" data-pv="delete" aria-label="${esc(t('Delete pop'))}">🗑️</button>`;
+    }
+    return `<form class="pv-reply" data-pv-reply><input maxlength="500" autocomplete="off" enterkeyhint="send" placeholder="${esc(t('Reply to @{name}…', { name: r.user.username }))}" aria-label="${esc(t('Reply'))}"><button type="submit" aria-label="${esc(t('Send'))}">➤</button></form>
+      <div class="pv-reacts">${reacts.map((e) => `<button type="button" data-pv-react="${e}" aria-pressed="${p.myReact === e}">${e}</button>`).join('')}</div>`;
+  }
+
+  function show() {
+    const r = ring();
+    const p = pop();
+    if (!r || !p) { close(); return; }
+    menu.hidden = true;
+    sheet.hidden = true;
+    reasons.delete('menu');
+    reasons.delete('sheet');
+    reasons.delete('typing');
+    reasons.delete('hold');
+    bars.innerHTML = r.pops.map((x, i) => `<span style="--k:${i < pi ? 1 : 0}"></span>`).join('');
+    who.innerHTML = `${lookHTML(r.user)}<span><b dir="auto">${esc(r.me ? t('Your pop') : r.user.nickname)}</b><small>${esc(timeAgo(p.created))}</small></span>`;
+    who.dataset.user = r.user.username;
+    body.innerHTML = bodyHTML(p);
+    foot.innerHTML = footHTML(r, p);
+    // preload the next photo
+    const nx = r.pops[pi + 1] || list[ri + 1]?.pops[0];
+    if (nx?.photo) { const i = new Image(); i.src = photoSrc(nx.photo); }
+    started = performance.now();
+    pausedAt = reasons.size ? started : 0;
+    if (!r.me && !p.seen) {
+      p.seen = true;
+      r.unseen = Math.max(0, (r.unseen || 0) - 1);
+      auth.api('/api/pops/view', { method: 'POST', body: { id: p.id } }).catch(() => {});
+      paintRows();
+    }
+    tick();
+  }
+
+  function next() {
+    const r = ring();
+    if (r && pi < r.pops.length - 1) { pi++; show(); return; }
+    if (ri < list.length - 1) { ri++; pi = firstUnseen(ring()); show(); return; }
+    close();
+  }
+  function prev() {
+    if (pi > 0) { pi--; show(); return; }
+    if (ri > 0) { ri--; pi = 0; show(); return; }
+    started = performance.now();
+    if (reasons.size) pausedAt = started;
+  }
+  const firstUnseen = (r) => { const i = r.pops.findIndex((p) => !p.seen); return i < 0 ? 0 : i; };
+
+  function openViewer(fromList, index) {
+    list = fromList;
+    ri = index;
+    pi = firstUnseen(ring());
+    reasons.clear();
+    if (!V.open) V.showModal();
+    sfx.blip();
+    show();
+  }
+  function close() {
+    cancelAnimationFrame(raf);
+    if (V.open) V.close();
+    paintRows();
+  }
+  V.addEventListener('close', () => { cancelAnimationFrame(raf); reasons.clear(); });
+  V.addEventListener('keydown', (e) => {
+    if (e.target instanceof HTMLInputElement) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    if (e.key === 'ArrowRight') { e.preventDefault(); (rtl ? prev : next)(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); (rtl ? next : prev)(); }
+    if (e.key === ' ') { e.preventDefault(); if (reasons.has('button')) resume('button'); else pause('button'); }
+  });
+
+  // tap the left third to go back, anywhere else to go on; press and hold to pause
+  let downAt = 0;
+  body.addEventListener('pointerdown', (e) => {
+    if (e.target instanceof Element && e.target.closest('[data-pv="read"]')) return;
+    downAt = performance.now();
+    pause('hold');
+  });
+  const release = (e) => {
+    if (!downAt) return;
+    const held = performance.now() - downAt;
+    downAt = 0;
+    resume('hold');
+    if (held > 280 || e.type === 'pointercancel') return;
+    const box = V.querySelector('.pv-stage').getBoundingClientRect();
+    const x = (e.clientX - box.left) / (box.width || 1);
+    const rtl = document.documentElement.dir === 'rtl';
+    const back = rtl ? x > 2 / 3 : x < 1 / 3;
+    if (back) prev(); else next();
+  };
+  body.addEventListener('pointerup', release);
+  body.addEventListener('pointercancel', release);
+  body.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  foot.addEventListener('focusin', () => pause('typing'));
+  foot.addEventListener('focusout', () => setTimeout(() => { if (!foot.contains(document.activeElement)) resume('typing'); }, 0));
+  foot.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = foot.querySelector('input');
+    const text = input.value.trim();
+    const r = ring();
+    const p = pop();
+    if (!text || !r || !p) return;
+    input.disabled = true;
+    try {
+      await auth.api('/api/dm', { method: 'POST', body: { to: r.user.username, text, pop: p.id } });
+      input.value = '';
+      toast(t('Reply sent to @{name} ✉️', { name: r.user.username }), { emoji: '✉️' });
+      sfx.pop();
+      input.blur();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    input.disabled = false;
+  });
+
+  async function react(emoji, btn) {
+    const p = pop();
+    if (!p) return;
+    const nextReact = p.myReact === emoji ? null : emoji;
+    p.myReact = nextReact;
+    $$('[data-pv-react]', foot).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pvReact === nextReact)));
+    if (nextReact) { burstFrom(btn, { emojis: [emoji], count: 10, spread: 70 }); sfx.pop(); }
+    try { await auth.api('/api/pops/view', { method: 'POST', body: { id: p.id, react: nextReact } }); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  }
+
+  async function showViewers() {
+    const p = pop();
+    if (!p) return;
+    pause('sheet');
+    sheet.hidden = false;
+    sheet.innerHTML = `<div class="pv-sheet-head"><b>👁 ${t('Seen by')}</b><button type="button" class="pv-btn" data-pv="sheet-close" aria-label="${esc(t('Close'))}">✕</button></div><div class="pv-sheet-list"><div class="chat-empty"><span class="spin">🫧</span></div></div>`;
+    try {
+      const r = await auth.api(`/api/pops/${p.id}/viewers`);
+      const box = sheet.querySelector('.pv-sheet-list');
+      if (!box) return;
+      box.innerHTML = r.viewers.length
+        ? r.viewers.map((v) => `<button type="button" class="pv-viewer" data-pv-user="${esc(v.username)}">${lookHTML(v)}<span><b dir="auto">${esc(v.nickname)}</b><small>@${esc(v.username)} · ${esc(timeAgo(v.at))}</small></span>${v.react ? `<span class="pv-viewer-react">${esc(v.react)}</span>` : ''}</button>`).join('')
+        : `<p class="muted small">${t('Nobody yet — your followers will see it soon 🍿')}</p>`;
+    } catch (err) { sheet.querySelector('.pv-sheet-list').innerHTML = `<p class="muted small">😵 ${esc(tServer(err.message))}</p>`; }
+  }
+
+  V.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el === V) { close(); return; } // the backdrop
+    if (!el.closest('[data-pv="menu"]') && !menu.hidden && !el.closest('.pv-menu')) { menu.hidden = true; resume('menu'); }
+    const rb = el.closest('[data-pv-react]');
+    if (rb) return react(rb.dataset.pvReact, rb);
+    const vu = el.closest('[data-pv-user]');
+    if (vu) { close(); openProfile?.(vu.dataset.pvUser); return; }
+    const b = el.closest('[data-pv]');
+    if (!b) return;
+    const what = b.dataset.pv;
+    const r = ring();
+    const p = pop();
+    if (what === 'close') return close();
+    if (what === 'pause') { if (reasons.has('button')) resume('button'); else pause('button'); return; }
+    if (what === 'who') { close(); openProfile?.(r.user.username); return; }
+    if (what === 'read') { close(); openStory?.(p.story); return; }
+    if (what === 'viewers') return showViewers();
+    if (what === 'sheet-close') { sheet.hidden = true; resume('sheet'); return; }
+    if (what === 'add') { close(); compose(); return; }
+    if (what === 'menu') {
+      menu.innerHTML = r.me
+        ? `<button type="button" role="menuitem" data-pv="delete">🗑️ ${t('Delete pop')}</button>`
+        : `<button type="button" role="menuitem" data-pv="profile">👤 ${t('View profile')}</button><button type="button" role="menuitem" data-pv="report">🚩 ${t('Report pop')}</button>`;
+      menu.hidden = !menu.hidden;
+      if (menu.hidden) resume('menu'); else pause('menu');
+      return;
+    }
+    menu.hidden = true;
+    resume('menu');
+    if (what === 'profile') { close(); openProfile?.(r.user.username); return; }
+    if (what === 'delete') {
+      pause('confirm');
+      const yes = confirm(t('Delete this pop?'));
+      resume('confirm');
+      if (!yes) return;
+      try {
+        await auth.api(`/api/pops/${p.id}`, { method: 'DELETE' });
+        r.pops.splice(pi, 1);
+        if (!r.pops.length) { rings = rings.filter((x) => x !== r); list = list.filter((x) => x !== r); close(); load(true); return; }
+        pi = Math.min(pi, r.pops.length - 1);
+        show();
+        toast(t('Pop deleted.'), { emoji: '🗑️' });
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    if (what === 'report') {
+      pause('confirm');
+      const yes = confirm(t('Report this pop for being mean, unsafe or spammy?'));
+      resume('confirm');
+      if (!yes) return;
+      try { await auth.api('/api/pops/report', { method: 'POST', body: { id: p.id } }); toast(t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' }); next(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    }
+  });
+
+  // ---------------- the composer ----------------
+  const C = document.createElement('dialog');
+  C.className = 'modal pop-compose';
+  C.innerHTML = `<button type="button" class="modal-x" data-pc="close" aria-label="${esc(t('Close'))}">✕</button>
+    <h2>🫧 ${t('New pop')}</h2>
+    <div class="seg pc-seg" role="tablist"><button type="button" role="tab" data-pc-mode="text">Aa ${t('Text')}</button><button type="button" role="tab" data-pc-mode="photo">📷 ${t('Photo')}</button></div>
+    <div class="pc-preview"></div>
+    <div class="pc-bgs" role="radiogroup" aria-label="${esc(t('Background'))}">${Array.from({ length: BACKGROUNDS }, (_, i) => `<button type="button" role="radio" class="pop-bg-${i}" data-pc-bg="${i}" aria-label="${esc(t('Background {n}', { n: i + 1 }))}"></button>`).join('')}</div>
+    <input type="file" accept="image/*" hidden data-pc-file>
+    <p class="muted small pc-note">👯 ${t('The people who follow you can see it for 24 hours.')}</p>
+    <button type="button" class="btn btn-primary btn-block" data-pc="post">🫧 ${t('Share pop')}</button>`;
+  document.body.append(C);
+  const preview = C.querySelector('.pc-preview');
+  const fileIn = C.querySelector('[data-pc-file]');
+  let draft = { kind: 'text', text: '', bg: 0, photo: null, story: null };
+
+  function paintComposer() {
+    C.querySelector('.pc-seg').hidden = draft.kind === 'story';
+    $$('[data-pc-mode]', C).forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pcMode === draft.kind)));
+    C.querySelector('.pc-bgs').hidden = draft.kind === 'photo';
+    $$('[data-pc-bg]', C).forEach((b) => b.setAttribute('aria-checked', String(Number(b.dataset.pcBg) === draft.bg)));
+    if (draft.kind === 'text') {
+      preview.className = `pc-preview pop-bg-${draft.bg}`;
+      preview.innerHTML = `<textarea data-pc-text maxlength="200" dir="auto" placeholder="${esc(t('What’s popping? 🍿'))}" aria-label="${esc(t('Your pop'))}">${esc(draft.text)}</textarea>`;
+    } else if (draft.kind === 'photo') {
+      preview.className = 'pc-preview pc-photo';
+      preview.innerHTML = draft.photo
+        ? `<img src="${draft.photo}" alt=""><button type="button" class="pv-chip pc-change" data-pc="pick">📷 ${t('Change photo')}</button><input data-pc-text maxlength="200" dir="auto" placeholder="${esc(t('Add a caption…'))}" value="${esc(draft.text)}" aria-label="${esc(t('Caption'))}">`
+        : `<button type="button" class="pc-pick" data-pc="pick"><span>📷</span>${t('Pick a photo')}</button>`;
+    } else {
+      const s = draft.story;
+      const c = catById(s.cat);
+      preview.className = `pc-preview pop-bg-${draft.bg}`;
+      preview.innerHTML = `<div class="pv-story pc-story">${s.image && safeUrl(s.image) !== '#' ? `<img src="${esc(safeUrl(s.image))}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="pv-story-emoji">${c.emoji}</span>`}<span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}</small></span></div>
+        <input data-pc-text maxlength="200" dir="auto" placeholder="${esc(t('Say something about it…'))}" value="${esc(draft.text)}" aria-label="${esc(t('Caption'))}">`;
+    }
+  }
+
+  function compose({ story = null } = {}) {
+    if (!auth.user) { toast(t('Sign in to post pops 🫧'), { emoji: '🫧' }); openAuth?.('signin'); return; }
+    draft = story
+      ? { kind: 'story', text: '', bg: Math.floor(Math.random() * BACKGROUNDS), photo: null, story: { key: story.key, title: story.title, url: story.url, source: story.source, cat: story.cat, image: story.image, domain: story.domain } }
+      : { kind: 'text', text: '', bg: Math.floor(Math.random() * BACKGROUNDS), photo: null, story: null };
+    paintComposer();
+    if (!C.open) C.showModal();
+    setTimeout(() => C.querySelector('[data-pc-text]')?.focus(), 80);
+  }
+
+  C.addEventListener('input', (e) => { if (e.target.matches?.('[data-pc-text]')) draft.text = e.target.value; });
+  fileIn.addEventListener('change', async () => {
+    const f = fileIn.files?.[0];
+    fileIn.value = '';
+    if (!f) return;
+    preview.innerHTML = '<div class="chat-empty"><span class="spin">📷</span></div>';
+    try { draft.photo = await shrinkPhoto(f); } catch (err) { toast(err.message, { emoji: '😵' }); }
+    paintComposer();
+  });
+  C.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const m = el.closest('[data-pc-mode]');
+    if (m) { draft.kind = m.dataset.pcMode; paintComposer(); if (draft.kind === 'photo' && !draft.photo) fileIn.click(); return; }
+    const bg = el.closest('[data-pc-bg]');
+    if (bg) { draft.bg = Number(bg.dataset.pcBg); paintComposer(); return; }
+    const b = el.closest('[data-pc]');
+    if (!b) return;
+    if (b.dataset.pc === 'close') { C.close(); return; }
+    if (b.dataset.pc === 'pick') { fileIn.click(); return; }
+    if (b.dataset.pc === 'post') {
+      const body = { kind: draft.kind, text: draft.text.trim(), bg: draft.bg };
+      if (draft.kind === 'text' && !body.text) { toast(t('Write something first!'), { emoji: '✏️' }); return; }
+      if (draft.kind === 'photo') { if (!draft.photo) { fileIn.click(); return; } body.photo = draft.photo; }
+      if (draft.kind === 'story') body.storyKey = draft.story.key;
+      b.disabled = true;
+      try {
+        await auth.api('/api/pops', { method: 'POST', body });
+        C.close();
+        toast(t('Popped! Your followers can see it for 24 hours 🫧'), { emoji: '🫧' });
+        sfx.ding();
+        burstFrom(document.querySelector('.pops-row:not([hidden]) .pop-me') || document.body, { emojis: ['🫧', '✨', '🍿'], count: 14 });
+        await load(true);
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      b.disabled = false;
+    }
+  });
+
+  /** Open someone's pops straight from their profile card. */
+  async function openUser(username) {
+    if (!auth.user) { openAuth?.('signin'); return; }
+    try {
+      const r = await auth.api(`/api/pops?user=${encodeURIComponent(username)}`);
+      if (!r.rings.length) { toast(t('No pops right now.'), { emoji: '🫧' }); return; }
+      reacts = r.reacts || reacts;
+      openViewer(r.rings, 0);
+      load(true);
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  }
+
+  return { mountRow, refresh: () => load(true), compose, openUser };
+}
+
+return { initPops };
 })();
 
 // ===== play.js =====
@@ -6467,6 +7935,7 @@ const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML } = __m["look"];
 const { initDM, mountPeopleSearch, activeText } = __m["dm"];
 const { seasonMedalsHTML } = __m["arena"];
+const { initPops } = __m["pops"];
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -6498,7 +7967,8 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
   let dmCount = 0;
   let mode = store.get('chat:mode', 'rooms') === 'dms' ? 'dms' : 'rooms';
   let lastSeen = store.get('chat:seen', 0);
-  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, onBadge: (n) => { dmCount = n; paintDot(); } });
+  const pops = initPops({ openAuth, openStory, openProfile: (u) => showProfile(u) });
+  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, pops, openProfile: (u) => showProfile(u), onBadge: (n) => { dmCount = n; paintDot(); } });
 
   function setMode(m) {
     mode = m;
@@ -6767,7 +8237,8 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
       const badges = u.badges.map(badgeInfo).filter(Boolean);
       const trophies = u.trophies || [];
       body.innerHTML = `
-        <div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>
+        ${u.pops ? `<button type="button" class="uc-ava pop-ring ${u.popsUnseen ? 'unseen' : 'seen'}" data-pops-of="${esc(u.username)}" aria-label="${esc(t('Pops from {name}', { name: u.nickname }))}">${lookHTML(u, { streak: u.streak, active: u.active })}</button>`
+          : `<div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>`}
         <h2 dir="auto">${esc(u.nickname)}</h2>
         <p class="muted">@${esc(u.username)} · ${t('joined {when}', { when: fmtDate(u.joined, { month: 'short', year: 'numeric' }) })}</p>
         ${u.bio ? `<p class="uc-bio" dir="auto">${esc(u.bio)}</p>` : ''}
@@ -6814,6 +8285,8 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
       input.focus();
       return;
     }
+    const popsBtn = el?.closest('[data-pops-of]');
+    if (popsBtn) { $('#userCard').close(); pops.openUser(popsBtn.dataset.popsOf); return; }
     const duelBtn = el?.closest('[data-duel-user]');
     if (duelBtn) { $('#userCard').close(); challenge?.(duelBtn.dataset.duelUser); return; }
     const msgBtn = el?.closest('[data-message]');
@@ -6900,6 +8373,12 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
     },
     openDM,
     openMessages: () => { open(null, { as: 'dms' }); dm.inbox(); },
+    openGroup: (id) => {
+      if (!auth.user) { toast(t('Sign in to message people privately ✉️'), { emoji: '✉️' }); openAuth('signin'); return; }
+      open(null, { as: 'dms' });
+      dm.openGroup(id);
+    },
+    popStory: (item) => pops.compose({ story: item }),
     refreshPoll: loadPoll,
     showProfile,
   };
@@ -8007,6 +9486,7 @@ function initMod() {
       pane.innerHTML = `<div class="mod-tiles">
           ${tile(o.users, 'kernels')}${tile(o.newUsers, 'new today')}${tile(o.activeNow, 'active now')}
           ${tile(o.chat, 'chat messages today')}${tile(o.comments, 'comments today')}${tile(o.dms, 'private messages today')}
+          ${tile(o.groupMsgs || 0, 'group messages today')}${tile(o.pops || 0, 'pops today')}${tile((o.groupReports || 0) + (o.popReports || 0), 'reported group messages and pops', true)}
           ${tile(o.chatReports, 'reported chat messages', true)}${tile(o.commentReports, 'reported comments', true)}${tile(o.dmReports, 'reported people', true)}
           ${tile(o.photoReports, 'reported photos', true)}${tile(o.muted, 'muted')}${tile(o.banned, 'banned')}
         </div>
@@ -8019,8 +9499,9 @@ function initMod() {
     try {
       const r = await api('/api/mod/reports');
       const contentRow = (kind, x) => `<div class="mod-item${x.hidden ? ' is-hidden' : ''}">
-          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
-          <p class="mod-text" dir="auto">${esc(x.text) || `<i>${t('(deleted by its author)')}</i>`}</p>
+          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : kind === 'group' ? `👥 ${esc(x.group)}` : kind === 'pop' ? `🫧 ${t('Pop')}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
+          ${kind === 'pop' && x.photo ? `<img class="mod-pop-photo" src="${esc(auth.apiBase)}/api/pops/photo/${esc(x.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+          <p class="mod-text" dir="auto">${kind === 'pop' && x.story ? `📰 ${esc(x.story)}<br>` : ''}${esc(x.text) || (kind === 'pop' ? '' : `<i>${t('(deleted by its author)')}</i>`)}</p>
           <div class="mod-actions"><span class="chip">🚩 ${x.reports}</span>${x.hidden ? `<span class="chip">${t('hidden')}</span>` : ''}
             ${x.hidden ? `<button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:restore">${t('Bring back')}</button>` : `<button type="button" class="btn btn-sm btn-primary" data-content="${kind}:${x.id}:hide">${t('Hide')}</button>`}
             <button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:dismiss">${t('Looks fine')}</button></div>
@@ -8040,6 +9521,8 @@ function initMod() {
       const section = (title, items, row) => `<h3 class="mini-title">${title} <small>${items.length}</small></h3>${items.length ? items.map(row).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}`;
       pane.innerHTML = section(`💬 ${t('Chat messages')}`, r.chat, (x) => contentRow('chat', x))
         + section(`🗨️ ${t('Comments')}`, r.comments, (x) => contentRow('comment', x))
+        + section(`👥 ${t('Group messages')}`, r.groups || [], (x) => contentRow('group', x))
+        + section(`🫧 ${t('Pops')}`, r.pops || [], (x) => contentRow('pop', x))
         + section(`✉️ ${t('Reported in private messages')}`, r.dms, dmRow)
         + section(`📷 ${t('Profile photos')}`, r.photos, photoRow);
     } catch (e) { fail(e); }
@@ -8417,7 +9900,7 @@ function initReader({ getData, reactsHTML, summarize, speakText, showComments, o
     const d = getData();
     const saved = d.saved.some((s) => s.key === it.key);
     return `<button type="button" class="icon-btn save${saved ? ' on' : ''}" data-save aria-pressed="${saved}" title="${saved ? t('Remove from your bucket') : t('Save to your popcorn bucket')}">${icon('bookmark')}</button>
-      ${chatEnabled ? `<button type="button" class="icon-btn" data-dmshare title="${t('Send to a friend')}">${icon('send')}</button><button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">${icon('chat')}</button>` : ''}
+      ${chatEnabled ? `<button type="button" class="icon-btn pop-it" data-popshare title="${t('Pop it — share to your 24-hour pop')}" aria-label="${t('Pop it — share to your 24-hour pop')}">🫧</button><button type="button" class="icon-btn" data-dmshare title="${t('Send to a friend')}">${icon('send')}</button><button type="button" class="icon-btn" data-chatshare title="${t('Share to kerNEl Chat')}">${icon('chat')}</button>` : ''}
       <button type="button" class="icon-btn" data-share title="${t('Share')}">${icon('share')}</button>`;
   }
 
@@ -9654,6 +11137,8 @@ function openDeepLink() {
   else if (h.startsWith('@')) community?.showProfile(h.slice(1));
   else if (h.startsWith('dm=')) community?.openDM(h.slice(3));
   else if (h.startsWith('duel=')) arena?.openDuel(Number(h.slice(5)));
+  else if (h.startsWith('group=')) community?.openGroup(Number(h.slice(6)));
+  else if (h === 'pops') community?.openMessages();
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
@@ -9802,7 +11287,11 @@ function boot() {
       else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
       else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-dmshare]')) {
+      else if (el.closest('[data-popshare]')) {
+        const it = findItem(key);
+        if (!auth.user) { toast(t('Sign in to post pops 🫧'), { emoji: '🫧' }); openAuth('signin'); }
+        else if (it && community) { reader?.close(); community.popStory(it); } else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });
+      } else if (el.closest('[data-dmshare]')) {
         const it = findItem(key);
         reader?.close();
         if (it && community) community.sendToFriend(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });

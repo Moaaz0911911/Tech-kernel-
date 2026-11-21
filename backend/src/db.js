@@ -22,6 +22,8 @@ const MIGRATIONS = [
   'ALTER TABLE users ADD COLUMN season_xp INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE notify_prefs ADD COLUMN games INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE dm_messages ADD COLUMN duel INTEGER',
+  'ALTER TABLE dm_messages ADD COLUMN voice TEXT',
+  'ALTER TABLE dm_messages ADD COLUMN pop TEXT',
 ];
 
 export class KernelDB extends DurableObject {

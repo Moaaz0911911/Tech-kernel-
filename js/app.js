@@ -1160,6 +1160,8 @@ function openDeepLink() {
   else if (h.startsWith('@')) community?.showProfile(h.slice(1));
   else if (h.startsWith('dm=')) community?.openDM(h.slice(3));
   else if (h.startsWith('duel=')) arena?.openDuel(Number(h.slice(5)));
+  else if (h.startsWith('group=')) community?.openGroup(Number(h.slice(6)));
+  else if (h === 'pops') community?.openMessages();
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
@@ -1308,7 +1310,11 @@ function boot() {
       else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
       else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-dmshare]')) {
+      else if (el.closest('[data-popshare]')) {
+        const it = findItem(key);
+        if (!auth.user) { toast(t('Sign in to post pops 🫧'), { emoji: '🫧' }); openAuth('signin'); }
+        else if (it && community) { reader?.close(); community.popStory(it); } else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });
+      } else if (el.closest('[data-dmshare]')) {
         const it = findItem(key);
         reader?.close();
         if (it && community) community.sendToFriend(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });

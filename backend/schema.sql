@@ -289,6 +289,8 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   story       TEXT,                          -- JSON of a shared kerNEl story
   reacts      TEXT NOT NULL DEFAULT '{}',    -- JSON: { user id: emoji }
   duel        INTEGER,                       -- a ⚔️ Quiz Duel challenge card
+  voice       TEXT,                          -- JSON { key, ms, peaks } of a 🎙️ voice note
+  pop         TEXT,                          -- JSON snapshot of the 🫧 pop this message replies to
   deleted     INTEGER NOT NULL DEFAULT 0,
   created     INTEGER NOT NULL,
   updated     INTEGER NOT NULL
@@ -405,4 +407,102 @@ CREATE TABLE IF NOT EXISTS season_winners (
   user_id     TEXT NOT NULL,
   xp          INTEGER,
   PRIMARY KEY (season, place)
+);
+
+-- 🫧 Pops: 24-hour posts (a text card, a photo or a kerNEl story) for the people who follow you
+CREATE TABLE IF NOT EXISTS pops (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     TEXT NOT NULL,
+  kind        TEXT NOT NULL,                 -- text | photo | story
+  text        TEXT NOT NULL DEFAULT '',
+  bg          INTEGER NOT NULL DEFAULT 0,    -- background of a text pop
+  photo_key   TEXT,                          -- the photo lives in pop_photos under this unguessable key
+  story       TEXT,                          -- JSON of a shared kerNEl story
+  created     INTEGER NOT NULL,
+  expires     INTEGER NOT NULL,
+  reports     INTEGER NOT NULL DEFAULT 0,
+  hidden      INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS pops_user ON pops (user_id, expires);
+CREATE INDEX IF NOT EXISTS pops_expires ON pops (expires);
+CREATE TABLE IF NOT EXISTS pop_photos (
+  key         TEXT PRIMARY KEY,
+  data        TEXT NOT NULL,                 -- base64
+  type        TEXT NOT NULL,
+  created     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pop_views (
+  pop_id      INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  react       TEXT,
+  PRIMARY KEY (pop_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS pop_reports (
+  pop_id      INTEGER NOT NULL,
+  reporter_id TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (pop_id, reporter_id)
+);
+
+-- 👥 group chats
+CREATE TABLE IF NOT EXISTS chat_groups (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  emoji       TEXT NOT NULL DEFAULT '👥',
+  owner_id    TEXT NOT NULL,
+  created     INTEGER NOT NULL,
+  last_id     INTEGER NOT NULL DEFAULT 0,
+  last_at     INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS group_members (
+  group_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  joined      INTEGER NOT NULL,
+  since_id    INTEGER NOT NULL DEFAULT 0,    -- new members only see messages after this one
+  read_id     INTEGER NOT NULL DEFAULT 0,
+  muted       INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (group_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS group_members_user ON group_members (user_id);
+CREATE TABLE IF NOT EXISTS group_messages (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  group_id    INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  kind        TEXT NOT NULL DEFAULT 'msg',   -- msg | system ("@a added @b", "@c left", …)
+  text        TEXT NOT NULL DEFAULT '',
+  story       TEXT,
+  voice       TEXT,
+  reacts      TEXT NOT NULL DEFAULT '{}',
+  reports     INTEGER NOT NULL DEFAULT 0,
+  hidden      INTEGER NOT NULL DEFAULT 0,
+  deleted     INTEGER NOT NULL DEFAULT 0,
+  created     INTEGER NOT NULL,
+  updated     INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS group_messages_group ON group_messages (group_id, id);
+CREATE INDEX IF NOT EXISTS group_messages_updated ON group_messages (group_id, updated);
+CREATE TABLE IF NOT EXISTS group_reports (
+  msg_id      INTEGER NOT NULL,
+  reporter_id TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (msg_id, reporter_id)
+);
+
+-- ✍️ "typing…" (kept for a few seconds)
+CREATE TABLE IF NOT EXISTS typing (
+  scope       TEXT NOT NULL,                 -- d:<thread id> or g:<group id>
+  user_id     TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (scope, user_id)
+);
+
+-- 🎙️ voice notes (up to 30 seconds), fetched by an unguessable key
+CREATE TABLE IF NOT EXISTS voice_notes (
+  key         TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL,
+  scope       TEXT NOT NULL,                 -- d:<thread id> or g:<group id>
+  data        TEXT NOT NULL,                 -- base64
+  type        TEXT NOT NULL,
+  created     INTEGER NOT NULL
 );
