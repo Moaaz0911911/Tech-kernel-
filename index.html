@@ -128,6 +128,11 @@
             <p class="muted small">Most-mentioned words in today’s headlines. Tap one to search.</p>
             <div class="trend-list" id="trendList"></div>
           </section>
+          <section class="widget widget-map" id="mapWidget" aria-labelledby="mapTitle" hidden>
+            <h3 id="mapTitle" class="widget-title">🗺️ News Map</h3>
+            <p class="muted small">Where today’s stories are happening.</p>
+            <div id="mapBody"></div>
+          </section>
           <section class="widget widget-codme">
             <h3 class="widget-title">🤖 Meet codme</h3>
             <p data-i18n>Looking for something specific? codme sniffs through the live feed <em>and</em> years of archives.</p>
@@ -291,6 +296,7 @@
             <button type="button" class="set-row" data-action="theme" data-icon="moon"><span>Appearance</span><small id="setTheme"></small></button>
             <button type="button" class="set-row" data-action="sound" data-icon="soundOn"><span>Sound effects</span><small id="setSound"></small></button>
             <button type="button" class="set-row" data-action="chaos" data-icon="sparkle"><span>Chaos mode</span><small id="setChaos"></small></button>
+            <button type="button" class="set-row" data-action="comfort" data-icon="brain"><span>Reading comfort</span><small id="setComfort"></small></button>
             <button type="button" class="set-row" data-action="notify" data-icon="bell"><span>Notifications</span></button>
             <button type="button" class="set-row" data-action="account" data-icon="me"><span>Account &amp; security</span></button>
             <a class="set-row" href="privacy.html" data-icon="globe"><span>Privacy &amp; your data</span></a>
@@ -562,6 +568,7 @@
       <button type="button" class="icon-btn" data-reader="close" aria-label="Close" data-icon="close"></button>
       <span class="reader-src" id="readerSrc"></span>
       <span class="spacer"></span>
+      <button type="button" class="icon-btn cf-open" id="readerComfort" title="Reading comfort" aria-label="Reading comfort">Aa</button>
       <div class="reader-tools" id="readerTools"></div>
     </div>
     <div class="reader-scroll" id="readerScroll">

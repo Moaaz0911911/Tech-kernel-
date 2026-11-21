@@ -5,14 +5,19 @@ import { catById } from './news.js';
 import { t, lang } from './i18n.js';
 import { icon, applyIcons } from './icons.js';
 import { sfx } from './fun.js';
+import { markWords, initWords } from './words.js';
+import { comfort } from './comfort.js';
 
-export function initReader({ getData, reactsHTML, summarize, speakText, showComments, onOpen, chatEnabled }) {
+export function initReader({ getData, reactsHTML, summarize, speakText, showComments, onOpen, chatEnabled, onAskWord, onLearnWord }) {
   const dlg = $('#readerDialog');
   const scroller = $('#readerScroll');
   let item = null;
   let mode = 'tldr';
   let summaryText = '';
   let returnFocus = null;
+  // 📖 tricky tech words become tappable (unless switched off in Reading comfort)
+  const words = initWords({ host: dlg, onAsk: (k) => { close(); onAskWord?.(k); }, onLearn: onLearnWord });
+  const setText = (el, text) => { if (comfort.words) el.innerHTML = markWords(text); else el.textContent = text; };
 
   const thumb = (it) => {
     const c = catById(it.cat);
@@ -38,7 +43,7 @@ export function initReader({ getData, reactsHTML, summarize, speakText, showComm
     const r = await summarize(it, m);
     if (it !== item || m !== mode) return; // the reader moved on
     summaryText = r.text;
-    box.textContent = r.text;
+    setText(box, r.text);
     $('#readerSummaryNote').textContent = r.ai ? t('🤖 codme AI') : t('🍿 codme’s quick explainer');
   }
 
@@ -55,10 +60,10 @@ export function initReader({ getData, reactsHTML, summarize, speakText, showComm
     $('#readerMedia').innerHTML = thumb(it);
     $('#readerKicker').textContent = [`${t(c.label)}`, it.source, timeAgo(it.time)].filter(Boolean).join(' · ');
     const title = $('#readerTitle');
-    title.textContent = it.title;
+    setText(title, it.title);
     title.setAttribute('dir', 'auto');
     title.setAttribute('lang', 'en');
-    $('#readerDek').textContent = it.summary || '';
+    setText($('#readerDek'), it.summary || '');
     const openBtn = $('#readerOpen');
     openBtn.href = safeUrl(it.url);
     openBtn.innerHTML = `${esc(t('Continue reading on {source}', { source: it.source || it.domain || t('the original site') }))} ${icon('external')}`;
@@ -92,5 +97,13 @@ export function initReader({ getData, reactsHTML, summarize, speakText, showComm
     returnFocus?.focus?.({ preventScroll: true });
   });
   applyIcons(dlg);
-  return { open, close, current: () => item, isOpen: () => dlg.open };
+  /** Redraw the text after Reading comfort changes (words on or off). */
+  function rewrite() {
+    if (!item || !dlg.open) return;
+    words.hide();
+    setText($('#readerTitle'), item.title);
+    setText($('#readerDek'), item.summary || '');
+    if (summaryText) setText($('#readerSummary'), summaryText);
+  }
+  return { open, close, rewrite, current: () => item, isOpen: () => dlg.open };
 }

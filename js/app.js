@@ -31,6 +31,9 @@ import { initParties } from './parties.js';
 import { initDebates } from './debates.js';
 import { initShop } from './shop.js';
 import { initPet } from './pet.js';
+import { initNewsMap } from './newsmap.js';
+import { initComfort } from './comfort.js';
+import { LEARN_XP } from './words.js';
 import { ownsLook } from './shop-data.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
@@ -78,6 +81,8 @@ let parties = null;
 let debates = null;
 let invites = null;
 let shop = null;
+let newsmap = null;
+let comfortUI = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
@@ -188,6 +193,7 @@ const ACHIEVEMENTS = [
   { id: 'survivor', emoji: '🎤', name: 'Last One Standing', desc: 'Win a kerNEl Live show', test: () => (serverStats().liveWins || 0) >= 1 },
   { id: 'oracle', emoji: '🔮', name: 'Called It', desc: 'Get a prediction right', test: () => (serverStats().prophet || 0) >= 1 },
   { id: 'polyglot', emoji: '🌐', name: 'Polyglot', desc: 'Read kerNEl in another language', test: (d) => (d.counts?.langs || 0) >= 1 || lang !== 'en' },
+  { id: 'word_nerd', emoji: '📖', name: 'Word Nerd', desc: 'Tap 10 tricky words in stories to learn them', test: (d) => (d.counts?.wordsLearned || 0) >= 10 },
 ];
 
 function serverStats() { return auth.user ? store.get(`stats:${auth.profileKey()}`, {}) : {}; }
@@ -679,6 +685,7 @@ function renderAll() {
   renderFeed();
   renderTicker();
   renderTrends();
+  newsmap?.update(feed.all());
   renderSources();
   updateStatusLine();
   codme?.updateStatus();
@@ -1005,6 +1012,10 @@ function applyTheme(theme) {
   setIcon(st?.closest('.set-row'), theme === 'dark' ? 'moon' : 'sun');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#f5f5f7');
 }
+function paintComfortRow() {
+  const el = $('#setComfort');
+  if (el && comfortUI) el.textContent = comfortUI.summary();
+}
 function paintSoundBtn() {
   const b = $('#soundBtn');
   setIcon(b, sfx.enabled ? 'soundOn' : 'soundOff');
@@ -1066,6 +1077,7 @@ function handleAction(action, el) {
       break;
     }
     case 'sound': sfx.toggle(); paintSoundBtn(); if (auth.user) setData(getData()); break;
+    case 'comfort': comfortUI?.open(); break;
     case 'chaos': {
       const on = document.documentElement.classList.toggle('chaos');
       $$('[data-action="chaos"]').forEach((b) => b.id === 'chaosBtn' && b.setAttribute('aria-pressed', String(on)));
@@ -1279,7 +1291,13 @@ function boot() {
     showComments: (it, opts) => (social ? social.openComments(it, opts) : ($('.reader-comments').hidden = true)),
     onOpen: (it) => { markRead(it.key); discover?.readerOpened(it); },
     chatEnabled: !!community,
+    onAskWord: (k) => codme?.open(`What is ${k}?`),
+    onLearnWord: () => { addXp(LEARN_XP); bump('wordsLearned'); checkAchievements(); },
   });
+  comfortUI = initComfort({ onChange: () => { reader?.rewrite(); paintComfortRow(); } });
+  paintComfortRow();
+  newsmap = initNewsMap({ openStory: (s) => reader?.open(findItem(s.key) || s) });
+  if (feed.size) newsmap?.update(feed.all());
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
   invites = initInvites();

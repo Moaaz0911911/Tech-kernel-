@@ -55,6 +55,9 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🧈 **Butter Shop**: every XP you earn also gives you 1 🧈 butter (plus 200 to start), and spending it never lowers your XP or rank. Buy 🧊 streak freezes (they save your streak by themselves if you miss a day), card packs, pet treats, shop-only hats, name effects (✨ shimmer, 💡 neon, 🌈 rainbow, 📺 glitch), chat bubble colours and profile-card backgrounds that everyone sees.
 - 🐣 **Kernel Pet**: adopt a chick, dino, kitty or robot on the Me tab and name it. Feed it once a day (+5 XP) and it hatches and grows through five stages; a 7-day streak makes it grow twice as fast. It gets hungry when you skip a day but never goes away. Tap it to say hi, give it treats, and it shows on your profile card.
 - 🎭 **codme personalities**: tap 🎭 in codme to switch costumes — Professor Kern (free), Captain Byte the pirate, Wizard Kernelius, Coach Hype, Purrcy the cat and Teta Kernel, an Egyptian grandma. They greet you, present results and sign off in character; with an AI key on the server, the AI answers in character too (with the same facts).
+- 📖 **Tap-to-explain words**: tricky tech words in a story (API, VPN, GPU, quantum computer, Linux…) get a dotted underline in the reader. Tap one for a short, kid-friendly explanation in your language, plus a button to ask codme more. Each new word is +2 XP, and 10 of them unlock the 📖 Word Nerd achievement.
+- 🗺️ **News Map**: a dot-matrix world map on the News tab showing where today's stories happen. Places are found in the headlines (about 100 countries and big tech cities; country names appear in your language); bigger glowing spots mean more stories. Tap a spot or a place chip to see its stories, open a bigger map, and check the "off the map" row for the Moon, Mars, orbit and deep space.
+- 🔤 **Reading comfort**: tap **Aa** in the reader (or Me → Settings → Reading comfort) for five text sizes, an easy-to-read font (Atkinson Hyperlegible, designed for low vision), a book font, roomy lines, warm paper, a focus mode that leaves only the words, and a reading ruler that follows your finger. Switch on "Use size and font everywhere" to apply them to the whole site. Saved on your device.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -217,6 +220,10 @@ js/debates.js     ⚖️ Debate Rooms
 js/shop.js        🧈 Butter Shop (shop-data.js lists the items, shared with the server)
 js/pet.js         🐣 Kernel Pet (pet-data.js: kinds and stages, shared with the server)
 js/personas.js    🎭 codme's personalities (shared with the server for the AI)
+js/words.js       📖 tap-to-explain words in the reader
+js/newsmap.js     🗺️ News Map (places.js finds places in headlines; map-data.js is the dot-grid world)
+js/comfort.js     🔤 reading comfort settings
+fonts/            Atkinson Hyperlegible (SIL Open Font License, see the licence file next to it)
 js/emoji.js       the emoji dictionary (shared with the server)
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
@@ -241,3 +248,8 @@ backend/          the kerNEl server (Cloudflare Worker)
 ```
 
 Made with 🍿 and way too many puns.
+
+## Credits
+
+- 🗺️ The News Map's coastline comes from [Natural Earth](https://www.naturalearthdata.com/) 1:110m land (public domain), via the [world-atlas](https://github.com/topojson/world-atlas) package, turned into a small dot grid.
+- 🔤 [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute, under the SIL Open Font License 1.1 (`fonts/OFL-Atkinson-Hyperlegible.txt`).

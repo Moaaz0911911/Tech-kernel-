@@ -1837,6 +1837,115 @@ a.stat:hover { color: var(--text); }
 .persona-tic { display: inline-block; margin-top: 4px; font-style: italic; opacity: .85; }
 .codme-launcher:not([data-persona-emoji=""])[data-persona-emoji]::after { content: attr(data-persona-emoji); position: absolute; top: -4px; inset-inline-start: -4px; font-size: 1.05rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .3)); pointer-events: none; }
 
+/* ===================== 🔤 Reading comfort ===================== */
+@font-face { font-family: 'Atkinson Hyperlegible'; src: url('../fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Hyperlegible'; src: url('../fonts/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2'); font-weight: 600 800; font-style: normal; font-display: swap; }
+:root { --r-scale: 1; --font-easy: 'Atkinson Hyperlegible', 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif; --font-book: 'Iowan Old Style', 'Palatino Linotype', Charter, 'Book Antiqua', Georgia, 'Amiri', serif; }
+/* text size in stories */
+.reader .reader-title { font-size: calc(clamp(1.6rem, 4.2vw, 2.25rem) * var(--r-scale)); }
+.reader .reader-dek { font-size: calc(1.12rem * var(--r-scale)); }
+.reader .reader-summary-text { font-size: calc(1rem * var(--r-scale)); }
+.reader .reader-comments { font-size: calc(1rem * var(--r-scale)); }
+/* fonts */
+[data-rfont="easy"] .reader-body, [data-rfont="easy"] .reader-body .reader-title { font-family: var(--font-easy); letter-spacing: 0; }
+[data-rfont="serif"] .reader-body .reader-dek, [data-rfont="serif"] .reader-body .reader-summary-text, [data-rfont="serif"] .reader-body .reader-title { font-family: var(--font-book); letter-spacing: -.01em; }
+.r-roomy .reader-dek, .r-roomy .reader-summary-text { line-height: 2; letter-spacing: .012em; word-spacing: .1em; }
+/* …or everywhere: the whole site follows the size and font */
+:root.comfort-all { font-size: calc(100% * var(--r-scale)); }
+:root.comfort-all .reader { --r-scale: 1; }
+:root.comfort-all[data-rfont="easy"] { --font: var(--font-easy); --font-display: var(--font-easy); }
+:root.comfort-all[data-rfont="serif"] body { font-family: var(--font-book); }
+/* warm paper */
+.reader.r-paper { background: #f7f0e1; color: #3b2f1d; }
+.reader.r-paper .reader-summary { background: rgba(120, 88, 40, .08); }
+.reader.r-paper .reader-dek { color: inherit; }
+:root[data-theme="dark"] .reader.r-paper { background: #221d15; color: #efe2c6; }
+:root[data-theme="dark"] .reader.r-paper .reader-summary { background: rgba(255, 220, 160, .06); }
+/* focus mode: just the words */
+.reader.r-focus .reader-media, .reader.r-focus .reader-kicker, .reader.r-focus .reader-react, .reader.r-focus .reader-comments, .reader.r-focus .reader-follow, .reader.r-focus .reader-timeline, .reader.r-focus #readerTools { display: none; }
+.reader.r-focus .reader-body { max-width: 36em; padding-top: 34px; }
+/* reading ruler */
+.read-ruler { display: none; position: absolute; inset-inline: 0; top: 0; height: calc(2.6em * var(--r-scale)); margin-top: calc(-1.3em * var(--r-scale)); z-index: 3; pointer-events: none; border-block: 1.5px solid rgba(255, 159, 10, .7); background: rgba(255, 214, 120, .12); box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .28); transition: transform .06s linear; }
+.reader.r-ruler .read-ruler { display: block; }
+/* the "Aa" button and its panel */
+.cf-open { font: 700 .95rem/1 var(--font-display); letter-spacing: -.02em; }
+.comfort-pop { position: absolute; top: 64px; inset-inline-end: 12px; z-index: 5; width: min(340px, calc(100% - 24px)); max-height: calc(100% - 80px); overflow: auto; padding: 14px; border-radius: 22px; text-align: start; }
+.comfort-pop .tp-label { margin: 0 0 6px; }
+.cf-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
+.cf-label { font-weight: 600; font-size: .88rem; }
+.cf-size { display: flex; align-items: center; gap: 8px; }
+.cf-btn { width: 40px; height: 36px; border-radius: 12px; border: 0; background: var(--card-2); color: var(--text); font: 700 .85rem var(--font-display); cursor: pointer; }
+.cf-btn.big { font-size: 1.1rem; }
+.cf-btn:disabled { opacity: .35; cursor: default; }
+.cf-dots { display: flex; gap: 4px; }
+.cf-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.cf-dots i.on { background: var(--text); transform: scale(1.3); }
+.cf-fonts { display: flex; gap: 6px; }
+.cf-font { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 64px; padding: 6px 8px; border-radius: 12px; border: 1.5px solid transparent; background: var(--card-2); color: var(--text); cursor: pointer; }
+.cf-font b { font-size: 1.15rem; }
+.cf-font small { font-size: .68rem; color: var(--muted); }
+.cf-font[aria-checked="true"] { border-color: var(--text); }
+.cf-font.f-easy b { font-family: var(--font-easy); }
+.cf-font.f-serif b { font-family: var(--font-book); }
+.cf-toggles { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.cf-toggle { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-top: 1px solid var(--line); cursor: pointer; }
+.cf-tt { flex: 1; display: flex; flex-direction: column; font-size: .86rem; }
+.cf-tt small { color: var(--muted); font-size: .72rem; }
+.cf-toggle input { appearance: none; -webkit-appearance: none; flex: none; width: 44px; height: 26px; border-radius: 99px; background: var(--card-3); position: relative; cursor: pointer; transition: background .25s; }
+.cf-toggle input::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .3s var(--spring); }
+.cf-toggle input:checked { background: #34c759; }
+.cf-toggle input:checked::after { transform: translateX(18px); }
+[dir="rtl"] .cf-toggle input:checked::after { transform: translateX(-18px); }
+.cf-toggle input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.cf-reset { margin-top: 8px; font-size: .8rem; }
+.comfort-dialog .modal-body { text-align: start; }
+
+/* ===================== 📖 tap-to-explain words ===================== */
+.gl-word { all: unset; cursor: help; text-decoration: underline dotted; text-decoration-thickness: 1.5px; text-underline-offset: .18em; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); border-radius: 4px; transition: background .2s; }
+.gl-word:hover, .gl-word.on { background: rgba(255, 196, 64, .28); text-decoration-color: currentColor; }
+.gl-word:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+.gl-pop { position: absolute; z-index: 6; width: min(320px, calc(100% - 24px)); padding: 12px 14px; border-radius: 18px; text-align: start; font-size: .9rem; line-height: 1.5; animation: gl-in .25s var(--spring); }
+.gl-pop.as-sheet { inset-inline: 12px; bottom: 12px; width: auto; }
+@keyframes gl-in { from { opacity: 0; transform: translateY(6px) scale(.97); } }
+.gl-pop p { margin: 6px 0 10px; }
+.gl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gl-head b { font: 700 1rem var(--font-display); }
+.gl-x { border: 0; background: none; color: var(--muted); font-size: .9rem; cursor: pointer; }
+.gl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.gl-foot small { font-size: .72rem; }
+
+/* ===================== 🗺️ News Map ===================== */
+.nm-wrap { margin: 6px -4px 8px; border-radius: 16px; background: var(--card-2); padding: 6px 4px; }
+.nm-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.nm-land { stroke: var(--line-2); stroke-width: .62; stroke-linecap: round; fill: none; }
+:root[data-theme="dark"] .nm-land { stroke: rgba(255, 255, 255, .22); }
+.nm-spot { cursor: pointer; outline: none; }
+.nm-core { fill: #ff9f0a; stroke: var(--card-2); stroke-width: .25; transition: transform .3s var(--spring); }
+.nm-pulse { fill: rgba(255, 159, 10, .28); transform-box: fill-box; transform-origin: center; animation: nm-pulse 2.4s ease-out infinite; }
+.nm-spot text { font: 700 1.3px var(--font-display); fill: #2a1700; text-anchor: middle; pointer-events: none; }
+.nm-spot:hover .nm-core, .nm-spot:focus-visible .nm-core { transform: scale(1.25); }
+.nm-spot.on .nm-core { fill: var(--text); }
+.nm-spot.on text { fill: var(--bg-2); }
+.nm-spot:focus-visible .nm-pulse { fill: rgba(255, 159, 10, .5); }
+@keyframes nm-pulse { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .nm-pulse { animation: none; opacity: .5; } }
+.nm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; align-items: center; }
+.nm-chips .chip { padding: 5px 10px; border-radius: 99px; background: var(--card-2); text-transform: none; letter-spacing: 0; font-size: .78rem; font-weight: 500; }
+.nm-chips .chip b { font-variant-numeric: tabular-nums; }
+.nm-chips .chip.on { background: var(--text); color: var(--bg-2); }
+.nm-place { margin: 8px 0 4px; }
+.nm-stories { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.nm-story { display: flex; gap: 8px; align-items: flex-start; width: 100%; padding: 8px 10px; border: 0; border-radius: 12px; background: var(--card-2); color: var(--text); text-align: start; cursor: pointer; font: inherit; }
+.nm-story > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.nm-story b { font-size: .86rem; font-weight: 600; line-height: 1.3; }
+.nm-story small { color: var(--muted); font-size: .72rem; }
+.nm-hint { margin: 6px 0 10px; }
+.map-dialog .modal-body { max-width: 900px; text-align: start; }
+.map-dialog { width: min(940px, calc(100vw - 24px)); }
+.nm-wrap.big { margin: 6px 0 10px; padding: 10px; }
+.gl-pop, .comfort-pop { background: color-mix(in srgb, var(--card) 94%, transparent); }
+:root:not([data-theme="dark"]) .nm-land { stroke: rgba(0, 0, 0, .2); }
+
 
 /* single-file: kids corner overlay */
 #kidsFrame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1000; background: #8fd3ff; }
@@ -1949,6 +2058,11 @@ html.kids-open, html.kids-open body { overflow: hidden; }
             <h3 id="trendTitle" class="widget-title">📈 Hype-o-meter</h3>
             <p class="muted small">Most-mentioned words in today’s headlines. Tap one to search.</p>
             <div class="trend-list" id="trendList"></div>
+          </section>
+          <section class="widget widget-map" id="mapWidget" aria-labelledby="mapTitle" hidden>
+            <h3 id="mapTitle" class="widget-title">🗺️ News Map</h3>
+            <p class="muted small">Where today’s stories are happening.</p>
+            <div id="mapBody"></div>
           </section>
           <section class="widget widget-codme">
             <h3 class="widget-title">🤖 Meet codme</h3>
@@ -2113,6 +2227,7 @@ html.kids-open, html.kids-open body { overflow: hidden; }
             <button type="button" class="set-row" data-action="theme" data-icon="moon"><span>Appearance</span><small id="setTheme"></small></button>
             <button type="button" class="set-row" data-action="sound" data-icon="soundOn"><span>Sound effects</span><small id="setSound"></small></button>
             <button type="button" class="set-row" data-action="chaos" data-icon="sparkle"><span>Chaos mode</span><small id="setChaos"></small></button>
+            <button type="button" class="set-row" data-action="comfort" data-icon="brain"><span>Reading comfort</span><small id="setComfort"></small></button>
             <button type="button" class="set-row" data-action="notify" data-icon="bell"><span>Notifications</span></button>
             <button type="button" class="set-row" data-action="account" data-icon="me"><span>Account &amp; security</span></button>
             <a class="set-row" href="https://moaaz0911911.github.io/Tech-kernel-/privacy.html" data-icon="globe"><span>Privacy &amp; your data</span></a>
@@ -2384,6 +2499,7 @@ html.kids-open, html.kids-open body { overflow: hidden; }
       <button type="button" class="icon-btn" data-reader="close" aria-label="Close" data-icon="close"></button>
       <span class="reader-src" id="readerSrc"></span>
       <span class="spacer"></span>
+      <button type="button" class="icon-btn cf-open" id="readerComfort" title="Reading comfort" aria-label="Reading comfort">Aa</button>
       <div class="reader-tools" id="readerTools"></div>
     </div>
     <div class="reader-scroll" id="readerScroll">
@@ -4889,6 +5005,96 @@ const MAIN_STRINGS = [
   ['🐣 Your pet', '🐣 حيوانك', '🐣 Dein Haustier', '🐣 Ang pet mo'],
   ['🧈 Butter Shop', '🧈 محل الزبدة', '🧈 Butter-Shop', '🧈 Butter Shop'],
   ['Personality', 'الشخصية', 'Persönlichkeit', 'Personalidad'],
+  // 📖 tap-to-explain, 🗺️ News Map, 🔤 reading comfort
+  ['Word Nerd', 'دودة كلمات', 'Wortnerd', 'Word Nerd'],
+  ['Tap 10 tricky words in stories to learn them', 'دوس على 10 كلمات صعبة في الأخبار عشان تتعلمها', 'Tippe in Storys auf 10 knifflige Wörter, um sie zu lernen', 'I-tap ang 10 mahirap na salita sa mga balita para matutunan'],
+  ['Ask codme more', 'اسأل كودمي أكتر', 'Frag codme mehr', 'Magtanong pa kay codme'],
+  ['New word! +{xp} XP 🧠', 'كلمة جديدة! +{xp} XP 🧠', 'Neues Wort! +{xp} XP 🧠', 'Bagong salita! +{xp} XP 🧠'],
+  ['{n} words learned', 'اتعلمت {n} كلمة', '{n} Wörter gelernt', '{n} salitang natutunan'],
+  ['Text size', 'حجم الخط', 'Textgröße', 'Laki ng teksto'],
+  ['Smaller text', 'خط أصغر', 'Kleinerer Text', 'Mas maliit na teksto'],
+  ['Bigger text', 'خط أكبر', 'Größerer Text', 'Mas malaking teksto'],
+  ['Font', 'الخط', 'Schrift', 'Font'],
+  ['Back to normal', 'رجّع الإعدادات العادية', 'Zurück auf normal', 'Ibalik sa dati'],
+  ['Reading comfort', 'راحة القراية', 'Lesekomfort', 'Ginhawa sa pagbasa'],
+  ['Make stories easier on your eyes. Saved on this device.', 'خلّي الأخبار أريح لعينيك. بيتحفظ على الجهاز ده.', 'Mach Storys angenehmer für deine Augen. Wird auf diesem Gerät gespeichert.', 'Gawing mas magaan sa mata ang mga balita. Naka-save sa device na ito.'],
+  ['Focus mode', 'وضع التركيز', 'Fokusmodus', 'Focus mode'],
+  ['Standard', 'عادي', 'Standard', 'Karaniwan'],
+  ['News Map', 'خريطة الأخبار', 'News-Karte', 'Mapa ng Balita'],
+  ['🗺️ News Map', '🗺️ خريطة الأخبار', '🗺️ News-Karte', '🗺️ Mapa ng Balita'],
+  ['Where today’s stories are happening.', 'الأخبار النهارده بتحصل فين.', 'Wo die Storys von heute passieren.', 'Saan nangyayari ang mga balita ngayon.'],
+  ['World map of where today’s stories happen', 'خريطة العالم وأماكن أخبار النهارده', 'Weltkarte: Wo die Storys von heute passieren', 'Mapa ng mundo kung saan nangyayari ang mga balita ngayon'],
+  ['Tap a glowing spot to see its stories.', 'دوس على نقطة منوّرة عشان تشوف أخبارها.', 'Tippe auf einen leuchtenden Punkt, um seine Storys zu sehen.', 'I-tap ang kumikinang na tuldok para makita ang mga balita nito.'],
+  ['No places in today’s headlines yet — check back soon! 🌍', 'مفيش أماكن في عناوين النهارده لسه — ارجع كمان شوية! 🌍', 'Noch keine Orte in den heutigen Schlagzeilen – schau bald wieder vorbei! 🌍', 'Wala pang lugar sa mga headline ngayon — bumalik ka mamaya! 🌍'],
+  ['Off the map', 'برّه الخريطة', 'Nicht auf der Karte', 'Labas sa mapa'],
+  ['Off the map:', 'برّه الخريطة:', 'Nicht auf der Karte:', 'Labas sa mapa:'],
+  ['Bigger map', 'خريطة أكبر', 'Größere Karte', 'Mas malaking mapa'],
+  ['The Moon', 'القمر', 'Der Mond', 'Ang Buwan'],
+  ['Mars', 'المريخ', 'Mars', 'Mars'],
+  ['In orbit', 'في المدار', 'Im Orbit', 'Nasa orbit'],
+  ['Deep space', 'الفضاء البعيد', 'Tiefer Weltraum', 'Malalim na kalawakan'],
+  ['Easy-read', 'سهل القراية', 'Leicht lesbar', 'Madaling basahin'],
+  ['Book', 'كتاب', 'Buch', 'Libro'],
+  ['Roomy lines', 'سطور واسعة', 'Luftige Zeilen', 'Maluwag na linya'],
+  ['Warm paper', 'ورق دافي', 'Warmes Papier', 'Mainit na papel'],
+  ['Just the words: hides pictures, reactions and comments', 'الكلام بس: بيخبّي الصور والريأكشنز والكومنتات', 'Nur der Text: blendet Bilder, Reaktionen und Kommentare aus', 'Mga salita lang: itinatago ang larawan, reaksyon at komento'],
+  ['Reading ruler', 'مسطرة القراية', 'Leselineal', 'Ruler sa pagbasa'],
+  ['A band that follows your finger or mouse', 'شريط بيمشي مع صباعك أو الماوس', 'Ein Streifen, der deinem Finger oder der Maus folgt', 'Isang guhit na sumusunod sa daliri o mouse mo'],
+  ['Explain tricky words', 'اشرح الكلمات الصعبة', 'Knifflige Wörter erklären', 'Ipaliwanag ang mahirap na salita'],
+  ['Tap underlined tech words for a quick explanation', 'دوس على الكلمات التقنية اللي تحتها خط عشان شرح سريع', 'Tippe auf unterstrichene Tech-Wörter für eine schnelle Erklärung', 'I-tap ang mga tech na salitang may salungguhit para sa mabilis na paliwanag'],
+  ['Use size and font everywhere', 'استخدم الحجم والخط في كل حتة', 'Größe und Schrift überall verwenden', 'Gamitin ang laki at font kahit saan'],
+  ['Not just in stories', 'مش في الأخبار بس', 'Nicht nur in Storys', 'Hindi lang sa mga balita'],
+  // 🗺️ city names on the News Map
+  ['Silicon Valley', 'وادي السيليكون', 'Silicon Valley', 'Silicon Valley'],
+  ['Seattle', 'سياتل', 'Seattle', 'Seattle'],
+  ['New York', 'نيويورك', 'New York', 'New York'],
+  ['Los Angeles', 'لوس أنجلوس', 'Los Angeles', 'Los Angeles'],
+  ['Texas', 'تكساس', 'Texas', 'Texas'],
+  ['Boston', 'بوسطن', 'Boston', 'Boston'],
+  ['Washington, D.C.', 'واشنطن', 'Washington, D.C.', 'Washington, D.C.'],
+  ['Florida', 'فلوريدا', 'Florida', 'Florida'],
+  ['Chicago', 'شيكاغو', 'Chicago', 'Chicago'],
+  ['California', 'كاليفورنيا', 'Kalifornien', 'California'],
+  ['London', 'لندن', 'London', 'London'],
+  ['Paris', 'باريس', 'Paris', 'Paris'],
+  ['Berlin', 'برلين', 'Berlin', 'Berlin'],
+  ['Munich', 'ميونخ', 'München', 'Munich'],
+  ['Amsterdam', 'أمستردام', 'Amsterdam', 'Amsterdam'],
+  ['Stockholm', 'ستوكهولم', 'Stockholm', 'Stockholm'],
+  ['Dublin', 'دبلن', 'Dublin', 'Dublin'],
+  ['Geneva', 'جنيف', 'Genf', 'Geneva'],
+  ['Zurich', 'زيورخ', 'Zürich', 'Zurich'],
+  ['Moscow', 'موسكو', 'Moskau', 'Moscow'],
+  ['Kyiv', 'كييف', 'Kyjiw', 'Kyiv'],
+  ['Tel Aviv', 'تل أبيب', 'Tel Aviv', 'Tel Aviv'],
+  ['Cairo', 'القاهرة', 'Kairo', 'Cairo'],
+  ['Dubai', 'دبي', 'Dubai', 'Dubai'],
+  ['Riyadh', 'الرياض', 'Riad', 'Riyadh'],
+  ['Lagos', 'لاجوس', 'Lagos', 'Lagos'],
+  ['Nairobi', 'نيروبي', 'Nairobi', 'Nairobi'],
+  ['Cape Town', 'كيب تاون', 'Kapstadt', 'Cape Town'],
+  ['Beijing', 'بكين', 'Peking', 'Beijing'],
+  ['Shanghai', 'شنغهاي', 'Shanghai', 'Shanghai'],
+  ['Shenzhen', 'شنتشن', 'Shenzhen', 'Shenzhen'],
+  ['Hong Kong', 'هونج كونج', 'Hongkong', 'Hong Kong'],
+  ['Tokyo', 'طوكيو', 'Tokio', 'Tokyo'],
+  ['Osaka', 'أوساكا', 'Osaka', 'Osaka'],
+  ['Seoul', 'سول', 'Seoul', 'Seoul'],
+  ['Bengaluru', 'بنجالور', 'Bengaluru', 'Bengaluru'],
+  ['Mumbai', 'مومباي', 'Mumbai', 'Mumbai'],
+  ['Delhi', 'دلهي', 'Delhi', 'Delhi'],
+  ['Taipei', 'تايبيه', 'Taipeh', 'Taipei'],
+  ['Manila', 'مانيلا', 'Manila', 'Maynila'],
+  ['Jakarta', 'جاكرتا', 'Jakarta', 'Jakarta'],
+  ['Sydney', 'سيدني', 'Sydney', 'Sydney'],
+  ['Melbourne', 'ملبورن', 'Melbourne', 'Melbourne'],
+  ['Toronto', 'تورنتو', 'Toronto', 'Toronto'],
+  ['Vancouver', 'فانكوفر', 'Vancouver', 'Vancouver'],
+  ['Montreal', 'مونتريال', 'Montreal', 'Montreal'],
+  ['São Paulo', 'ساو باولو', 'São Paulo', 'São Paulo'],
+  ['Mexico City', 'مكسيكو سيتي', 'Mexiko-Stadt', 'Mexico City'],
+  ['Buenos Aires', 'بوينس آيرس', 'Buenos Aires', 'Buenos Aires'],
+  ['Aa', 'Aa', 'Aa', 'Aa'],
 ];
 addStrings(MAIN_STRINGS);
 
@@ -6054,6 +6260,224 @@ function petStage(growth = 0) {
 const petEmoji = (species, growth) => (PET_SPECIES[species] || PET_SPECIES.chick).stages[petStage(growth).index];
 
 return { PET_SPECIES, PET_STAGES, PET_FEED_XP, STREAK_BOOST, petStage, petEmoji };
+})();
+
+// ===== map-data.js =====
+__m["map-data"] = (() => {
+// 🗺️ The News Map's world: land as a dot grid (144×56, 2.5° per dot, 82.5°N to 57.5°S).
+// Made from Natural Earth 1:110m land (public domain), via the world-atlas package. Each row is hex, 4 dots per digit.
+const MAP = { step: 2.5, top: 82.5, cols: 144, rows: 56 };
+const LAND = [
+  '000000000ff9ffffe0000000000000000000',
+  '000000133fcfffff000700000000c0000000',
+  '00000129900fffff00000000e001f8000000',
+  '000003c034003fff00000006007ff8008000',
+  '8040017c6fe01f01ffffffe61dfffff7f800',
+  'f800002bc4c7e007fffe01fa140000000000',
+  '0c00000003c1e03fbff802c0000000000000',
+  '00fffffff51c1f00800f7ffffffffffffffe',
+  '03ffffffc0600e00003e7ffffffffffffef8',
+  '01e07fffe07a0000003e7fffffffffff8080',
+  '00801ffff87e00000214fffffffffffe0380',
+  '00000ffffeff80000d1fffffffffffff0300',
+  '000007ffffffc00003ffffffffffffff0000',
+  '000003fffff4e00003ffffffffffffff0000',
+  '000003fffffc000001fff5f7fffffffe0000',
+  '000003fffff0000001ebe0effffffffc4000',
+  '000003ffffe000000f86f6f3fffffff08000',
+  '000001ffffc000000f029ff3fffffe208000',
+  '000001ffffc0000000f007ffffffff130000',
+  '0000007fff80000007f003ffffffff040000',
+  '0000005ffe0000000ffeebffffffff800000',
+  '0000003fc10000000fffffefffffff800000',
+  '0000000f810000003ffffdf3ffffff000000',
+  '00000007800000003ffffdfe1ffffe800000',
+  '00000003880000007ffffeff0fe7e0000000',
+  '00000003d81800003ffffefe07c3d0000000',
+  '00000000780000007fffff780781e0800000',
+  '000000000e0000007fffffe00301f0c00000',
+  '00000000002800003fffff90030160000000',
+  '00000000017f00001ffffff0000100200000',
+  '00000000007f80000fbffff0008080000000',
+  '00000000007ff000000fffe0000186000000',
+  '0000000000fff000000fffc00000ce000000',
+  '0000000000fffc00000fff800000ce8c0000',
+  '0000000000ffff80000fff0000004083c000',
+  '0000000000ffffc00007ff0000002001e000',
+  '0000000000ffffc00007ff00000001a08000',
+  '00000000007fff800007ff00000000000000',
+  '00000000007fff000007ff100000000c0000',
+  'ffffffffffe000fffff807300000007e4000',
+  '00000000000fff000007fc300000007fe000',
+  '00000000000fff000007fc60000003fff000',
+  '00000000000ffc000003fc60000007fff000',
+  '00000000000ff8000003f800000007fff800',
+  '00000000001ff0000001f800000003fff800',
+  '00000000001ff0000001f000000003fff800',
+  '00000000001fe0000001c000000003c3f800',
+  '00000000001f80000000000000000000f000',
+  '00000000001f000000000000000000002002',
+  '00000000003c000000000000000000002004',
+  '00000000001c000000000000000000000008',
+  '000000000038000000000000000000000010',
+  '000000000038000000000000000000000000',
+  '000000000030800000000000000000000000',
+  '000000000018000000000000000000000000',
+  '000000000000000000000000000000000000',
+];
+
+return { MAP, LAND };
+})();
+
+// ===== places.js =====
+__m["places"] = (() => {
+// 🗺️ Where a story happens: place names found in headlines and summaries (case-sensitive, whole words).
+// Countries use ISO codes so their names show in your language; cities keep their English names.
+// Off-planet spots (the Moon, Mars, orbit, deep space) get their own row under the map.
+const C = (cc, lat, lon, words) => ({ id: cc, cc, lat, lon, re: words });
+const T = (id, name, cc, lat, lon, words) => ({ id, name, cc, lat, lon, re: words });
+
+const PLACES = [
+  // ---- cities and regions (checked first; they win over their country) ----
+  T('valley', 'Silicon Valley', 'US', 37.4, -122.1, 'Silicon Valley|San Francisco|Bay Area|Palo Alto|Mountain View|Cupertino|Menlo Park|San Jose'),
+  T('seattle', 'Seattle', 'US', 47.6, -122.3, 'Seattle|Redmond'),
+  T('nyc', 'New York', 'US', 40.7, -74.0, 'New York|NYC|Manhattan|Brooklyn|Wall Street'),
+  T('la', 'Los Angeles', 'US', 34.05, -118.25, 'Los Angeles|Hollywood'),
+  T('texas', 'Texas', 'US', 30.3, -97.7, 'Texas|Austin|Houston|Dallas|Starbase'),
+  T('boston', 'Boston', 'US', 42.36, -71.06, 'Boston|MIT|Harvard'),
+  T('dc', 'Washington, D.C.', 'US', 38.9, -77.04, 'Washington,? D\\.?C\\.?|White House|Congress|Senate|Pentagon|FTC|FCC|Supreme Court|Capitol Hill'),
+  T('florida', 'Florida', 'US', 28.4, -80.6, 'Florida|Cape Canaveral|Kennedy Space Center|Miami'),
+  T('chicago', 'Chicago', 'US', 41.88, -87.63, 'Chicago'),
+  T('cali', 'California', 'US', 36.8, -119.4, 'California|Californian'),
+  T('london', 'London', 'GB', 51.5, -0.13, 'London'),
+  T('paris', 'Paris', 'FR', 48.86, 2.35, 'Paris'),
+  T('berlin', 'Berlin', 'DE', 52.52, 13.4, 'Berlin'),
+  T('munich', 'Munich', 'DE', 48.14, 11.58, 'Munich|München'),
+  T('amsterdam', 'Amsterdam', 'NL', 52.37, 4.9, 'Amsterdam'),
+  T('stockholm', 'Stockholm', 'SE', 59.33, 18.07, 'Stockholm'),
+  T('dublin', 'Dublin', 'IE', 53.35, -6.26, 'Dublin'),
+  T('geneva', 'Geneva', 'CH', 46.2, 6.15, 'Geneva|CERN'),
+  T('zurich', 'Zurich', 'CH', 47.37, 8.54, 'Zurich|Zürich'),
+  T('moscow', 'Moscow', 'RU', 55.75, 37.62, 'Moscow|Kremlin'),
+  T('kyiv', 'Kyiv', 'UA', 50.45, 30.52, 'Kyiv|Kiev'),
+  T('telaviv', 'Tel Aviv', 'IL', 32.08, 34.78, 'Tel Aviv'),
+  T('cairo', 'Cairo', 'EG', 30.04, 31.24, 'Cairo|Giza'),
+  T('dubai', 'Dubai', 'AE', 25.2, 55.27, 'Dubai|Abu Dhabi'),
+  T('riyadh', 'Riyadh', 'SA', 24.71, 46.68, 'Riyadh|NEOM'),
+  T('lagos', 'Lagos', 'NG', 6.52, 3.38, 'Lagos'),
+  T('nairobi', 'Nairobi', 'KE', -1.29, 36.82, 'Nairobi'),
+  T('capetown', 'Cape Town', 'ZA', -33.92, 18.42, 'Cape Town'),
+  T('beijing', 'Beijing', 'CN', 39.9, 116.4, 'Beijing'),
+  T('shanghai', 'Shanghai', 'CN', 31.23, 121.47, 'Shanghai'),
+  T('shenzhen', 'Shenzhen', 'CN', 22.54, 114.06, 'Shenzhen'),
+  T('hongkong', 'Hong Kong', 'HK', 22.32, 114.17, 'Hong Kong'),
+  T('tokyo', 'Tokyo', 'JP', 35.68, 139.69, 'Tokyo'),
+  T('osaka', 'Osaka', 'JP', 34.69, 135.5, 'Osaka|Kyoto'),
+  T('seoul', 'Seoul', 'KR', 37.57, 126.98, 'Seoul'),
+  T('bengaluru', 'Bengaluru', 'IN', 12.97, 77.59, 'Bengaluru|Bangalore'),
+  T('mumbai', 'Mumbai', 'IN', 19.08, 72.88, 'Mumbai'),
+  T('delhi', 'Delhi', 'IN', 28.61, 77.21, 'New Delhi|Delhi'),
+  T('taipei', 'Taipei', 'TW', 25.03, 121.57, 'Taipei|Hsinchu'),
+  T('manila', 'Manila', 'PH', 14.6, 120.98, 'Manila|Quezon City|Cebu'),
+  T('jakarta', 'Jakarta', 'ID', -6.2, 106.85, 'Jakarta'),
+  T('sydney', 'Sydney', 'AU', -33.87, 151.21, 'Sydney'),
+  T('melbourne', 'Melbourne', 'AU', -37.81, 144.96, 'Melbourne'),
+  T('toronto', 'Toronto', 'CA', 43.65, -79.38, 'Toronto'),
+  T('vancouver', 'Vancouver', 'CA', 49.28, -123.12, 'Vancouver'),
+  T('montreal', 'Montreal', 'CA', 45.5, -73.57, 'Montreal|Montréal'),
+  T('saopaulo', 'São Paulo', 'BR', -23.55, -46.63, 'São Paulo|Sao Paulo'),
+  T('mexicocity', 'Mexico City', 'MX', 19.43, -99.13, 'Mexico City'),
+  T('buenosaires', 'Buenos Aires', 'AR', -34.6, -58.38, 'Buenos Aires'),
+  // ---- countries and unions ----
+  C('EU', 50.85, 4.35, 'EU|European Union|European Commission|Europe|European|Brussels|GDPR'),
+  C('US', 39.5, -98.35, 'US|U\\.S\\.|USA|United States|America|American|Americans|NASA'),
+  C('GB', 54.0, -2.0, 'UK|U\\.K\\.|Britain|British|England|Scotland|Scottish|Wales|Welsh'),
+  C('CN', 35.0, 105.0, 'China|Chinese'),
+  C('JP', 36.2, 138.25, 'Japan|Japanese'),
+  C('KP', 40.0, 127.0, 'North Korea|North Korean|Pyongyang'),
+  C('KR', 36.5, 127.9, '(?<!North )Korea|(?<!North )Korean|South Korea|South Korean'),
+  C('IN', 22.0, 79.0, 'India|Indian(?! Ocean)'),
+  C('DE', 51.0, 10.0, 'Germany|German'),
+  C('FR', 46.6, 2.4, 'France|French'),
+  C('CA', 56.0, -106.0, 'Canada|Canadian'),
+  C('AU', -25.0, 134.0, 'Australia|Australian'),
+  C('BR', -10.0, -52.0, 'Brazil|Brazilian'),
+  C('RU', 61.0, 96.0, 'Russia|Russian'),
+  C('UA', 49.0, 32.0, 'Ukraine|Ukrainian'),
+  C('IL', 31.4, 35.0, 'Israel|Israeli'),
+  C('EG', 26.8, 30.8, 'Egypt|Egyptian'),
+  C('SA', 24.0, 45.0, 'Saudi Arabia|Saudi'),
+  C('AE', 24.0, 54.0, 'UAE|United Arab Emirates|Emirati'),
+  C('QA', 25.3, 51.2, 'Qatar'),
+  C('TR', 39.0, 35.0, 'Türkiye|Turkiye|Turkish|Istanbul|Ankara'),
+  C('IR', 32.0, 53.0, 'Iran|Iranian|Tehran'),
+  C('PK', 30.0, 70.0, 'Pakistan|Pakistani'),
+  C('BD', 23.7, 90.4, 'Bangladesh'),
+  C('NG', 9.0, 8.0, 'Nigeria|Nigerian'),
+  C('KE', 0.2, 38.0, 'Kenya|Kenyan'),
+  C('ZA', -29.0, 25.0, 'South Africa|South African'),
+  C('ET', 9.0, 40.0, 'Ethiopia|Ethiopian'),
+  C('GH', 7.9, -1.0, 'Ghana|Ghanaian'),
+  C('MA', 31.8, -7.0, 'Morocco|Moroccan'),
+  C('MX', 23.0, -102.0, '(?<!New )Mexico|Mexican'),
+  C('AR', -34.0, -64.0, 'Argentina|Argentine|Argentinian'),
+  C('CL', -35.0, -71.0, 'Chile|Chilean'),
+  C('CO', 4.6, -74.0, 'Colombia|Colombian'),
+  C('PE', -9.0, -75.0, 'Peru|Peruvian'),
+  C('NL', 52.2, 5.3, 'Netherlands|Dutch|Holland'),
+  C('BE', 50.6, 4.6, 'Belgium|Belgian'),
+  C('SE', 62.0, 15.0, 'Sweden|Swedish'),
+  C('NO', 61.0, 9.0, 'Norway|Norwegian'),
+  C('FI', 64.0, 26.0, 'Finland|Finnish|Helsinki'),
+  C('DK', 56.0, 10.0, 'Denmark|Danish|Copenhagen'),
+  C('IS', 65.0, -18.0, 'Iceland|Icelandic'),
+  C('ES', 40.0, -3.7, 'Spain|Spanish|Madrid|Barcelona'),
+  C('PT', 39.5, -8.0, 'Portugal|Portuguese|Lisbon'),
+  C('IT', 42.8, 12.5, 'Italy|Italian|Rome|Milan'),
+  C('CH', 46.8, 8.2, 'Switzerland|Swiss'),
+  C('AT', 47.5, 14.5, 'Austria|Austrian|Vienna'),
+  C('PL', 52.0, 19.0, 'Poland|Warsaw'),
+  C('CZ', 49.8, 15.5, 'Czechia|Czech|Prague'),
+  C('RO', 46.0, 25.0, 'Romania|Romanian'),
+  C('GR', 39.0, 22.0, 'Greece|Greek|Athens'),
+  C('EE', 58.6, 25.0, 'Estonia|Estonian|Tallinn'),
+  C('IE', 53.4, -8.0, 'Ireland|Irish'),
+  C('SG', 1.35, 103.82, 'Singapore|Singaporean'),
+  C('TW', 23.7, 121.0, 'Taiwan|Taiwanese|TSMC'),
+  C('VN', 16.0, 107.0, 'Vietnam|Vietnamese'),
+  C('TH', 15.0, 101.0, 'Thailand|Thai|Bangkok'),
+  C('MY', 4.0, 102.0, 'Malaysia|Malaysian|Kuala Lumpur'),
+  C('ID', -2.5, 118.0, 'Indonesia|Indonesian'),
+  C('PH', 12.9, 122.0, 'Philippines|Philippine|Filipino'),
+  C('NZ', -41.0, 174.0, 'New Zealand'),
+];
+
+// Not on the map at all 🚀
+const SPACE = [
+  { id: 'moon', emoji: '🌙', name: 'The Moon', re: 'Moon|lunar|Lunar|Artemis' },
+  { id: 'mars', emoji: '🔴', name: 'Mars', re: 'Mars|Martian' },
+  { id: 'orbit', emoji: '🛰️', name: 'In orbit', re: 'ISS|International Space Station|space station|orbit|Orbit|orbital|Orbital|Starlink|Starship|satellite|satellites|Satellite' },
+  { id: 'deep', emoji: '🪐', name: 'Deep space', re: 'Jupiter|Saturn|Venus|asteroid|Asteroid|comet|Comet|black hole|Black hole|galaxy|Galaxy|James Webb|exoplanet|Exoplanet' },
+];
+
+const compile = (list) => list.map((p) => ({ ...p, rx: new RegExp(`(?<![\\p{L}\\p{N}])(?:${p.re})(?![\\p{L}\\p{N}])`, 'u') }));
+const PLACES_RX = compile(PLACES);
+const SPACE_RX = compile(SPACE);
+
+/** The places a story mentions (a city beats its own country, so "Tokyo, Japan" is just Tokyo). */
+function placesOf(text) {
+  const s = String(text || '');
+  const hits = PLACES_RX.filter((p) => p.rx.test(s));
+  const cityCountries = new Set(hits.filter((p) => p.id !== p.cc).map((p) => p.cc));
+  const earth = hits.filter((p) => p.id !== p.cc || !cityCountries.has(p.cc));
+  const space = SPACE_RX.filter((p) => p.rx.test(s));
+  return { earth, space };
+}
+
+/** A flag emoji from a country code (🇪🇺 works too). */
+const flag = (cc) => (/^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map((ch) => 0x1f1a5 + ch.charCodeAt(0))) : '');
+
+return { PLACES, SPACE, placesOf, flag };
 })();
 
 // ===== icons.js =====
@@ -10601,6 +11025,336 @@ function initDebates({ openAuth, openStory }) {
 return { initDebates };
 })();
 
+// ===== words.js =====
+__m["words"] = (() => {
+// 📖 Tap-to-explain: tricky tech words in a story get a dotted underline. Tap one for a short,
+// kid-friendly explanation (from codme's glossary, in your language) and a button to ask codme more.
+const { esc, store } = __m["utils"];
+const { t, tn } = __m["i18n"];
+const { GLOSSARY, GLOSSARY_ALIASES } = __m["content"];
+const { sfx } = __m["fun"];
+
+// Words so common that underlining them would just be noise
+const SKIP = new Set(['app', 'apps', 'web', 'internet', 'the internet', 'memory', 'the cloud', 'a kernel', 'a.i']);
+const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const TERMS = [...Object.keys(GLOSSARY), ...Object.keys(GLOSSARY_ALIASES)].filter((k) => !SKIP.has(k)).sort((a, b) => b.length - a.length);
+const RX = new RegExp(`(?<![\\p{L}\\p{N}])(${TERMS.map(escRe).join('|')})(s?)(?![\\p{L}\\p{N}])`, 'giu');
+const NAMES = { wifi: 'Wi-Fi', github: 'GitHub', linux: 'Linux', '5g': '5G', iot: 'IoT', ipo: 'IPO', crypto: 'Crypto' };
+const LEARN_XP = 2;
+
+const keyOf = (word) => {
+  const w = word.toLowerCase();
+  for (const x of [w, w.replace(/s$/, '')]) {
+    if (GLOSSARY[x] && !SKIP.has(x)) return x;
+    if (GLOSSARY_ALIASES[x] && !SKIP.has(x)) return GLOSSARY_ALIASES[x];
+  }
+  return null;
+};
+/** How a glossary word is written as a title: API, GPU, Wi-Fi, Machine learning… */
+const wordLabel = (k) => NAMES[k] || (k.length <= 4 && !['bug', 'chip', 'ram'].includes(k) ? k.toUpperCase() : k === 'ram' ? 'RAM' : k[0].toUpperCase() + k.slice(1));
+
+/** Escape `text` for HTML and turn the first few glossary words into tappable buttons. */
+function markWords(text, { max = 6 } = {}) {
+  const s = String(text || '');
+  const seen = new Set();
+  let out = '';
+  let last = 0;
+  for (const m of s.matchAll(RX)) {
+    const key = keyOf(m[1]);
+    if (!key || seen.has(key) || seen.size >= max) continue;
+    seen.add(key);
+    out += `${esc(s.slice(last, m.index))}<button type="button" class="gl-word" data-gl="${esc(key)}">${esc(m[0])}</button>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(s.slice(last));
+}
+
+/** The pop-up that explains a word. `host` is the element it lives in (the reader). */
+function initWords({ host, onAsk, onLearn }) {
+  const pop = document.createElement('div');
+  pop.className = 'gl-pop glass';
+  pop.setAttribute('role', 'dialog');
+  pop.hidden = true;
+  host.append(pop);
+  let key = null;
+
+  function show(btn) {
+    key = btn.dataset.gl;
+    const learned = store.get('glLearned', []);
+    const isNew = !learned.includes(key);
+    if (isNew) { learned.push(key); store.set('glLearned', learned.slice(-500)); onLearn?.(key); }
+    pop.setAttribute('aria-label', wordLabel(key));
+    pop.innerHTML = `<div class="gl-head"><b>📖 ${esc(wordLabel(key))}</b><button type="button" class="gl-x" data-gl-close aria-label="${esc(t('Close'))}">✕</button></div>
+      <p dir="auto">${esc(t(GLOSSARY[key]))}</p>
+      <div class="gl-foot"><button type="button" class="btn btn-sm btn-ghost" data-gl-ask>🤖 ${t('Ask codme more')}</button>
+        <small class="muted">${isNew ? t('New word! +{xp} XP 🧠', { xp: LEARN_XP }) : tn(learned.length, '{n} word learned', '{n} words learned')}</small></div>`;
+    pop.hidden = false;
+    // under the word, kept inside the reader; on phones it sits at the bottom like a little sheet
+    const hb = host.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    const narrow = hb.width < 560;
+    pop.classList.toggle('as-sheet', narrow);
+    if (!narrow) {
+      const w = pop.offsetWidth;
+      const left = Math.min(Math.max(12, b.left - hb.left + b.width / 2 - w / 2), hb.width - w - 12);
+      const below = b.bottom - hb.top + 8;
+      const top = below + pop.offsetHeight > hb.height - 12 ? b.top - hb.top - pop.offsetHeight - 8 : below;
+      pop.style.left = `${left}px`;
+      pop.style.top = `${Math.max(12, top)}px`;
+    } else { pop.style.left = ''; pop.style.top = ''; }
+    host.querySelectorAll('.gl-word.on').forEach((x) => x.classList.remove('on'));
+    btn.classList.add('on');
+    sfx.blip();
+  }
+  function hide() {
+    if (pop.hidden) return;
+    pop.hidden = true;
+    host.querySelectorAll('.gl-word.on').forEach((x) => x.classList.remove('on'));
+  }
+
+  host.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const w = el.closest('[data-gl]');
+    if (w) { e.preventDefault(); e.stopPropagation(); show(w); return; }
+    if (el.closest('[data-gl-close]')) { hide(); return; }
+    if (el.closest('[data-gl-ask]')) { const k = key; hide(); onAsk?.(k); return; }
+    if (!e.composedPath().includes(pop)) hide();
+  }, true);
+  host.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pop.hidden) { e.preventDefault(); e.stopPropagation(); hide(); } }, true);
+  host.querySelector('.reader-scroll')?.addEventListener('scroll', hide, { passive: true });
+  host.addEventListener('close', hide);
+  return { hide };
+}
+
+return { LEARN_XP, wordLabel, markWords, initWords };
+})();
+
+// ===== comfort.js =====
+__m["comfort"] = (() => {
+// 🔤 Reading comfort: text size, an easy-to-read font (Atkinson Hyperlegible, made for low vision),
+// roomy lines, warm paper, a distraction-free focus mode and a reading ruler. Saved on this device.
+const { $, esc, store } = __m["utils"];
+const { t } = __m["i18n"];
+const { sfx } = __m["fun"];
+const { makeDialog } = __m["arena"];
+
+const SIZES = [0.9, 1, 1.15, 1.3, 1.5];
+const FONTS = [['default', 'Standard'], ['easy', 'Easy-read'], ['serif', 'Book']];
+const TOGGLES = [
+  ['roomy', '↕️', 'Roomy lines'],
+  ['paper', '📜', 'Warm paper'],
+  ['focus', '🎯', 'Focus mode', 'Just the words: hides pictures, reactions and comments'],
+  ['ruler', '📏', 'Reading ruler', 'A band that follows your finger or mouse'],
+  ['words', '📖', 'Explain tricky words', 'Tap underlined tech words for a quick explanation'],
+  ['everywhere', '🌍', 'Use size and font everywhere', 'Not just in stories'],
+];
+const DEF = { size: 1, font: 'default', roomy: false, paper: false, focus: false, ruler: false, words: true, everywhere: false };
+const comfort = { ...DEF, ...store.get('comfort', {}) };
+
+function applyComfort() {
+  const root = document.documentElement;
+  root.style.setProperty('--r-scale', String(SIZES[comfort.size] ?? 1));
+  root.dataset.rfont = comfort.font;
+  root.classList.toggle('r-roomy', comfort.roomy);
+  root.classList.toggle('comfort-all', comfort.everywhere);
+  const r = $('#readerDialog');
+  if (r) for (const k of ['paper', 'focus', 'ruler']) r.classList.toggle(`r-${k}`, comfort[k]);
+}
+
+function panelHTML() {
+  return `<div class="cf-row"><span class="cf-label">${t('Text size')}</span>
+      <div class="cf-size"><button type="button" class="cf-btn" data-cf-size="-1" aria-label="${esc(t('Smaller text'))}" ${comfort.size <= 0 ? 'disabled' : ''}>A−</button>
+        <span class="cf-dots" aria-hidden="true">${SIZES.map((_, i) => `<i class="${i === comfort.size ? 'on' : ''}"></i>`).join('')}</span>
+        <button type="button" class="cf-btn big" data-cf-size="1" aria-label="${esc(t('Bigger text'))}" ${comfort.size >= SIZES.length - 1 ? 'disabled' : ''}>A+</button></div></div>
+    <div class="cf-row"><span class="cf-label">${t('Font')}</span>
+      <div class="cf-fonts" role="radiogroup" aria-label="${esc(t('Font'))}">${FONTS.map(([id, name]) => `<button type="button" role="radio" class="cf-font f-${id}" data-cf-font="${id}" aria-checked="${comfort.font === id}"><b>Aa</b><small>${t(name)}</small></button>`).join('')}</div></div>
+    <div class="cf-toggles">${TOGGLES.map(([k, emoji, name, hint]) => `<label class="cf-toggle"><span>${emoji}</span><span class="cf-tt"><b>${t(name)}</b>${hint ? `<small>${t(hint)}</small>` : ''}</span>
+      <input type="checkbox" class="switch" data-cf="${k}" ${comfort[k] ? 'checked' : ''}></label>`).join('')}</div>
+    <button type="button" class="linkish cf-reset" data-cf-reset>${t('Back to normal')}</button>`;
+}
+
+/** The "Aa" button in the reader and the "Reading comfort" settings row. */
+function initComfort({ onChange } = {}) {
+  applyComfort();
+  const reader = $('#readerDialog');
+  const pop = document.createElement('div');
+  pop.className = 'comfort-pop glass';
+  pop.hidden = true;
+  pop.setAttribute('role', 'dialog');
+  pop.setAttribute('aria-label', t('Reading comfort'));
+  reader?.append(pop);
+  const D = makeDialog('comfort-dialog', `🔤 ${t('Reading comfort')}`);
+  const paint = () => { pop.innerHTML = `<p class="tp-label">🔤 ${t('Reading comfort')}</p>${panelHTML()}`; D.body.innerHTML = `<p class="muted small">${t('Make stories easier on your eyes. Saved on this device.')}</p>${panelHTML()}`; };
+
+  function set(patch) {
+    Object.assign(comfort, patch);
+    store.set('comfort', { ...comfort });
+    applyComfort();
+    paint();
+    onChange?.(comfort);
+    sfx.blip();
+  }
+  const onClick = (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const s = el.closest('[data-cf-size]');
+    if (s) { set({ size: Math.max(0, Math.min(SIZES.length - 1, comfort.size + Number(s.dataset.cfSize))) }); return; }
+    const f = el.closest('[data-cf-font]');
+    if (f) { set({ font: f.dataset.cfFont }); return; }
+    if (el.closest('[data-cf-reset]')) set({ ...DEF });
+  };
+  const onToggle = (e) => { const k = e.target.dataset?.cf; if (k) set({ [k]: e.target.checked }); };
+  for (const box of [pop, D.body]) { box.addEventListener('click', onClick); box.addEventListener('change', onToggle); }
+
+  $('#readerComfort')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (pop.hidden) paint();
+    pop.hidden = !pop.hidden;
+  });
+  // tapping outside closes the panel (the path is checked as it was when tapped, since the panel redraws itself)
+  reader?.addEventListener('click', (e) => { const path = e.composedPath(); if (!pop.hidden && !path.includes(pop) && !path.includes($('#readerComfort'))) pop.hidden = true; });
+  reader?.addEventListener('close', () => { pop.hidden = true; });
+
+  // 📏 the reading ruler follows the pointer (or finger) inside the reader
+  const ruler = document.createElement('div');
+  ruler.className = 'read-ruler';
+  ruler.setAttribute('aria-hidden', 'true');
+  reader?.append(ruler);
+  let lastY = null;
+  const place = (y) => { if (y == null || !reader) return; const top = y - reader.getBoundingClientRect().top; ruler.style.transform = `translateY(${Math.round(top)}px)`; };
+  reader?.addEventListener('pointermove', (e) => { if (comfort.ruler) { lastY = e.clientY; place(lastY); } }, { passive: true });
+  reader?.addEventListener('pointerdown', (e) => { if (comfort.ruler) { lastY = e.clientY; place(lastY); } }, { passive: true });
+  reader?.addEventListener('toggle', () => { if (comfort.ruler) place(lastY ?? window.innerHeight * 0.45); });
+
+  return {
+    open() { paint(); if (!D.dlg.open) D.dlg.showModal(); },
+    summary: () => [comfort.size !== 1 ? `${Math.round((SIZES[comfort.size]) * 100)}%` : '', comfort.font !== 'default' ? t(FONTS.find(([id]) => id === comfort.font)[1]) : '', comfort.focus ? t('Focus mode') : ''].filter(Boolean).join(' · ') || t('Standard'),
+    wordsOn: () => comfort.words,
+  };
+}
+
+return { comfort, applyComfort, initComfort };
+})();
+
+// ===== newsmap.js =====
+__m["newsmap"] = (() => {
+// 🗺️ News Map: where today's stories are happening, on a dot-matrix world map. Each glowing spot is a place
+// mentioned in the headlines (bigger = more stories); tap one to see them. Space stories get their own row.
+const { $, esc, timeAgo } = __m["utils"];
+const { t, tn, lang } = __m["i18n"];
+const { sfx } = __m["fun"];
+const { catById } = __m["news"];
+const { MAP, LAND } = __m["map-data"];
+const { placesOf, flag } = __m["places"];
+const { makeDialog } = __m["arena"];
+
+const W = MAP.cols;
+const H = MAP.rows;
+// all land dots as one path of zero-length strokes with round caps: thousands of dots, one element
+const LAND_PATH = LAND.map((row, r) => [...row].map((hex, i) => {
+  const v = parseInt(hex, 16);
+  let d = '';
+  for (let b = 0; b < 4; b++) if (v & (8 >> b)) d += `M${i * 4 + b + 0.5} ${r + 0.5}h0`;
+  return d;
+}).join('')).join('');
+const xy = (lat, lon) => [(lon + 180) / MAP.step, (MAP.top - lat) / MAP.step];
+
+let regionNames = null;
+const countryName = (cc) => {
+  try { regionNames ||= new Intl.DisplayNames([lang, 'en'], { type: 'region' }); return regionNames.of(cc) || cc; } catch { return cc; }
+};
+const placeName = (p) => (p.name ? t(p.name) : countryName(p.cc)); // cities and space spots have names; countries come from the browser, in your language
+const placeLabel = (p) => (p.emoji ? `${p.emoji} ${t(p.name)}` : `${flag(p.cc)} ${placeName(p)}`);
+
+/** Group stories by place: [{ place, stories }] biggest first, and the same for space. */
+function mapStories(items) {
+  const earth = new Map();
+  const space = new Map();
+  for (const it of items) {
+    const found = placesOf(`${it.title} ${it.summary || ''}`);
+    for (const p of found.earth) (earth.get(p.id) || earth.set(p.id, { place: p, stories: [] }).get(p.id)).stories.push(it);
+    for (const p of found.space) (space.get(p.id) || space.set(p.id, { place: p, stories: [] }).get(p.id)).stories.push(it);
+  }
+  const order = (m) => [...m.values()].sort((a, b) => b.stories.length - a.stories.length || a.place.id.localeCompare(b.place.id));
+  return { earth: order(earth), space: order(space) };
+}
+
+function initNewsMap({ openStory }) {
+  const box = $('#mapWidget');
+  const body = $('#mapBody');
+  if (!box || !body) return null;
+  const D = makeDialog('map-dialog', `🗺️ ${t('News Map')}`);
+  let data = { earth: [], space: [] };
+  let selected = null;
+  let lastSig = '';
+
+  function svg(big) {
+    const max = Math.max(1, ...data.earth.map((g) => g.stories.length));
+    const spots = data.earth.map((g) => {
+      const [x, y] = xy(g.place.lat, g.place.lon);
+      const r = 0.9 + Math.sqrt(g.stories.length / max) * (big ? 1.5 : 1.9);
+      const on = selected === g.place.id;
+      return `<g class="nm-spot${on ? ' on' : ''}" data-place="${g.place.id}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})" role="button" tabindex="0" aria-label="${esc(`${placeName(g.place)}: ${tn(g.stories.length, '{n} story', '{n} stories')}`)}">
+        <circle class="nm-pulse" r="${(r * 1.9).toFixed(2)}"/><circle class="nm-core" r="${r.toFixed(2)}"/>${g.stories.length > 1 ? `<text dy=".35em">${g.stories.length}</text>` : ''}</g>`;
+    }).join('');
+    return `<svg class="nm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('World map of where today’s stories happen'))}"><path class="nm-land" d="${LAND_PATH}"/>${spots}</svg>`;
+  }
+
+  function listHTML() {
+    const g = [...data.earth, ...data.space].find((x) => x.place.id === selected);
+    if (!g) return `<p class="muted small nm-hint">${data.earth.length || data.space.length ? t('Tap a glowing spot to see its stories.') : t('No places in today’s headlines yet — check back soon! 🌍')}</p>`;
+    return `<p class="nm-place"><b>${esc(placeLabel(g.place))}</b> <small class="muted">${tn(g.stories.length, '{n} story', '{n} stories')}</small></p>
+      <ul class="nm-stories">${g.stories.slice(0, 6).map((s) => `<li><button type="button" class="nm-story" data-nm-story="${esc(s.key)}"><span aria-hidden="true">${catById(s.cat).emoji}</span><span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || '')} · ${esc(timeAgo(s.time))}</small></span></button></li>`).join('')}</ul>`;
+  }
+
+  function chipsHTML() {
+    const top = data.earth.slice(0, 6);
+    return `${data.space.length ? `<div class="nm-chips nm-space" aria-label="${esc(t('Off the map'))}"><span class="muted small">🚀 ${t('Off the map:')}</span>${data.space.map((g) => `<button type="button" class="chip${selected === g.place.id ? ' on' : ''}" data-place="${g.place.id}">${esc(placeLabel(g.place))} <b>${g.stories.length}</b></button>`).join('')}</div>` : ''}
+      ${top.length ? `<div class="nm-chips">${top.map((g) => `<button type="button" class="chip${selected === g.place.id ? ' on' : ''}" data-place="${g.place.id}">${esc(placeLabel(g.place))} <b>${g.stories.length}</b></button>`).join('')}</div>` : ''}`;
+  }
+
+  function paint() {
+    box.hidden = false;
+    body.innerHTML = `<div class="nm-wrap">${svg(false)}</div>${chipsHTML()}<div class="nm-list">${listHTML()}</div>
+      <button type="button" class="btn btn-ghost btn-sm btn-block" data-nm-big>⤢ ${t('Bigger map')}</button>`;
+    if (D.dlg.open) paintBig();
+  }
+  function paintBig() { D.body.innerHTML = `<div class="nm-wrap big">${svg(true)}</div>${chipsHTML()}<div class="nm-list">${listHTML()}</div>`; }
+
+  function pick(id) {
+    selected = selected === id ? null : id;
+    sfx.blip();
+    paint();
+  }
+  const all = () => [...data.earth, ...data.space].flatMap((g) => g.stories);
+  function onClick(e) {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const p = el.closest('[data-place]');
+    if (p) { pick(p.dataset.place); return; }
+    const s = el.closest('[data-nm-story]');
+    if (s) { const it = all().find((x) => x.key === s.dataset.nmStory); if (it) { if (D.dlg.open) D.dlg.close(); openStory(it); } return; }
+    if (el.closest('[data-nm-big]')) { paintBig(); D.dlg.showModal(); }
+  }
+  const onKey = (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('.nm-spot')) { e.preventDefault(); pick(e.target.closest('.nm-spot').dataset.place); } };
+  for (const el of [body, D.body]) { el.addEventListener('click', onClick); el.addEventListener('keydown', onKey); }
+
+  return {
+    update(items) {
+      data = mapStories(items);
+      if (selected && ![...data.earth, ...data.space].some((g) => g.place.id === selected)) selected = null;
+      const sig = [...data.earth, ...data.space].map((g) => `${g.place.id}:${g.stories.map((x) => x.key).join(',')}`).join('|') + lang;
+      if (sig === lastSig) return; // nothing new: keep the map (and its animations) as they are
+      lastSig = sig;
+      paint();
+    },
+  };
+}
+
+return { placeName, mapStories, initNewsMap };
+})();
+
 // ===== discover.js =====
 __m["discover"] = (() => {
 // ☀️ Morning Drop, 🔔 followed topics and companies, 🕰️ "how we got here" timelines in the reader.
@@ -12815,14 +13569,19 @@ const { catById } = __m["news"];
 const { t, lang } = __m["i18n"];
 const { icon, applyIcons } = __m["icons"];
 const { sfx } = __m["fun"];
+const { markWords, initWords } = __m["words"];
+const { comfort } = __m["comfort"];
 
-function initReader({ getData, reactsHTML, summarize, speakText, showComments, onOpen, chatEnabled }) {
+function initReader({ getData, reactsHTML, summarize, speakText, showComments, onOpen, chatEnabled, onAskWord, onLearnWord }) {
   const dlg = $('#readerDialog');
   const scroller = $('#readerScroll');
   let item = null;
   let mode = 'tldr';
   let summaryText = '';
   let returnFocus = null;
+  // 📖 tricky tech words become tappable (unless switched off in Reading comfort)
+  const words = initWords({ host: dlg, onAsk: (k) => { close(); onAskWord?.(k); }, onLearn: onLearnWord });
+  const setText = (el, text) => { if (comfort.words) el.innerHTML = markWords(text); else el.textContent = text; };
 
   const thumb = (it) => {
     const c = catById(it.cat);
@@ -12848,7 +13607,7 @@ function initReader({ getData, reactsHTML, summarize, speakText, showComments, o
     const r = await summarize(it, m);
     if (it !== item || m !== mode) return; // the reader moved on
     summaryText = r.text;
-    box.textContent = r.text;
+    setText(box, r.text);
     $('#readerSummaryNote').textContent = r.ai ? t('🤖 codme AI') : t('🍿 codme’s quick explainer');
   }
 
@@ -12865,10 +13624,10 @@ function initReader({ getData, reactsHTML, summarize, speakText, showComments, o
     $('#readerMedia').innerHTML = thumb(it);
     $('#readerKicker').textContent = [`${t(c.label)}`, it.source, timeAgo(it.time)].filter(Boolean).join(' · ');
     const title = $('#readerTitle');
-    title.textContent = it.title;
+    setText(title, it.title);
     title.setAttribute('dir', 'auto');
     title.setAttribute('lang', 'en');
-    $('#readerDek').textContent = it.summary || '';
+    setText($('#readerDek'), it.summary || '');
     const openBtn = $('#readerOpen');
     openBtn.href = safeUrl(it.url);
     openBtn.innerHTML = `${esc(t('Continue reading on {source}', { source: it.source || it.domain || t('the original site') }))} ${icon('external')}`;
@@ -12902,7 +13661,15 @@ function initReader({ getData, reactsHTML, summarize, speakText, showComments, o
     returnFocus?.focus?.({ preventScroll: true });
   });
   applyIcons(dlg);
-  return { open, close, current: () => item, isOpen: () => dlg.open };
+  /** Redraw the text after Reading comfort changes (words on or off). */
+  function rewrite() {
+    if (!item || !dlg.open) return;
+    words.hide();
+    setText($('#readerTitle'), item.title);
+    setText($('#readerDek'), item.summary || '');
+    if (summaryText) setText($('#readerSummary'), summaryText);
+  }
+  return { open, close, rewrite, current: () => item, isOpen: () => dlg.open };
 }
 
 return { initReader };
@@ -12943,6 +13710,9 @@ const { initParties } = __m["parties"];
 const { initDebates } = __m["debates"];
 const { initShop } = __m["shop"];
 const { initPet } = __m["pet"];
+const { initNewsMap } = __m["newsmap"];
+const { initComfort } = __m["comfort"];
+const { LEARN_XP } = __m["words"];
 const { ownsLook } = __m["shop-data"];
 const { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } = __m["invite"];
 
@@ -12990,6 +13760,8 @@ let parties = null;
 let debates = null;
 let invites = null;
 let shop = null;
+let newsmap = null;
+let comfortUI = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
@@ -13100,6 +13872,7 @@ const ACHIEVEMENTS = [
   { id: 'survivor', emoji: '🎤', name: 'Last One Standing', desc: 'Win a kerNEl Live show', test: () => (serverStats().liveWins || 0) >= 1 },
   { id: 'oracle', emoji: '🔮', name: 'Called It', desc: 'Get a prediction right', test: () => (serverStats().prophet || 0) >= 1 },
   { id: 'polyglot', emoji: '🌐', name: 'Polyglot', desc: 'Read kerNEl in another language', test: (d) => (d.counts?.langs || 0) >= 1 || lang !== 'en' },
+  { id: 'word_nerd', emoji: '📖', name: 'Word Nerd', desc: 'Tap 10 tricky words in stories to learn them', test: (d) => (d.counts?.wordsLearned || 0) >= 10 },
 ];
 
 function serverStats() { return auth.user ? store.get(`stats:${auth.profileKey()}`, {}) : {}; }
@@ -13591,6 +14364,7 @@ function renderAll() {
   renderFeed();
   renderTicker();
   renderTrends();
+  newsmap?.update(feed.all());
   renderSources();
   updateStatusLine();
   codme?.updateStatus();
@@ -13917,6 +14691,10 @@ function applyTheme(theme) {
   setIcon(st?.closest('.set-row'), theme === 'dark' ? 'moon' : 'sun');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#f5f5f7');
 }
+function paintComfortRow() {
+  const el = $('#setComfort');
+  if (el && comfortUI) el.textContent = comfortUI.summary();
+}
 function paintSoundBtn() {
   const b = $('#soundBtn');
   setIcon(b, sfx.enabled ? 'soundOn' : 'soundOff');
@@ -13978,6 +14756,7 @@ function handleAction(action, el) {
       break;
     }
     case 'sound': sfx.toggle(); paintSoundBtn(); if (auth.user) setData(getData()); break;
+    case 'comfort': comfortUI?.open(); break;
     case 'chaos': {
       const on = document.documentElement.classList.toggle('chaos');
       $$('[data-action="chaos"]').forEach((b) => b.id === 'chaosBtn' && b.setAttribute('aria-pressed', String(on)));
@@ -14191,7 +14970,13 @@ function boot() {
     showComments: (it, opts) => (social ? social.openComments(it, opts) : ($('.reader-comments').hidden = true)),
     onOpen: (it) => { markRead(it.key); discover?.readerOpened(it); },
     chatEnabled: !!community,
+    onAskWord: (k) => codme?.open(`What is ${k}?`),
+    onLearnWord: () => { addXp(LEARN_XP); bump('wordsLearned'); checkAchievements(); },
   });
+  comfortUI = initComfort({ onChange: () => { reader?.rewrite(); paintComfortRow(); } });
+  paintComfortRow();
+  newsmap = initNewsMap({ openStory: (s) => reader?.open(findItem(s.key) || s) });
+  if (feed.size) newsmap?.update(feed.all());
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
   invites = initInvites();

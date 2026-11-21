@@ -13,7 +13,7 @@ const jsonArg = process.argv.indexOf('--json');
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
 const unq = (s) => s.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
 
-const MAIN_FILES = ['app', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'look', 'news', 'fun', 'auth', 'content', 'reader', 'tabs', 'dm', 'photo', 'mod', 'invite', 'cosmetics', 'arena', 'voice', 'groups', 'pops', 'discover', 'stocks', 'bingo', 'guess', 'cards', 'cards-ui', 'cards-data', 'squads', 'parties', 'debates', 'shop', 'shop-data', 'personas', 'pet', 'pet-data'];
+const MAIN_FILES = ['app', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'look', 'news', 'fun', 'auth', 'content', 'reader', 'tabs', 'dm', 'photo', 'mod', 'invite', 'cosmetics', 'arena', 'voice', 'groups', 'pops', 'discover', 'stocks', 'bingo', 'guess', 'cards', 'cards-ui', 'cards-data', 'squads', 'parties', 'debates', 'shop', 'shop-data', 'personas', 'pet', 'pet-data', 'words', 'comfort', 'newsmap', 'places'];
 const KIDS_FILES = ['kids'];
 const files = (which === 'kids' ? KIDS_FILES : MAIN_FILES).map((f) => `js/${f}.js`);
 
@@ -50,6 +50,10 @@ if (which === 'main') {
   for (const m of read('js/news.js').matchAll(/label: '([^']+)'/g)) add(m[1]);
   for (const m of read('js/community.js').matchAll(/name: '([^']+)'/g)) add(m[1]);
   for (const m of read('js/shop-data.js').matchAll(/^\s+\['\w+', '([^']+)'\],$/gm)) add(m[1]); // shop sections
+  for (const m of read('js/places.js').matchAll(/T\('\w+', '([^']+)'/g)) add(m[1]); // city names on the News Map
+  const cf = read('js/comfort.js'); // reading comfort: fonts and switches
+  for (const m of cf.matchAll(/\['\w+', '([A-Z][^']+)'\]/g)) add(m[1]);
+  for (const m of cf.matchAll(/\['\w+', '[^\w\s']+', '([^']+)'(?:, '([^']+)')?\]/gu)) { add(m[1]); if (m[2]) add(m[2]); }
   const personas = read('js/personas.js'); // codme personalities: greetings, result intros, catchphrases
   for (const m of personas.matchAll(new RegExp(String.raw`\b(?:hi|found|none)\s*:\s*(?:${LIT})`, 'g'))) add(m[1] ?? m[2] ?? m[3]);
   for (const m of personas.matchAll(/tics: \[([^\]]+)\]/g)) for (const x of m[1].matchAll(new RegExp(LIT, 'g'))) add(x[1] ?? x[2] ?? x[3]);
