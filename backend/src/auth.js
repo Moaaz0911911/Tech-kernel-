@@ -5,7 +5,7 @@ import { HttpError, sha256Hex, randomToken } from './util.js';
 
 const SESSION_DAYS = 30;
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
-const RESERVED = new Set(['admin', 'administrator', 'codme', 'kernel', 'root', 'support', 'moderator', 'mod', 'system', 'staff', 'official']);
+const RESERVED = new Set(['admin', 'administrator', 'codme', 'kernel', 'root', 'support', 'moderator', 'mod', 'system', 'staff', 'official', 'search', 'blocked']);
 const COMMON = new Set(['password', 'password1', '12345678', '123456789', '1234567890', 'qwertyui', 'qwerty123', 'iloveyou', 'letmein1', 'abcdefgh', 'abc12345', '11111111', '00000000', 'football', 'baseball', 'sunshine', 'princess', 'welcome1', 'kernel123', 'popcorn1']);
 const enc = new TextEncoder();
 const b64 = (bytes) => btoa(String.fromCharCode(...bytes));
@@ -213,7 +213,7 @@ export function cleanProfile(p, prev = {}) {
   return { ...prev, nickname, avatar, topics, leaderboard, lang };
 }
 
-const COUNTERS = new Set(['quizPlayed', 'quizPerfect', 'battleVotes', 'comments', 'explains', 'briefings', 'swipes', 'timeTravels', 'tourneys', 'wrapped', 'follows', 'langs']);
+const COUNTERS = new Set(['quizPlayed', 'quizPerfect', 'battleVotes', 'comments', 'explains', 'briefings', 'swipes', 'timeTravels', 'tourneys', 'wrapped', 'follows', 'langs', 'dms']);
 /** Kids' minutes per day (for the grown-ups' dashboard): keep the bigger number for each day, last 30 days. */
 function mergeMinutes(prev = {}, next = {}) {
   const out = { ...prev };

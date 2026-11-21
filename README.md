@@ -41,6 +41,15 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
 - 👯 **Friends**: follow people from their profile card, see their streak flames and a feed of their rank-ups, achievements, quiz scores and trophies. They get a notification when you follow them.
+- ✉️ **Messages**: private one-to-one chats, in the Chat tab next to the rooms.
+  - People you don't follow land in **Message requests**. They can send up to 3 messages until you accept, and they can't see that you've read anything until then.
+  - **Seen ✓✓**, reactions (double-tap a message for ❤️), delete your own messages, and **🔥 message streaks** when you both write every day.
+  - **Send a story to a friend** from the reader. It arrives as a card that opens in their reader.
+  - Block, report (which also blocks) and "delete chat". Settings has **Who can message me**: everyone, only people I follow, or nobody.
+  - New messages can send a push notification, with their own on/off switch.
+- 🔍 **Find people**: search by name or @username on the Me tab or in Messages, with suggestions (people who follow you, the most active kernels). Follow or message right from the results.
+- 📷 **Profile photos**: pick a photo from your gallery or camera, then drag and zoom to crop it to a circle. It's shrunk to a small JPEG in the browser before upload and shows everywhere your avatar does: chat, comments, leaderboard, profile cards. Photos are public, and 3 reports from different people take one down.
+- 🪪 **Profile cards** now show a short **bio**, 🟢 **Active now** (or when someone was last around) and "Follows you". They have Message, **Share profile** (a link like `#@username`), Block and Report photo buttons.
 - 🎩 **Hats and frames** for your avatar, unlocked with XP (and a Champion look for trophy winners). They show in chat, comments, the leaderboard and on profile cards, next to a 🔥 streak flame.
 - 🎁 **kerNEl Wrapped**: a shareable picture of your stats, your "news vibe" and favourite section.
 - 🎧 **Daily audio briefing**: the top 5 stories read aloud, with pause and skip.
@@ -156,6 +165,8 @@ js/i18n-main.js   ← translations for the news site [English, Arabic, German, T
 js/i18n-kids.js   ← translations for kerNEl Kids
 js/play.js        Daily Quiz, Popcorn Battle, weekly tournament
 js/social.js      story comments (+ reactions on comments), friends + activity feed
+js/dm.js          ✉️ Messages (requests, Seen, reactions, streaks, shared stories) + 🔍 people search
+js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
 js/look.js        avatars with hats, frames and streak flames
 js/cosmetics.js   the hats and frames (shared with the server)

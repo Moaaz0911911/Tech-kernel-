@@ -5,6 +5,7 @@ import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML } from './look.js';
+import { initDM, mountPeopleSearch, activeText } from './dm.js';
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -15,7 +16,7 @@ const DEFAULT_ROOMS = [ // shown instantly, before the server answers
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
-export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle }) {
+export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle, openStory, onDM }) {
   const drawer = $('#chatDrawer');
   if (!auth.ready) { // community features need the kerNEl server
     drawer.remove();
@@ -33,7 +34,20 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
   let busy = false;
   let share = null; // story waiting to be shared
   let unread = 0;
+  let dmCount = 0;
+  let mode = store.get('chat:mode', 'rooms') === 'dms' ? 'dms' : 'rooms';
   let lastSeen = store.get('chat:seen', 0);
+  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, onBadge: (n) => { dmCount = n; paintDot(); } });
+
+  function setMode(m) {
+    mode = m;
+    store.set('chat:mode', m);
+    $$('[data-chatmode]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.chatmode === m)));
+    $('#roomsPane').hidden = m !== 'rooms';
+    $('#dmPane').hidden = m !== 'dms';
+    if (m === 'dms' && isOpen()) dm.show(); else dm.hide();
+    if (m === 'rooms' && isOpen()) { paintRooms(); paintComposer(); poll({ fresh: !msgs.size }); }
+  }
 
   // ---------------- chat ----------------
   const isOpen = () => !drawer.hidden;
@@ -135,27 +149,32 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
 
   function schedule(ms) {
     clearTimeout(timer);
-    timer = setTimeout(() => { if (!document.hidden) poll(); else schedule(); }, ms ?? (isOpen() ? OPEN_MS : CLOSED_MS));
+    timer = setTimeout(() => { if (!document.hidden) poll(); else schedule(); }, ms ?? (isOpen() && mode === 'rooms' ? OPEN_MS : CLOSED_MS));
   }
 
   function paintDot() {
-    $$('.chat-dot').forEach((d) => { d.hidden = !unread; d.textContent = unread > 9 ? '9+' : String(unread); });
+    const n = unread + dmCount;
+    $$('.chat-dot').forEach((d) => { d.hidden = !n; d.textContent = n > 9 ? '9+' : String(n); });
   }
 
-  function open(shareItem) {
+  function open(shareItem, { as = null } = {}) {
     if (shareItem) share = { key: shareItem.key, title: shareItem.title, url: shareItem.url, source: shareItem.source, cat: shareItem.cat, time: shareItem.time };
+    const wasOpen = isOpen();
     drawer.hidden = false;
     requestAnimationFrame(() => drawer.classList.add('open'));
     unread = 0;
     paintDot();
-    paintRooms();
-    paintComposer();
-    if (!msgs.size) log.innerHTML = `<div class="chat-empty"><span class="spin">🍿</span><p>${t('Popping the chat…')}</p></div>`;
-    poll({ fresh: !msgs.size });
-    if (auth.user) setTimeout(() => input.focus(), 150);
-    sfx.pop();
+    if (shareItem) mode = 'rooms';
+    if (as) mode = as;
+    setMode(mode);
+    if (mode === 'rooms') {
+      if (!msgs.size) log.innerHTML = `<div class="chat-empty"><span class="spin">🍿</span><p>${t('Popping the chat…')}</p></div>`;
+      if (auth.user) setTimeout(() => input.focus(), 150);
+    }
+    if (!wasOpen) sfx.pop();
   }
   function close() {
+    dm.hide();
     drawer.classList.remove('open');
     setTimeout(() => { if (!drawer.classList.contains('open')) drawer.hidden = true; }, 250);
     schedule(CLOSED_MS);
@@ -201,6 +220,8 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
   drawer.addEventListener('click', async (e) => {
     const el = e.target;
     if (!(el instanceof Element)) return;
+    const modeBtn = el.closest('[data-chatmode]');
+    if (modeBtn) return setMode(modeBtn.dataset.chatmode);
     const roomBtn = el.closest('[data-room]');
     if (roomBtn) return switchRoom(roomBtn.dataset.room);
     if (el.closest('[data-cm="close"]')) return close();
@@ -238,7 +259,7 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
     }
   });
-  drawer.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  drawer.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.defaultPrevented) close(); });
 
   // ---------------- daily Hot Take poll ----------------
   async function loadPoll() {
@@ -285,9 +306,11 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       const badges = u.badges.map(badgeInfo).filter(Boolean);
       const trophies = u.trophies || [];
       body.innerHTML = `
-        <div class="uc-ava">${lookHTML(u, { streak: u.streak })}</div>
+        <div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>
         <h2 dir="auto">${esc(u.nickname)}</h2>
         <p class="muted">@${esc(u.username)} · ${t('joined {when}', { when: fmtDate(u.joined, { month: 'short', year: 'numeric' }) })}</p>
+        ${u.bio ? `<p class="uc-bio" dir="auto">${esc(u.bio)}</p>` : ''}
+        ${activeText(u) || u.followsYou ? `<p class="uc-status">${activeText(u) ? `<span>${u.active ? '🟢' : '⚪'} ${esc(activeText(u))}</span>` : ''}${u.followsYou ? `<span class="chip">${t('Follows you')}</span>` : ''}</p>` : ''}
         <p class="uc-rank">${esc(u.rank)} ${esc(t(rankTitle(u.xp)))}</p>
         <div class="uc-stats">
           <span><b>${u.xp}</b>XP</span>
@@ -301,10 +324,18 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
         ${badges.length ? `<p class="uc-badges" aria-label="${t('Achievements')}">${badges.map((b) => `<span title="${esc(t(b.name))}">${b.emoji}</span>`).join('')}</p>` : `<p class="muted small">${t('No achievements yet — still warming up 🌽')}</p>`}
         ${u.topics.length ? `<p class="uc-topics">${u.topics.map((x) => `<span class="chip chip-cat" style="--cat-h:${catById(x).hue}">${catById(x).emoji} ${esc(t(catById(x).label))}</span>`).join(' ')}</p>` : ''}
         ${u.kidsStars ? `<p class="muted small">🧸 ${t('{n} kerNEl Kids stars', { n: u.kidsStars })}</p>` : ''}
+        ${u.blocked ? `<p class="uc-blocked">🚫 ${t('You blocked @{name}.', { name: esc(u.username) })}</p>` : ''}
         <div class="uc-actions">
-          ${auth.user && !u.me ? `<button type="button" class="btn ${u.isFollowing ? 'btn-ghost' : 'btn-primary'}" data-follow="${esc(u.username)}" data-on="${u.isFollowing ? 1 : 0}">${u.isFollowing ? t('✓ Following') : t('➕ Follow')}</button>` : ''}
+          ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn ${u.isFollowing ? 'btn-ghost' : 'btn-primary'}" data-follow="${esc(u.username)}" data-on="${u.isFollowing ? 1 : 0}">${u.isFollowing ? t('✓ Following') : u.followsYou ? t('➕ Follow back') : t('➕ Follow')}</button>` : ''}
+          ${auth.user && !u.me && u.canMessage ? `<button type="button" class="btn btn-ghost" data-message="${esc(u.username)}">✉️ ${t('Message')}</button>` : ''}
           ${!auth.user ? `<button type="button" class="btn btn-primary" data-action="signup">${t('➕ Sign up to follow')}</button>` : ''}
-          ${auth.user && !u.me ? `<button type="button" class="btn btn-ghost" data-mention="${esc(u.username)}">💬 ${t('Mention in chat')}</button>` : ''}
+          ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn btn-ghost" data-mention="${esc(u.username)}">💬 ${t('Mention in chat')}</button>` : ''}
+          ${u.me ? `<button type="button" class="btn btn-ghost" data-action="edit-profile">✏️ ${t('Edit profile')}</button>` : ''}
+        </div>
+        <div class="uc-more">
+          <button type="button" class="linkish" data-share-profile="${esc(u.username)}">🔗 ${t('Share profile')}</button>
+          ${auth.user && !u.me ? `<button type="button" class="linkish" data-block="${esc(u.username)}" data-on="${u.blocked ? 1 : 0}">${u.blocked ? `✅ ${t('Unblock')}` : `🚫 ${t('Block')}`}</button>` : ''}
+          ${auth.user && !u.me && u.photo ? `<button type="button" class="linkish" data-report-photo="${esc(u.username)}">🚩 ${t('Report photo')}</button>` : ''}
         </div>`;
     } catch (err) {
       body.innerHTML = `<div class="auth-mascot">🤷</div><p>${esc(tServer(err.message))}</p>`;
@@ -319,6 +350,40 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       open();
       input.value = `@${b.dataset.mention} ${input.value}`;
       input.focus();
+      return;
+    }
+    const msgBtn = el?.closest('[data-message]');
+    if (msgBtn) { $('#userCard').close(); openDM(msgBtn.dataset.message); return; }
+    if (el?.closest('[data-action="edit-profile"]')) { $('#userCard').close(); return; }
+    const shareBtn = el?.closest('[data-share-profile]');
+    if (shareBtn) {
+      const link = `${location.origin}${location.pathname}#@${shareBtn.dataset.shareProfile}`;
+      try {
+        if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: `@${shareBtn.dataset.shareProfile} on kerNEl`, url: link });
+        else { await navigator.clipboard.writeText(link); toast(t('Profile link copied! 🔗'), { emoji: '🔗' }); }
+      } catch { /* cancelled */ }
+      return;
+    }
+    const blockBtn = el?.closest('[data-block]');
+    if (blockBtn) {
+      const name = blockBtn.dataset.block;
+      const on = blockBtn.dataset.on !== '1';
+      if (on && !confirm(t('Block @{name}? They won’t be able to message you or find you, and you’ll stop following each other.', { name }))) return;
+      try {
+        await auth.api('/api/block', { method: 'POST', body: { username: name, block: on } });
+        toast(on ? t('@{name} is blocked.', { name }) : t('@{name} is unblocked.', { name }), { emoji: on ? '🚫' : '✅' });
+        showProfile(name);
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const rp = el?.closest('[data-report-photo]');
+    if (rp) {
+      if (!confirm(t('Report this profile photo as inappropriate? Photos reported by 3 people are removed.'))) return;
+      try {
+        const r = await auth.api('/api/photo/report', { method: 'POST', body: { username: rp.dataset.reportPhoto } });
+        toast(r.removed ? t('Thanks — that photo has been removed.') : t('Thanks for reporting. We’ve got it from here. 🛡️'), { emoji: '🚩' });
+        showProfile(rp.dataset.reportPhoto);
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
       return;
     }
     const f = el?.closest('[data-follow]');
@@ -338,11 +403,21 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
     if (u && !u.closest('#userCard')) { e.preventDefault(); showProfile(u.dataset.user); }
   });
 
+  // ---------------- ✉️ messages + 🔍 people ----------------
+  function openDM(username, person) {
+    if (!auth.user) { toast(t('Sign in to message people privately ✉️'), { emoji: '✉️' }); openAuth('signin'); return; }
+    open(null, { as: 'dms' });
+    dm.openWith(username, person);
+  }
+  const people = mountPeopleSearch({ input: $('#peopleSearch'), results: $('#peopleResults'), onMessage: openDM, onFollow });
+  $('#peopleWidget').hidden = false;
+  people.refresh();
+
   // start: light background check + poll
   schedule(4000);
   loadPoll();
-  auth.addEventListener('signin', () => { loadPoll(); if (isOpen()) poll({ fresh: true }); });
-  auth.addEventListener('signout', () => { loadPoll(); share = null; if (isOpen()) { paintComposer(); render(); } });
+  auth.addEventListener('signin', () => { loadPoll(); people.refresh(); if (isOpen()) { poll({ fresh: true }); setMode(mode); } });
+  auth.addEventListener('signout', () => { loadPoll(); people.refresh(); share = null; dmCount = 0; paintDot(); if (isOpen()) { paintComposer(); render(); setMode(mode); } });
 
   return {
     open,
@@ -354,6 +429,13 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
     close,
     toggle: () => (isOpen() ? close() : open()),
     share: (item) => (auth.user ? open(item) : (toast(t('Sign in to share stories in kerNEl Chat!'), { emoji: '💬' }), openAuth('signin'))),
+    sendToFriend: (item) => {
+      if (!auth.user) { toast(t('Sign in to send stories to your friends ✉️'), { emoji: '✉️' }); openAuth('signin'); return; }
+      open(null, { as: 'dms' });
+      dm.shareStory(item);
+    },
+    openDM,
+    openMessages: () => { open(null, { as: 'dms' }); dm.inbox(); },
     refreshPoll: loadPoll,
     showProfile,
   };

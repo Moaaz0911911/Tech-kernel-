@@ -6,7 +6,7 @@ import {
   requireUser, currentUser, signOut, publicUser, cleanProfile, mergeDataPatch, REACTS,
 } from './auth.js';
 import { codmeReply } from './codme.js';
-import { assertNotMuted, listMessages, postMessage, reactMessage, reportMessage, deleteMessage, publicProfile, getPoll, votePoll } from './community.js';
+import { assertNotMuted, listMessages, postMessage, reactMessage, reportMessage, deleteMessage, publicProfile, getPoll, votePoll, cleanText } from './community.js';
 import { getDB, KernelDB } from './db.js';
 import { featureRoute } from './features.js';
 import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordActivity, STREAK_MILESTONES } from './social.js';
@@ -90,6 +90,8 @@ async function route(request, env, ctx) {
     const body = await readJson(request, 10_000);
     const prev = parse(user.profile, {});
     const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { xp: user.xp || 0, trophies: await trophyCount(env, user.id) }) };
+    if (typeof body.bio === 'string') profile.bio = cleanText(body.bio.replace(/\s+/g, ' ')).slice(0, 80);
+    if (['everyone', 'following', 'nobody'].includes(body.dms)) profile.dms = body.dms;
     await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();
     return json({ profile });
   }
@@ -130,6 +132,13 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM tourney_scores WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM trophies WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM dm_messages WHERE thread_id IN (SELECT thread_id FROM dm_members WHERE user_id = ?)').bind(user.id),
+      env.DB.prepare('DELETE FROM dm_threads WHERE id IN (SELECT thread_id FROM dm_members WHERE user_id = ?)').bind(user.id),
+      env.DB.prepare('DELETE FROM dm_members WHERE user_id = ? OR other_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM dm_reports WHERE reporter_id = ? OR user_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM blocks WHERE blocker_id = ? OR blocked_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM photos WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM photo_reports WHERE owner_id = ? OR reporter_id = ?').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
     return json({ ok: true });
@@ -181,7 +190,7 @@ async function route(request, env, ctx) {
   const del = path.match(/^\/api\/chat\/(\d+)$/);
   if (del && m === 'DELETE') return json(await deleteMessage(env, await requireUser(request, env), del[1]));
   const prof = path.match(/^\/api\/users\/([A-Za-z0-9_]{1,20})$/);
-  if (prof && m === 'GET') {
+  if (prof && m === 'GET' && prof[1].toLowerCase() !== 'search') {
     const viewer = await currentUser(request, env);
     return json(await publicProfile(env, prof[1], viewer), 200, { 'Cache-Control': viewer ? 'private, no-store' : 'public, max-age=30' });
   }
@@ -296,6 +305,8 @@ export default {
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'kidsnews:%' AND substr(k, -10) < ?").bind(new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare("DELETE FROM kv WHERE k LIKE 'tm:%' AND k NOT LIKE ?").bind(`tm:${new Date().getUTCFullYear()}:%`),
         env.DB.prepare('DELETE FROM quiz_scores WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare('DELETE FROM dm_messages WHERE created < ?').bind(Date.now() - 365 * 864e5), // messages keep a year
+        env.DB.prepare('DELETE FROM dm_reports WHERE at < ?').bind(Date.now() - 30 * 864e5),
         env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
       ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);

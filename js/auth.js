@@ -121,7 +121,7 @@ class Auth extends EventTarget {
   saveProfile(p) {
     store.set(`profile:${this.profileKey()}`, p);
     if (this.user?.apiToken) {
-      const body = { nickname: p.nickname, avatar: p.avatar, topics: p.topics, leaderboard: p.leaderboard !== false, hat: p.hat || 'none', frame: p.frame || 'none', ...(p.lang ? { lang: p.lang } : {}) };
+      const body = { nickname: p.nickname, avatar: p.avatar, topics: p.topics, leaderboard: p.leaderboard !== false, hat: p.hat || 'none', frame: p.frame || 'none', ...(p.lang ? { lang: p.lang } : {}), bio: p.bio || '', dms: p.dms || 'everyone' };
       this.api('/api/me/profile', { method: 'PUT', body })
         .then((r) => { // the server double-checks hats and frames against your XP
           if (r?.profile && (r.profile.hat !== body.hat || r.profile.frame !== body.frame)) {
@@ -133,6 +133,22 @@ class Auth extends EventTarget {
     }
     this.dispatchEvent(new CustomEvent('profile', { detail: p }));
   }
+  /** 📷 Upload a cropped profile photo (a JPEG data URL). */
+  async setPhoto(dataUrl) {
+    const r = await this.api('/api/me/photo', { method: 'PUT', body: { data: dataUrl } });
+    store.set(`profile:${this.profileKey()}`, { ...this.getProfile(), photo: r.photo });
+    this.dispatchEvent(new CustomEvent('profile', { detail: this.getProfile() }));
+    return r.photo;
+  }
+
+  async removePhoto() {
+    await this.api('/api/me/photo', { method: 'DELETE' });
+    const p = { ...this.getProfile() };
+    delete p.photo;
+    store.set(`profile:${this.profileKey()}`, p);
+    this.dispatchEvent(new CustomEvent('profile', { detail: p }));
+  }
+
 }
 
 export const auth = new Auth();

@@ -18,6 +18,7 @@ import { initExtras } from './extras.js';
 import { icon, setIcon } from './icons.js';
 import { initTabs, initGlass } from './tabs.js';
 import { initReader } from './reader.js';
+import { pickPhoto } from './photo.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
 const PAGE = 24;
@@ -556,7 +557,7 @@ function updateStatusLine() {
 }
 
 function avatarHTML(profile, cls = '', streak = 0) {
-  return lookHTML(profile, { cls: `avatar avatar-emoji ${cls}`, streak });
+  return lookHTML({ ...profile, username: auth.user?.username }, { cls: `avatar avatar-emoji ${cls}`, streak });
 }
 
 function renderProfileWidget() {
@@ -567,6 +568,7 @@ function renderProfileWidget() {
   const pct = r.next ? Math.round(((d.xp - r.min) / (r.next - r.min)) * 100) : 100;
   box.innerHTML = `
     <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div><b dir="auto">${esc(p.nickname)}</b><span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
+    ${auth.user && p.bio ? `<p class="pw-bio" dir="auto">${esc(p.bio)}</p>` : ''}
     <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${t('Progress to next rank')}"><i style="width:${pct}%"></i></div>
     <p class="xp-note">${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}</p>
     <div class="pw-stats"><span><b>${d.read.length}</b> ${t('read')}</span><span><b>${d.saved.length}</b> ${t('saved')}</span><span><b>${Object.keys(d.reactions).length}</b> ${t('reactions')}</span>${auth.user ? `<span title="${t('Visit every day to grow your streak')}"><b>🔥${d.streak || 0}</b> ${t('streak')}</span>` : ''}</div>
@@ -587,6 +589,7 @@ function renderAuthSlot() {
       <div class="menu-head">${avatarHTML(p, 'avatar-lg')}<div><b dir="auto">${esc(p.nickname)}</b><small>@${esc(auth.user.username)}</small><span class="provider">${t('☁️ progress saved to your account')}</span></div></div>
       <button type="button" role="menuitem" data-action="edit-profile">${t('✏️ Edit name tag & style')}</button>
       <button type="button" role="menuitem" data-action="wrapped">${t('🎁 My kerNEl Wrapped')}</button>
+      <button type="button" role="menuitem" data-action="messages">${t('✉️ Messages')}</button>
       <button type="button" role="menuitem" data-action="show-friends">${t('👯 Friends')}</button>
       <button type="button" role="menuitem" data-action="show-foryou">${t('⭐ For You feed')}</button>
       <button type="button" role="menuitem" data-action="show-saved">${t('🔖 My popcorn bucket')}</button>
@@ -837,6 +840,30 @@ function openAccount() {
 }
 
 // ---------- profile dialog ----------
+function paintPhotoRow() {
+  const p = auth.getProfile();
+  const row = $('#photoRow');
+  row.hidden = !auth.ready;
+  $('#photoPreview').innerHTML = avatarHTML(p, 'avatar-lg');
+  $('#removePhoto').hidden = !p.photo;
+  $('#photoNote').textContent = auth.user ? t('Pick one from your gallery, or use an emoji below.') : t('Sign in to add a photo — or pick an emoji below.');
+}
+
+async function pickProfilePhoto(btn) {
+  if (!auth.user) { openAuth('signin'); return; }
+  const data = await pickPhoto();
+  if (!data) return;
+  btn.disabled = true;
+  try {
+    await auth.setPhoto(data);
+    paintPhotoRow();
+    toast(t('Looking good! Your photo is on. 📷'), { emoji: '📷' });
+    burstFrom($('#photoPreview'), { emojis: ['📷', '✨', '🍿'], count: 12 });
+    sfx.ding();
+  } catch (err) { toast(tServer(err.message), { emoji: '😵', type: 'error' }); }
+  finally { btn.disabled = false; }
+}
+
 function openProfile(isNew = false) {
   const dlg = $('#profileDialog');
   const form = $('#profileForm');
@@ -844,6 +871,11 @@ function openProfile(isNew = false) {
   $('#profileTitle').textContent = isNew ? t('Make your name tag 🏷️') : t('Edit your name tag ✏️');
   $('#profileSave').textContent = isNew ? t('Pop me in! 🍿') : t('Save changes ✅');
   form.elements.nickname.value = p.nickname || '';
+  form.elements.bio.value = p.bio || '';
+  form.elements.dms.value = p.dms || 'everyone';
+  $('#bioField').hidden = !auth.user;
+  $('#dmsField').hidden = !auth.user || !community;
+  paintPhotoRow();
   $('#avatarPick').innerHTML = AVATARS.map((a) => `<label class="pick-avatar"><input type="radio" name="avatar" value="${esc(a)}" ${p.avatar === a ? 'checked' : ''}><span>${a}</span></label>`).join('');
   form.elements.leaderboard.checked = p.leaderboard !== false;
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
@@ -913,6 +945,11 @@ function handleAction(action, el) {
       break;
     }
     case 'edit-profile': closeMenus(); openProfile(false); break;
+    case 'pick-photo': pickProfilePhoto(el); break;
+    case 'remove-photo':
+      auth.removePhoto().then(() => { paintPhotoRow(); toast(t('Photo removed — back to your emoji.'), { emoji: '🙂' }); }).catch((err) => toast(tServer(err.message), { emoji: '😵' }));
+      break;
+    case 'messages': closeMenus(); if (community) community.openMessages(); else toast(t('Chat needs the kerNEl server.'), { emoji: '💬' }); break;
     case 'show-saved': closeMenus(); tabs?.show('news'); setCat('saved'); break;
     case 'show-foryou': closeMenus(); tabs?.show('news'); if (!auth.getProfile().topics?.length) openProfile(false); setCat('foryou'); break;
     case 'signout': closeMenus(); auth.signOut(); break;
@@ -1055,6 +1092,8 @@ function openDeepLink() {
     if (it) reader?.open(it, { focus: 'comments' });
     else if (feed.size) toast(t('That story has left the feed — it was more than a few days old.'), { emoji: '🕰️' });
   } else if (h.startsWith('user=')) community?.showProfile(h.slice(5));
+  else if (h.startsWith('@')) community?.showProfile(h.slice(1));
+  else if (h.startsWith('dm=')) community?.openDM(h.slice(3));
 }
 
 function boot() {
@@ -1097,6 +1136,8 @@ function boot() {
     onFollow: (on) => { if (on) bump('follows'); social?.loadFriends(); },
     badgeInfo: (id) => ACHIEVEMENTS.find((a) => a.id === id),
     rankTitle: (xp) => rankFor(xp).title,
+    openStory: (s) => reader?.open(findItem(s.key) || s),
+    onDM: () => { bump('dms'); addXp(2); },
   });
 
   play = initPlay({
@@ -1194,7 +1235,11 @@ function boot() {
       else if (el.closest('[data-explain]')) { const it = findItem(key); if (it) reader?.open(it); }
       else if (el.closest('[data-comments]')) { const it = findItem(key); if (it) reader?.open(it, { focus: 'comments' }); }
       else if (el.closest('[data-share]')) share(key);
-      else if (el.closest('[data-chatshare]')) {
+      else if (el.closest('[data-dmshare]')) {
+        const it = findItem(key);
+        reader?.close();
+        if (it && community) community.sendToFriend(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });
+      } else if (el.closest('[data-chatshare]')) {
         const it = findItem(key);
         reader?.close();
         if (it && community) community.share(it); else if (!community) toast(t('Chat needs the kerNEl server.'), { emoji: '💬' });
@@ -1397,6 +1442,7 @@ function boot() {
     p.hat = String(fd.get('hat') || p.hat || 'none');
     p.frame = String(fd.get('frame') || p.frame || 'none');
     if (auth.user) p.leaderboard = fd.get('leaderboard') === 'on';
+    if (auth.user) { p.bio = String(fd.get('bio') || '').replace(/\s+/g, ' ').trim().slice(0, 80); p.dms = String(fd.get('dms') || 'everyone'); }
     auth.saveProfile(p);
     setTimeout(loadLeaderboard, 800);
     renderNav();

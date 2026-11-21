@@ -87,7 +87,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'community', 'notify', 'game', 'play', 'social', 'extras', 'tabs', 'reader', 'app'])
+const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'dm', 'community', 'notify', 'game', 'play', 'social', 'extras', 'photo', 'tabs', 'reader', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');

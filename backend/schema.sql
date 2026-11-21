@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS notify_prefs (
   news            INTEGER NOT NULL DEFAULT 1,
   streak          INTEGER NOT NULL DEFAULT 1,
   friends         INTEGER NOT NULL DEFAULT 1, -- follows, friends' rank-ups, trophies
+  dms             INTEGER NOT NULL DEFAULT 1, -- direct messages
   tz              INTEGER NOT NULL DEFAULT 0, -- minutes east of UTC
   news_day        TEXT,
   news_today      INTEGER NOT NULL DEFAULT 0,
@@ -250,4 +251,67 @@ CREATE TABLE IF NOT EXISTS comment_reacts (
   user_id    TEXT NOT NULL,
   emoji      TEXT NOT NULL,
   PRIMARY KEY (comment_id, user_id)
+);
+
+-- ✉️ direct messages: one thread per pair of people, a member row each (accepted = 0 means it's still a message request)
+CREATE TABLE IF NOT EXISTS dm_threads (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  pair        TEXT NOT NULL UNIQUE,          -- "<smaller id>|<bigger id>"
+  created     INTEGER NOT NULL,
+  last_id     INTEGER NOT NULL DEFAULT 0,
+  last_at     INTEGER NOT NULL DEFAULT 0,
+  streak      INTEGER NOT NULL DEFAULT 0,    -- days in a row both people messaged
+  streak_day  TEXT
+);
+CREATE TABLE IF NOT EXISTS dm_members (
+  thread_id   INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  other_id    TEXT NOT NULL,
+  accepted    INTEGER NOT NULL DEFAULT 1,
+  read_id     INTEGER NOT NULL DEFAULT 0,    -- last message this person has seen
+  hidden      INTEGER NOT NULL DEFAULT 0,    -- "delete chat" (comes back if a new message arrives)
+  sent_day    TEXT,                          -- last day this person sent something (for the streak)
+  PRIMARY KEY (thread_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS dm_members_user ON dm_members (user_id);
+CREATE TABLE IF NOT EXISTS dm_messages (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  thread_id   INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  text        TEXT NOT NULL DEFAULT '',
+  story       TEXT,                          -- JSON of a shared kerNEl story
+  reacts      TEXT NOT NULL DEFAULT '{}',    -- JSON: { user id: emoji }
+  deleted     INTEGER NOT NULL DEFAULT 0,
+  created     INTEGER NOT NULL,
+  updated     INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS dm_messages_thread ON dm_messages (thread_id, id);
+CREATE INDEX IF NOT EXISTS dm_messages_updated ON dm_messages (thread_id, updated);
+CREATE TABLE IF NOT EXISTS dm_reports (
+  reporter_id TEXT NOT NULL,
+  user_id     TEXT NOT NULL,                 -- who was reported
+  msg_id      INTEGER,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (reporter_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id  TEXT NOT NULL,
+  blocked_id  TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+CREATE INDEX IF NOT EXISTS blocks_blocked ON blocks (blocked_id);
+
+-- 📷 profile photos (small JPEG/PNG/WebP, resized in the browser), stored as base64
+CREATE TABLE IF NOT EXISTS photos (
+  user_id     TEXT PRIMARY KEY,
+  data        TEXT NOT NULL,
+  type        TEXT NOT NULL,
+  updated     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS photo_reports (
+  owner_id    TEXT NOT NULL,
+  reporter_id TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, reporter_id)
 );

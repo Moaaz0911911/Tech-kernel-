@@ -33,7 +33,11 @@ export function initNotify({ openAuth, openRoom }) {
     const u = new URL(url, location.href);
     if (u.origin !== location.origin) { window.open(u.href, '_blank', 'noopener'); return; }
     if (u.hash.startsWith('#chat=')) { openRoom(u.hash.slice(6)); history.replaceState(null, '', location.pathname + location.search); return; }
-    if (u.pathname !== location.pathname) location.href = u.href;
+    if (u.pathname !== location.pathname) { location.href = u.href; return; }
+    if (u.hash.length > 1) { // #story=…, #user=…, #dm=… are opened by the page itself
+      if (location.hash === u.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
+      else location.hash = u.hash;
+    }
   }
   const fromHash = () => { if (location.hash.startsWith('#chat=')) go(location.href); };
   window.addEventListener('hashchange', fromHash);
@@ -140,7 +144,7 @@ export function initNotify({ openAuth, openRoom }) {
     if (auth.user) {
       try {
         const p = await auth.api('/api/notify/prefs');
-        for (const k of ['mentions', 'news', 'streak', 'friends']) $(`#notifyDialog [name="${k}"]`).checked = !!p[k];
+        for (const k of ['mentions', 'dms', 'news', 'streak', 'friends']) $(`#notifyDialog [name="${k}"]`).checked = p[k] !== false;
         $('#nsDevices').textContent = p.devices ? tn(p.devices, 'Push is on for {n} device.', 'Push is on for {n} devices.') : '';
       } catch { /* offline */ }
     }
@@ -210,7 +214,7 @@ export function initNotify({ openAuth, openRoom }) {
     paintInstall();
   });
   $$('#notifyDialog .ns-kinds input').forEach((box) => box.addEventListener('change', () => {
-    const prefs = Object.fromEntries(['mentions', 'news', 'streak', 'friends'].map((k) => [k, $(`#notifyDialog [name="${k}"]`).checked]));
+    const prefs = Object.fromEntries(['mentions', 'dms', 'news', 'streak', 'friends'].map((k) => [k, $(`#notifyDialog [name="${k}"]`).checked]));
     auth.api('/api/notify/prefs', { method: 'PUT', body: { prefs, tz: -new Date().getTimezoneOffset() } }).catch(() => {});
   }));
   $('#notifyDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });

@@ -205,6 +205,11 @@
           <h3 id="pwTitle" class="widget-title">🏷️ Your name tag</h3>
           <div id="profileWidget"></div>
         </section>
+        <section class="widget widget-people" id="peopleWidget" aria-labelledby="peopleTitle" hidden>
+          <h3 id="peopleTitle" class="widget-title">🔍 Find people</h3>
+          <label class="people-search"><span class="sr-only">Search people</span><span class="search-icon" data-icon="search"></span><input id="peopleSearch" type="search" placeholder="Search by name or @username" autocomplete="off" enterkeyhint="search"></label>
+          <div class="people-results" id="peopleResults"></div>
+        </section>
         <section class="widget widget-friends" id="friendsWidget" aria-labelledby="friendsTitle" hidden>
           <h3 id="friendsTitle" class="widget-title">👯 Friends</h3>
           <div id="friendsBody"></div>
@@ -354,6 +359,18 @@
         <span>Nickname</span>
         <input name="nickname" maxlength="24" required autocomplete="nickname">
       </label>
+      <label class="field" id="bioField">
+        <span>Bio <small>(optional)</small></span>
+        <input name="bio" maxlength="80" autocomplete="off" placeholder="What are you into? 🍿">
+      </label>
+      <div class="photo-row" id="photoRow">
+        <span class="photo-preview" id="photoPreview"></span>
+        <div class="photo-btns">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="pick-photo">📷 Choose a photo</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="remove-photo" id="removePhoto" hidden>Remove photo</button>
+          <small class="muted" id="photoNote">Pick one from your gallery, or use an emoji below.</small>
+        </div>
+      </div>
       <fieldset class="pick">
         <legend>Pick your avatar</legend>
         <div class="avatar-grid" id="avatarPick"></div>
@@ -370,6 +387,14 @@
         <legend>🖼️ Frame</legend>
         <div class="style-grid" id="framePick"></div>
       </fieldset>
+      <label class="field" id="dmsField">
+        <span>✉️ Who can message me</span>
+        <select name="dms">
+          <option value="everyone">Everyone (new people send a request first)</option>
+          <option value="following">Only people I follow</option>
+          <option value="nobody">Nobody</option>
+        </select>
+      </label>
       <label class="check"><input type="checkbox" name="leaderboard"> Show me on the 🏆 leaderboard</label>
       <button class="btn btn-primary btn-block btn-big" id="profileSave" value="save">Pop me in! 🍿</button>
     </form>
@@ -420,6 +445,7 @@
       <fieldset class="pick ns-kinds">
         <legend>Ping me when…</legend>
         <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
+        <label class="check"><input type="checkbox" name="dms" checked> ✉️ someone sends me a message</label>
         <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
         <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
         <label class="check"><input type="checkbox" name="friends" checked> 👯 someone follows me, or a friend ranks up or wins a trophy</label>
@@ -577,22 +603,29 @@
       <div><b>💬 kerNEl Chat</b><small id="chatOnline">🟢 online</small></div>
       <button type="button" class="icon-btn" data-cm="close" aria-label="Close chat">✕</button>
     </header>
-    <nav class="chat-rooms" id="chatRooms" aria-label="Chat rooms"></nav>
-    <div class="chat-log" id="chatLog" aria-live="polite"></div>
-    <div class="chat-share" id="chatShare" hidden></div>
-    <p class="chat-muted" id="chatMuted" hidden></p>
-    <form class="chat-form" id="chatForm" hidden>
-      <button type="button" class="chat-codme" data-cm="codme" title="Ask codme in the room">🤖</button>
-      <label class="sr-only" for="chatInput">Message</label>
-      <input id="chatInput" maxlength="500" autocomplete="off" placeholder="Say something nice… (try @codme ai)" enterkeyhint="send">
-      <button type="submit" class="send-btn" aria-label="Send">➤</button>
-    </form>
-    <div class="chat-guest" id="chatGuest" hidden>
-      <p>Join the conversation! 🍿</p>
-      <button type="button" class="btn btn-primary" data-cm="signup">Sign up free</button>
-      <button type="button" class="btn btn-ghost" data-cm="signin">Sign in</button>
+    <div class="seg chat-modes" role="tablist" aria-label="Chat">
+      <button type="button" role="tab" data-chatmode="rooms" aria-selected="true">💬 Rooms</button>
+      <button type="button" role="tab" data-chatmode="dms" aria-selected="false">✉️ Messages <span class="dm-dot" id="dmDot" hidden></span></button>
     </div>
-    <p class="chat-rules">Be kind 💛 Don’t share personal info. Messages with 3 reports get hidden.</p>
+    <div class="chat-pane" id="roomsPane">
+      <nav class="chat-rooms" id="chatRooms" aria-label="Chat rooms"></nav>
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <div class="chat-share" id="chatShare" hidden></div>
+      <p class="chat-muted" id="chatMuted" hidden></p>
+      <form class="chat-form" id="chatForm" hidden>
+        <button type="button" class="chat-codme" data-cm="codme" title="Ask codme in the room">🤖</button>
+        <label class="sr-only" for="chatInput">Message</label>
+        <input id="chatInput" maxlength="500" autocomplete="off" placeholder="Say something nice… (try @codme ai)" enterkeyhint="send">
+        <button type="submit" class="send-btn" aria-label="Send">➤</button>
+      </form>
+      <div class="chat-guest" id="chatGuest" hidden>
+        <p>Join the conversation! 🍿</p>
+        <button type="button" class="btn btn-primary" data-cm="signup">Sign up free</button>
+        <button type="button" class="btn btn-ghost" data-cm="signin">Sign in</button>
+      </div>
+      <p class="chat-rules">Be kind 💛 Don’t share personal info. Messages with 3 reports get hidden.</p>
+    </div>
+    <div class="chat-pane dm-pane" id="dmPane" hidden></div>
   </aside>
 
   <dialog id="userCard" class="modal" aria-label="Profile">

@@ -5,6 +5,10 @@ import { assertNotMuted } from './community.js';
 import { listComments, postComment, deleteComment, reportComment, reactComment, follow, friends } from './social.js';
 import { getQuiz, answerQuiz, quizBoard, getBattle, voteBattle, getTournament, playTournament } from './play.js';
 import { explainStory, kidsNews, timeMachine } from './extras.js';
+import {
+  searchPeople, setBlock, listBlocked, listThreads, dmCounts, getThread, sendDM, acceptThread, hideThread, reactDM, deleteDM, reportDM,
+  setPhoto, removePhoto, photoResponse, reportPhoto,
+} from './people.js';
 
 /** Returns a Response, or null when the path isn't one of these. */
 export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
@@ -40,6 +44,70 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     return json(await follow(env, user, await readJson(request, 1_000)));
   }
   if (path === '/api/me/friends' && m === 'GET') return json(await friends(env, await requireUser(request, env)));
+
+  // ---- 🔍 people ----
+  if (path === '/api/users/search' && m === 'GET') {
+    await rateLimit(env, `search:${ip}`, 300, 3600_000);
+    return json(await searchPeople(env, await currentUser(request, env), url.searchParams.get('q')));
+  }
+  if (path === '/api/block' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `block:${user.id}`, 60, 3600_000);
+    return json(await setBlock(env, user, await readJson(request, 1_000)));
+  }
+  if (path === '/api/me/blocked' && m === 'GET') return json(await listBlocked(env, await requireUser(request, env)));
+
+  // ---- ✉️ direct messages ----
+  if (path === '/api/dm' && m === 'GET') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `dmpoll:${user.id}`, 2400, 3600_000);
+    return json(url.searchParams.get('count') ? await dmCounts(env, user) : await listThreads(env, user));
+  }
+  if (path === '/api/dm' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `dm:burst:${user.id}`, 6, 10_000);
+    await rateLimit(env, `dm:hour:${user.id}`, 300, 3600_000);
+    return json(await sendDM(env, user, await readJson(request, 6_000), ctx));
+  }
+  const thread = path.match(/^\/api\/dm\/(\d+)$/);
+  if (thread && m === 'GET') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `dmpoll:${user.id}`, 2400, 3600_000);
+    return json(await getThread(env, user, thread[1], Number(url.searchParams.get('since')) || 0));
+  }
+  if (path === '/api/dm/accept' && m === 'POST') return json(await acceptThread(env, await requireUser(request, env), await readJson(request, 1_000)));
+  if (path === '/api/dm/hide' && m === 'POST') return json(await hideThread(env, await requireUser(request, env), await readJson(request, 1_000)));
+  if (path === '/api/dm/react' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `dmreact:${user.id}`, 300, 3600_000);
+    return json(await reactDM(env, user, await readJson(request, 1_000)));
+  }
+  if (path === '/api/dm/report' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `dmreport:${user.id}`, 20, 3600_000);
+    return json(await reportDM(env, user, await readJson(request, 1_000)));
+  }
+  const dmDel = path.match(/^\/api\/dm\/messages\/(\d+)$/);
+  if (dmDel && m === 'DELETE') return json(await deleteDM(env, await requireUser(request, env), dmDel[1]));
+
+  // ---- 📷 profile photos ----
+  if (path === '/api/me/photo' && m === 'PUT') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `photo:${user.id}`, 20, 3600_000);
+    return json(await setPhoto(env, user, await readJson(request, 450_000)));
+  }
+  if (path === '/api/me/photo' && m === 'DELETE') return json(await removePhoto(env, await requireUser(request, env)));
+  const photo = path.match(/^\/api\/photo\/([A-Za-z0-9_]{1,20})$/);
+  if (photo && m === 'GET') {
+    await rateLimit(env, `photoget:${ip}`, 6000, 3600_000);
+    return photoResponse(env, photo[1]);
+  }
+  if (path === '/api/photo/report' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `photoreport:${user.id}`, 30, 3600_000);
+    return json(await reportPhoto(env, user, await readJson(request, 1_000)));
+  }
 
   // ---- 🧠 Daily Kernel Quiz ----
   if (path === '/api/quiz' && m === 'GET') return json(await getQuiz(env, await currentUser(request, env)));

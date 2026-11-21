@@ -12,6 +12,7 @@ const statements = (sql) => sql
 // Columns added after the first launch. Each runs once; "duplicate column" errors mean it already ran.
 const MIGRATIONS = [
   'ALTER TABLE notify_prefs ADD COLUMN friends INTEGER NOT NULL DEFAULT 1',
+  'ALTER TABLE notify_prefs ADD COLUMN dms INTEGER NOT NULL DEFAULT 1',
 ];
 
 export class KernelDB extends DurableObject {

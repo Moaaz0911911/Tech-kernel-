@@ -4,6 +4,7 @@ import { searchStories, rowToStory } from './news.js';
 import { codmeReply } from './codme.js';
 import { look, liveStreak, followCounts, isFollowing } from './social.js';
 import { trophiesOf } from './play.js';
+import { relation } from './people.js';
 import { tr, langOfProfile } from './i18n.js';
 
 export const ROOMS = [
@@ -35,10 +36,10 @@ export function cleanText(text) {
 
 // ---------- messages ----------
 function toMessage(r, myReacts = {}) {
-  const l = r.u_profile ? look(r.u_profile) : { avatar: r.avatar || '🍿', hat: '', frame: 'none' };
+  const l = r.u_profile ? look(r.u_profile) : { avatar: r.avatar || '🍿', hat: '', frame: 'none', photo: '' };
   return {
     id: r.id, room: r.room,
-    user: { username: r.username, nickname: r.nickname || r.username, avatar: r.bot ? r.avatar : l.avatar, hat: l.hat, frame: l.frame, rank: r.rank_emoji || '🌽', bot: !!r.bot, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
+    user: { username: r.username, nickname: r.nickname || r.username, avatar: r.bot ? r.avatar : l.avatar, hat: l.hat, frame: l.frame, photo: r.bot ? '' : l.photo, rank: r.rank_emoji || '🌽', bot: !!r.bot, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
     text: r.hidden ? '' : r.text, stories: r.hidden ? [] : parse(r.stories, []), reactions: parse(r.reactions, {}), mine: myReacts[r.id] || null,
     hidden: !!r.hidden, created: r.created, updated: r.updated,
   };
@@ -193,6 +194,7 @@ export async function publicProfile(env, username, viewer = null) {
     trophies: await trophiesOf(env, r.id),
     badges: Object.keys(d.badges || {}), kidsStars: Object.values(d.kids?.stars || {}).reduce((a, b) => a + b, 0),
     messages: msgs?.n || 0, joined: r.created,
+    ...(await relation(env, viewer, r)),
   };
 }
 

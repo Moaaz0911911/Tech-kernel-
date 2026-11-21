@@ -18,6 +18,24 @@ const T = {
     de: '🗨️ @{who} hat dich in einem Kommentar erwähnt',
     tl: '🗨️ Binanggit ka ni @{who} sa isang comment',
   },
+  dmTitle: {
+    en: '✉️ @{who} sent you a message',
+    ar: '✉️ @{who} بعتلك رسالة',
+    de: '✉️ @{who} hat dir geschrieben',
+    tl: '✉️ Nag-message sa’yo si @{who}',
+  },
+  dmRequest: {
+    en: '📨 New message request from @{who}',
+    ar: '📨 طلب رسالة جديد من @{who}',
+    de: '📨 Neue Nachrichtenanfrage von @{who}',
+    tl: '📨 Bagong message request mula kay @{who}',
+  },
+  dmRequestBody: {
+    en: 'Open kerNEl to accept or ignore it.',
+    ar: 'افتح kerNEl عشان تقبلها أو تتجاهلها.',
+    de: 'Öffne kerNEl, um sie anzunehmen oder zu ignorieren.',
+    tl: 'Buksan ang kerNEl para tanggapin o i-ignore.',
+  },
   bigNews: { en: '🔥 Big news', ar: '🔥 خبر جامد', de: '🔥 Große News', tl: '🔥 Malaking balita' },
   bigNewsTopics: {
     en: '🔥 Big news in your topics',

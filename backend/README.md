@@ -20,6 +20,9 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🏆 **Weekly tournament** | 8 Real-or-Fake headlines per week (the fakes never name real people or companies). On Monday the top 3 get trophies and a notification. |
 | 🗨️ **Comments** | Comments on any kerNEl story, with @mentions, the swear filter, reports (3 → hidden), mutes and comment counts in `/api/news`. |
 | 👯 **Friends** | Follow people; their rank-ups, achievements, quiz/tournament scores, trophies and streak milestones go to a friends feed, and the big ones to followers' phones. |
+| ✉️ **Messages** | Private chats between two people, with message requests for people you don't follow (3 messages until accepted), read receipts, reactions, day streaks, shared stories, blocking and reports (3 reports in a day mute someone for 24 hours). Messages are kept for a year. |
+| 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
+| 📷 **Profile photos** | Small JPEG/PNG/WebP photos (checked by their first bytes, max 300 KB, never SVG), served with long caching. Three reports from different people remove a photo. |
 | 🎩 **Looks** | Hats and frames unlocked by XP (and trophies), checked on the server so nobody can fake a crown. |
 | 🌐 **Languages** | Notifications and codme's chat replies in English, Egyptian Arabic, German or Tagalog, following each person's chosen language. |
 | 🧸 **Kid news** | Three upbeat stories from the week, picked with a strict filter (no crime, politics, money talk or scary words). |
@@ -61,7 +64,7 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `POST /api/auth/recover` | – | `{ username, recoveryCode, newPassword }` → `{ token, recoveryCode (new), user }` |
 | `POST /api/auth/logout` | Bearer | End this session |
 | `GET /api/me` | Bearer | Account, profile, streak and synced data |
-| `PUT /api/me/profile` | Bearer | `{ nickname, avatar, topics, leaderboard, hat, frame, lang }` (hats/frames are checked against XP and trophies) |
+| `PUT /api/me/profile` | Bearer | `{ nickname, avatar, topics, leaderboard, hat, frame, lang, bio, dms }` (hats/frames are checked against XP and trophies; `dms` is `everyone`, `following` or `nobody`) |
 | `PATCH /api/me/data` | Bearer | Any of `{ xp, read, saved, reactions, badges, settings, kids, codmeAsks, konami }`, merged in |
 | `POST /api/me/checkin` | Bearer | Daily streak → `{ streak, bestStreak, bonusXp }` |
 | `POST /api/me/password` | Bearer | `{ currentPassword, newPassword }` (signs out other devices) |
@@ -90,6 +93,13 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `POST /api/comments/report` · `DELETE /api/comments/:id` | Bearer | `{ id }` · delete your own |
 | `POST /api/comments/react` | Bearer | `{ id, emoji }` (❤️ 😂 🔥 👍 🤯 😮, or `null` to take it back) → `{ reactions, myReaction }`. Comments come back with `reactions` and your `myReaction`. |
 | `POST /api/follow` | Bearer | `{ username, follow: true\|false }` |
+| `GET /api/users/search?q=` | optional | People matching a name (empty = suggestions), with follow/active/blocked info |
+| `POST /api/block` · `GET /api/me/blocked` | Bearer | `{ username, block: true\|false }` · people you blocked |
+| `GET /api/dm` · `GET /api/dm?count=1` | Bearer | Your conversations (with unread counts and requests) · just the counts |
+| `POST /api/dm` | Bearer | `{ to: username \| thread: id, text?, storyKey? }` → message, `pending`, `streak` |
+| `GET /api/dm/:id?since=` | Bearer | A conversation's messages (+ changes since a time), `theirRead` for "Seen" |
+| `POST /api/dm/accept` · `/hide` · `/react` · `/report` · `DELETE /api/dm/messages/:id` | Bearer | Accept a request · delete the chat for you · `{ id, emoji }` · report + block · delete your message |
+| `PUT` / `DELETE /api/me/photo` · `GET /api/photo/:username` · `POST /api/photo/report` | Bearer / – | `{ data: "data:image/jpeg;base64,…" }` · the image · `{ username }` |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
@@ -121,6 +131,7 @@ src/push.js    notifications: inbox, Web Push encryption + VAPID, mention / big-
 src/features.js  routes for the games and social features
 src/play.js    Daily Quiz, Popcorn Battles, weekly tournament + trophies
 src/social.js  comments, follows, friends' activity, avatar looks
+src/people.js  messages, people search, profile photos, blocking
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine
 src/i18n.js    notification + chat-reply texts in English, Egyptian Arabic, German, Tagalog
 schema.sql     database tables
