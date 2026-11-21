@@ -1,5 +1,5 @@
 // kerNEl service worker: shows push notifications and keeps the app working offline.
-const CACHE = 'kernel-v3';
+const CACHE = 'kernel-v4';
 const SHELL = ['./', 'index.html', 'kids.html', 'css/main.css', 'css/kids.css', 'assets/favicon.svg', 'assets/icon-192.png',
   'js/app.js', 'js/config.js', 'js/utils.js', 'js/content.js', 'js/fun.js', 'js/news.js', 'js/auth.js', 'js/codme.js',
   'js/community.js', 'js/notify.js', 'js/game.js', 'js/kids.js', 'js/i18n.js', 'js/i18n-main.js', 'js/i18n-kids.js',
