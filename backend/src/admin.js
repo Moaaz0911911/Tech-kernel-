@@ -17,7 +17,7 @@ export async function requireAdmin(request, env) {
   return user;
 }
 
-async function log(env, admin, action, target, note = '') {
+export async function log(env, admin, action, target, note = '') {
   await env.DB.prepare('INSERT INTO mod_log (admin, action, target, note, at) VALUES (?, ?, ?, ?, ?)').bind(admin.username, action, String(target ?? ''), String(note || '').slice(0, 200), Date.now()).run();
 }
 const userByName = async (env, name) => {

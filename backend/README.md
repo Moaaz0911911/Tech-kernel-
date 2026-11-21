@@ -47,7 +47,7 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 
 The website keeps working without the backend. If the backend is down, it fetches news directly like before.
 
-**Cost:** Cloudflare's free Workers plan covers a hobby site (100k requests a day, plus free SQLite storage). The only paid part is codme AI, billed by Anthropic per use. Turn it off by not setting the key.
+**Cost:** Cloudflare's free Workers plan covers a hobby site (100k requests a day, plus free SQLite storage). The free plan also allows about **100,000 database row writes a day**; if that runs out, the server answers with errors until midnight UTC. To stay well under it, everyday rate limits live in memory, presence is written at most once a minute, stories are only rewritten when they really change, and the clean-up runs hourly. The Workers Paid plan ($5/month) raises the limit a lot. The only paid part is codme AI, billed by Anthropic per use. Turn it off by not setting the key.
 
 ---
 

@@ -300,7 +300,9 @@ export default {
     } catch (err) {
       const status = err instanceof HttpError ? err.status : 500;
       if (status === 500) console.error(err);
-      res = json({ error: status === 500 ? 'Something went wrong on our side' : err.message }, status);
+      // a maintainer can see the real error by sending the DEBUG_KEY set at deploy time (it's never set normally)
+      const debug = status === 500 && env.DEBUG_KEY && request.headers.get('X-Debug-Key') === env.DEBUG_KEY;
+      res = json({ error: status === 500 ? 'Something went wrong on our side' : err.message, ...(debug ? { debug: String(err?.stack || err).slice(0, 1500) } : {}) }, status);
     }
     for (const [k, v] of Object.entries(cors)) res.headers.set(k, v);
     return res;
@@ -332,7 +334,7 @@ export default {
       await awardSeason(env).catch((e) => console.error('season', e));
       await updatePrices(env).catch((e) => console.error('stocks', e));
       await awardMarket(env).catch((e) => console.error('stocks award', e));
-      await env.DB.batch([
+      if (new Date().getUTCMinutes() < 5 || event.cron === 'cleanup') await env.DB.batch([ // the clean-up runs once an hour
         env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()),
         env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
         env.DB.prepare('DELETE FROM presence WHERE at < ?').bind(Date.now() - 864e5),

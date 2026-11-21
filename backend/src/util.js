@@ -71,7 +71,38 @@ export function clientIp(request) {
 }
 
 /** Fixed-window rate limit stored in D1. Throws 429 when exceeded. */
+// Cloudflare's free plan allows about 100,000 database row writes a day, so everyday limits live in memory
+// (per Worker instance: good enough against spam) and only sign-ups, logins, password recovery and the paid
+// AI features keep their counters in the database, where every instance sees them.
+const DURABLE_BUCKETS = /^(register|login|recover|pw|codme|explain)/;
+const MEM_LIMITS = new Map();
+const LAST_WRITE = new Map();
+
+/** True at most once per `ms` for a key (per Worker instance): for writes that don't need to happen on every request. */
+export function throttle(key, ms) {
+  const now = Date.now();
+  if (now - (LAST_WRITE.get(key) || 0) < ms) return false;
+  if (LAST_WRITE.size > 20_000) LAST_WRITE.clear();
+  LAST_WRITE.set(key, now);
+  return true;
+}
+
 export async function rateLimit(env, bucket, limit, windowMs) {
+  if (!DURABLE_BUCKETS.test(bucket) && env.DURABLE_LIMITS !== '1') { // (tests keep every limit in the database so they can reset them)
+    const now = Date.now();
+    let r = MEM_LIMITS.get(bucket);
+    if (!r || r.reset <= now) {
+      if (MEM_LIMITS.size > 20_000) for (const [k, v] of MEM_LIMITS) if (v.reset <= now) MEM_LIMITS.delete(k);
+      r = { count: 0, reset: now + windowMs };
+      MEM_LIMITS.set(bucket, r);
+    }
+    if (r.count >= limit) {
+      const mins = Math.ceil((r.reset - now) / 60000);
+      throw new HttpError(429, `Slow down! Try again in ${mins} minute${mins === 1 ? '' : 's'}.`);
+    }
+    r.count++;
+    return;
+  }
   const now = Date.now();
   const row = await env.DB.prepare('SELECT count, reset FROM rate_limits WHERE bucket = ?').bind(bucket).first();
   if (!row || row.reset <= now) {

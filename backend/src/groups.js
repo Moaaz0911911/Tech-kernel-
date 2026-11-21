@@ -1,5 +1,5 @@
 // 👥 Group chats: up to 32 kernels, with stories, 🎙️ voice notes, reactions, "Seen by" and ✍️ typing.
-import { HttpError } from './util.js';
+import { HttpError, throttle } from './util.js';
 import { cleanText } from './community.js';
 import { rowToStory } from './news.js';
 import { notify } from './push.js';
@@ -138,7 +138,7 @@ export async function groupCounts(env, user) {
 export async function getGroup(env, user, groupId, since = 0) {
   const { m, g } = await membership(env, user, groupId);
   const now = Date.now();
-  await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, 'dm', now).run();
+  if (throttle(`presence:${user.id}:dm`, 60_000)) await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, 'dm', now).run();
   const q = 'SELECT gm.*, u.username FROM group_messages gm LEFT JOIN users u ON u.id = gm.user_id WHERE gm.group_id = ? AND gm.id > ?';
   let rows;
   if (since > 0) ({ results: rows } = await env.DB.prepare(`${q} AND gm.updated > ? ORDER BY gm.id ASC LIMIT 200`).bind(g.id, m.since_id, since).all());

@@ -86,7 +86,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({
     ...(process.env.STORAGE === 'do'
       ? { durableObjects: { KERNEL_DB: { className: 'KernelDB', useSQLite: true } } }
       : { d1Databases: { DB: 'test-db' } }),
-    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy', LIVE_TEST_PERIOD_MS: '60000', LIVE_TEST_STEP_MS: '2000' },
+    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy', LIVE_TEST_PERIOD_MS: '60000', LIVE_TEST_STEP_MS: '2000', DURABLE_LIMITS: '1' },
     outboundService: outbound,
   }],
 }));
@@ -879,7 +879,7 @@ try {
   ok('delete your own pop (and its photo)', (await api(`/api/pops/${photoPop}`, { method: 'DELETE', token: moToken })).status === 200 && (await raw(`/api/pops/photo/${photoKey}`)).status === 404);
   await db.prepare("UPDATE pops SET expires = ? WHERE user_id = (SELECT id FROM users WHERE username_lc = 'momo')").bind(Date.now() - 1000).run();
   ok('pops disappear after a day', (await api('/api/pops', { token: saraToken })).data.rings.length === 0);
-  await worker.scheduled({ cron: '*/5 * * * *' });
+  await worker.scheduled({ cron: 'cleanup' }); // the hourly clean-up
   ok('…and the cleanup removes them', (await db.prepare('SELECT (SELECT COUNT(*) FROM pops) + (SELECT COUNT(*) FROM pop_views) + (SELECT COUNT(*) FROM pop_photos) AS n').first()).n === 0);
 
   r = await api('/api/groups', { method: 'POST', token: moToken, body: { name: 'Pop Squad', emoji: '🍿', members: ['Sara', 'Yuki', 'Keiiii', 'nobody_here'] } });

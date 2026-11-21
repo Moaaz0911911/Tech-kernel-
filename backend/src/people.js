@@ -1,5 +1,5 @@
 // kerNEl people: ✉️ direct messages (with message requests), 🔍 finding people, 📷 profile photos and 🚫 blocking.
-import { HttpError } from './util.js';
+import { HttpError, throttle } from './util.js';
 import { cleanText, assertNotMuted } from './community.js';
 import { look, liveStreak, RANKS, rankIndex } from './social.js';
 import { rowToStory } from './news.js';
@@ -35,6 +35,7 @@ export async function lastSeen(env, ids) {
 export const activeFields = (at) => ({ active: !!at && Date.now() - at < ACTIVE_MS, lastActive: at && Date.now() - at < 864e5 ? at : null });
 
 export async function touch(env, user) {
+  if (!throttle(`presence:${user.id}:dm`, 60_000)) return;
   await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, 'dm', Date.now()).run();
 }
 

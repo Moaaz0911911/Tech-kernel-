@@ -99,7 +99,10 @@ const UPSERT = `INSERT INTO stories (key, title, url, comments_url, source, sour
     comments = MAX(stories.comments, excluded.comments),
     image = COALESCE(stories.image, excluded.image),
     image_checked = MAX(stories.image_checked, excluded.image_checked),
-    summary = CASE WHEN stories.summary IS NULL OR stories.summary = '' THEN excluded.summary ELSE stories.summary END`;
+    summary = CASE WHEN stories.summary IS NULL OR stories.summary = '' THEN excluded.summary ELSE stories.summary END
+  WHERE excluded.points >= stories.points + 3 OR excluded.comments >= stories.comments + 3
+    OR (stories.image IS NULL AND excluded.image IS NOT NULL) OR excluded.image_checked > stories.image_checked
+    OR ((stories.summary IS NULL OR stories.summary = '') AND excluded.summary IS NOT NULL AND excluded.summary != '')`; // unchanged rows cost no writes
 
 /** Fetch every source, store new/updated stories, record source health. */
 export async function collectNews(env) {
@@ -115,9 +118,13 @@ export async function collectNews(env) {
         stmts.push(env.DB.prepare(UPSERT).bind(s.key, s.title, s.url, s.commentsUrl, s.source, s.sourceId, s.sourceEmoji, s.author, s.time,
           s.points, s.comments, s.image, s.image ? 1 : 0, s.summary, s.cat, s.domain, now));
       }
-      stmts.push(env.DB.prepare('INSERT OR REPLACE INTO source_status (id, name, emoji, ok, count, at, error) VALUES (?, ?, ?, 1, ?, ?, NULL)').bind(src.id, src.name, src.emoji, items.length, now));
+      stmts.push(env.DB.prepare(`INSERT INTO source_status (id, name, emoji, ok, count, at, error) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET ok = excluded.ok, count = excluded.count, at = excluded.at, error = excluded.error
+      WHERE source_status.ok != excluded.ok OR source_status.count != excluded.count OR source_status.at < excluded.at - 1800000`).bind(src.id, src.name, src.emoji, 1, items.length, now, null)); // only when it changed (or every half hour)
     } else {
-      stmts.push(env.DB.prepare('INSERT OR REPLACE INTO source_status (id, name, emoji, ok, count, at, error) VALUES (?, ?, ?, 0, 0, ?, ?)').bind(src.id, src.name, src.emoji, now, String(r.reason?.message || r.reason).slice(0, 200)));
+      stmts.push(env.DB.prepare(`INSERT INTO source_status (id, name, emoji, ok, count, at, error) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET ok = excluded.ok, count = excluded.count, at = excluded.at, error = excluded.error
+      WHERE source_status.ok != excluded.ok OR source_status.count != excluded.count OR source_status.at < excluded.at - 1800000`).bind(src.id, src.name, src.emoji, 0, 0, now, String(r.reason?.message || r.reason).slice(0, 200)));
     }
   });
   // keep the table small: drop stories older than 10 days

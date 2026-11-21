@@ -1,5 +1,5 @@
 // kerNEl community: chat rooms, codme in chat, daily polls, public profiles.
-import { HttpError } from './util.js';
+import { HttpError, throttle } from './util.js';
 import { searchStories, rowToStory } from './news.js';
 import { codmeReply } from './codme.js';
 import { look, liveStreak, followCounts, isFollowing } from './social.js';
@@ -66,7 +66,7 @@ export async function listMessages(env, user, room, since) {
     ({ results: rows } = await env.DB.prepare(`${WITH_PEOPLE} WHERE m.room = ? AND m.hidden = 0 ORDER BY m.id DESC LIMIT 60`).bind(room).all());
     rows.reverse();
   }
-  if (user) await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, room, now).run();
+  if (user && throttle(`presence:${user.id}:${room}`, 60_000)) await env.DB.prepare('INSERT OR REPLACE INTO presence (user_id, room, at) VALUES (?, ?, ?)').bind(user.id, room, now).run();
   const { results: online } = await env.DB.prepare('SELECT room, COUNT(*) AS n FROM presence WHERE at > ? GROUP BY room').bind(now - ONLINE_MS).all();
   const counts = Object.fromEntries(online.map((o) => [o.room, o.n]));
   const mine = await myReactions(env, user, rows.map((r) => r.id));
