@@ -3,6 +3,7 @@
 // Session tokens and recovery codes are stored as SHA-256 hashes, never as-is.
 import { HttpError, sha256Hex, randomToken } from './util.js';
 import { applyInvite } from './rewards.js';
+import { freezesFor } from './shop.js';
 
 const SESSION_DAYS = 30;
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
@@ -196,10 +197,14 @@ export async function checkin(env, user) {
   const today = new Date().toISOString().slice(0, 10);
   if (user.last_day === today) return { streak: user.streak, bestStreak: user.best_streak, bonusXp: 0, already: true };
   const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-  const streak = user.last_day === yesterday ? (user.streak || 0) + 1 : 1;
+  // 🧊 streak freezes from the Butter Shop cover missed days
+  const missed = user.last_day ? Math.round((Date.parse(today) - Date.parse(user.last_day)) / 864e5) - 1 : 0;
+  const freeze = user.last_day === yesterday ? { used: 0 } : freezesFor(user, missed);
+  const streak = user.last_day === yesterday || freeze.used ? (user.streak || 0) + 1 : 1;
   const best = Math.max(streak, user.best_streak || 0);
-  await env.DB.prepare('UPDATE users SET streak = ?, best_streak = ?, last_day = ? WHERE id = ?').bind(streak, best, today, user.id).run();
-  return { streak, bestStreak: best, bonusXp: Math.min(streak, 7) * 5, already: false };
+  if (freeze.used) await env.DB.prepare('UPDATE users SET streak = ?, best_streak = ?, last_day = ?, shop = ? WHERE id = ?').bind(streak, best, today, freeze.shop, user.id).run();
+  else await env.DB.prepare('UPDATE users SET streak = ?, best_streak = ?, last_day = ? WHERE id = ?').bind(streak, best, today, user.id).run();
+  return { streak, bestStreak: best, bonusXp: Math.min(streak, 7) * 5, already: false, frozen: freeze.used };
 }
 
 // ---------------- cleaning what the browser sends ----------------

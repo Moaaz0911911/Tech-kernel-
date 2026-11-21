@@ -3,7 +3,7 @@ import { $, esc, timeAgo, toast } from './utils.js';
 import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tServer } from './i18n.js';
-import { lookHTML } from './look.js';
+import { lookHTML, fxClass } from './look.js';
 import { icon } from './icons.js';
 
 const COMMENT_REACTS = ['❤️', '😂', '🔥', '👍', '🤯', '😮'];
@@ -23,7 +23,7 @@ export function initSocial({ openAuth, onComment, rankInfo, badgeInfo, onCount }
   const commentHTML = (c) => `<div class="cmt" data-cid="${c.id}">
     <button type="button" class="cm-ava" data-user="${esc(c.user.username)}" aria-label="${esc(t('{name}’s profile', { name: c.user.nickname }))}">${lookHTML(c.user, { streak: c.user.streak })}</button>
     <div class="cmt-bubble">
-      <div class="cmt-head"><button type="button" data-user="${esc(c.user.username)}" dir="auto">${esc(c.user.nickname)}</button><time>${timeAgo(c.created)}</time>
+      <div class="cmt-head"><button type="button" data-user="${esc(c.user.username)}" dir="auto" class="${fxClass(c.user).trim()}" data-text="${esc(c.user.nickname)}">${esc(c.user.nickname)}</button><time>${timeAgo(c.created)}</time>
         ${c.mine ? `<button type="button" class="cm-more" data-cmt="delete" aria-label="${t('Delete my comment')}">🗑️</button>` : auth.user ? `<button type="button" class="cm-more" data-cmt="report" aria-label="${t('Report comment')}">🚩</button>` : ''}</div>
       <div class="cmt-text" dir="auto">${formatText(c.text)}</div>
       <div class="cmt-reacts">${reactsRow(c)}</div>

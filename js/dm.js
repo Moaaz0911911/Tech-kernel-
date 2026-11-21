@@ -5,7 +5,7 @@ import { catById } from './news.js';
 import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
-import { lookHTML } from './look.js';
+import { lookHTML, nameHTML, bubbleAttr } from './look.js';
 import { canRecord, recordVoice, voiceHTML, initVoicePlayer, stopVoice, clock, VOICE_MAX_MS } from './voice.js';
 import { groupAvatarHTML, systemText, initGroupTools } from './groups.js';
 import { tradeMessageHTML, answerTrade } from './cards-ui.js';
@@ -307,7 +307,8 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
     const actions = m.mine
       ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
       : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
-    return `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}">${from}
+    const sender = m.mine ? auth.getProfile() : isGroup() ? cur.authors?.[m.from] : cur.other;
+    return `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}"${bubbleAttr(sender)}>${from}
       <div class="dm-bubble${gone ? ' deleted' : ''}${card ? ' only-story' : ''}${m.voice && !m.text && !gone ? ' only-voice' : ''}" dir="auto">${bubbleInner(m)}</div>
       ${reactsHTML(m)}
       ${gone ? '' : `<div class="dm-actions glass">${REACTS.map((e) => `<button type="button" data-dreact="${e}" aria-pressed="${m.myReact === e}">${e}</button>`).join('')}${actions}</div>`}
@@ -347,7 +348,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
       let from = '';
       if (isGroup() && !m.mine && m.kind !== 'system' && (prev?.from !== m.from || prev?.kind === 'system' || m.created - prev.created > 3600e3)) {
         const a = cur.authors[m.from] || cur.members.find((x) => x.username === m.from) || { username: m.from, nickname: m.from };
-        from = `<button type="button" class="dm-from" data-user="${esc(m.from || '')}">${lookHTML(a)}<b dir="auto">${esc(a.nickname)}</b></button>`;
+        from = `<button type="button" class="dm-from" data-user="${esc(m.from || '')}">${lookHTML(a)}${nameHTML(a)}</button>`;
       }
       html += msgHTML(m, from);
       if (m === lastMine && cur.id) html += `<div class="dm-status">${seenText(m)}</div>`;

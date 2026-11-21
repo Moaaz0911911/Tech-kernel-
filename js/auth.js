@@ -122,10 +122,12 @@ class Auth extends EventTarget {
     store.set(`profile:${this.profileKey()}`, p);
     if (this.user?.apiToken) {
       const body = { nickname: p.nickname, avatar: p.avatar, topics: p.topics, leaderboard: p.leaderboard !== false, hat: p.hat || 'none', frame: p.frame || 'none', ...(p.lang ? { lang: p.lang } : {}), bio: p.bio || '', dms: p.dms || 'everyone' };
+      for (const k of ['bubble', 'bg', 'fx', 'persona']) if (p[k]) body[k] = p[k]; // 🧈 shop looks (checked against what you own)
       this.api('/api/me/profile', { method: 'PUT', body })
-        .then((r) => { // the server double-checks hats and frames against your XP
-          if (r?.profile && (r.profile.hat !== body.hat || r.profile.frame !== body.frame)) {
-            store.set(`profile:${this.profileKey()}`, { ...this.getProfile(), hat: r.profile.hat, frame: r.profile.frame });
+        .then((r) => { // the server double-checks hats and frames against your XP (and shop looks against what you bought)
+          const KEYS = ['hat', 'frame', 'bubble', 'bg', 'fx', 'persona'];
+          if (r?.profile && KEYS.some((k) => k in body && r.profile[k] !== body[k])) {
+            store.set(`profile:${this.profileKey()}`, { ...this.getProfile(), ...Object.fromEntries(KEYS.map((k) => [k, r.profile[k]])) });
             this.dispatchEvent(new CustomEvent('profile', { detail: this.getProfile() }));
           }
         })

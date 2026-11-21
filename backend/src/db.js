@@ -32,6 +32,10 @@ const MIGRATIONS = [
   'ALTER TABLE group_messages ADD COLUMN poll TEXT',
   'ALTER TABLE users ADD COLUMN week TEXT',
   'ALTER TABLE users ADD COLUMN week_xp INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE users ADD COLUMN butter INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE users ADD COLUMN butter_mark INTEGER',
+  'ALTER TABLE users ADD COLUMN shop TEXT',
+  'ALTER TABLE users ADD COLUMN pet TEXT',
 ];
 
 export class KernelDB extends DurableObject {

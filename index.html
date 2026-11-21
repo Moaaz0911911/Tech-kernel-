@@ -246,6 +246,14 @@
           <h3 id="inviteTitle" class="widget-title">🎟️ Invite friends</h3>
           <div id="inviteBody"></div>
         </section>
+        <section class="widget widget-pet" id="petWidget" aria-labelledby="petTitle" hidden>
+          <h3 id="petTitle" class="widget-title">🐣 Your pet</h3>
+          <div id="petBody"></div>
+        </section>
+        <section class="widget widget-shop" id="shopWidget" aria-labelledby="shopTitle" hidden>
+          <h3 id="shopTitle" class="widget-title">🧈 Butter Shop</h3>
+          <div id="shopBody"></div>
+        </section>
         <section class="widget widget-squad" id="squadWidget" aria-labelledby="squadTitle" hidden>
           <h3 id="squadTitle" class="widget-title">👥 Your squad</h3>
           <div id="squadBody"></div>
@@ -711,9 +719,11 @@
         <path d="M24 46 q8 6 16 0" class="mouth"/>
       </svg>
       <div class="codme-title"><b>codme</b><small id="codmeStatus">online</small></div>
+      <button type="button" class="icon-btn" id="codmePersonaBtn" title="Personality" aria-label="Pick codme’s personality">🎭</button>
       <button type="button" class="icon-btn" id="codmeClear" title="New chat" aria-label="Start a new chat">🧹</button>
       <button type="button" class="icon-btn" id="codmeClose" title="Close" aria-label="Close chat">✕</button>
     </header>
+    <div class="codme-personas" id="codmePersonas" hidden></div>
     <div class="codme-log" id="codmeLog" aria-live="polite"></div>
     <div class="codme-chips" id="codmeChips"></div>
     <form class="codme-form" id="codmeForm">

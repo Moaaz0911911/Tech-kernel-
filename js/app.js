@@ -10,7 +10,7 @@ import { initNotify } from './notify.js';
 import { initGame } from './game.js';
 import { JOKES, FACTS, LOADING_LINES } from './content.js';
 import { t, tn, tServer, lang, setLang, chosenLang, translatePage, loadLangFonts, langMenuHTML, LANGS } from './i18n.js';
-import { lookHTML } from './look.js';
+import { lookHTML, nameHTML } from './look.js';
 import { HATS, FRAMES, unlocked } from './cosmetics.js';
 import { initPlay } from './play.js';
 import { initSocial } from './social.js';
@@ -29,6 +29,9 @@ import { initCards } from './cards.js';
 import { initSquads } from './squads.js';
 import { initParties } from './parties.js';
 import { initDebates } from './debates.js';
+import { initShop } from './shop.js';
+import { initPet } from './pet.js';
+import { ownsLook } from './shop-data.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -74,6 +77,7 @@ let cards = null;
 let parties = null;
 let debates = null;
 let invites = null;
+let shop = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
@@ -241,7 +245,7 @@ async function loadLeaderboard() {
     $('#boardList').innerHTML = top.length
       ? top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}" data-user="${esc(u.username)}" title="${esc(t('{name}’s profile', { name: u.nickname }))}">
           <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava">${lookHTML(u)}</span>
-          <span class="b-name"><b dir="auto">${esc(u.nickname)}</b><small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
+          <span class="b-name">${nameHTML(u)}<small>@${esc(u.username)} · ${esc(u.rankEmoji)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
           <span class="b-xp">${compact(u.xp)}<small>XP</small></span></li>`).join('')
       : `<li class="muted small">${t('Nobody yet — be the first kernel to pop! 🍿')}</li>`;
     $('#boardMe').innerHTML = !auth.user
@@ -261,6 +265,7 @@ async function dailyCheckin() {
     d.streak = r.streak;
     d.bestStreak = Math.max(d.bestStreak || 0, r.bestStreak || 0);
     store.set(`data:${auth.profileKey()}`, d);
+    if (r.frozen) toast(t('🧊 A streak freeze saved your streak! Now on day {n}.', { n: r.streak }), { emoji: '🧊', ms: 6000 });
     if (!r.already && r.bonusXp) {
       toast(r.streak > 1 ? t('{n}-day streak! +{xp} XP', { n: r.streak, xp: r.bonusXp }) : t('Daily visit bonus: +{xp} XP', { xp: r.bonusXp }), { emoji: '🔥', ms: 4500 });
       addXp(r.bonusXp);
@@ -624,7 +629,7 @@ function renderProfileWidget() {
   const r = rankFor(d.xp);
   const pct = r.next ? Math.round(((d.xp - r.min) / (r.next - r.min)) * 100) : 100;
   box.innerHTML = `
-    <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div><b dir="auto">${esc(p.nickname)}</b><span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
+    <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div>${nameHTML(p)}<span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
     ${auth.user && p.bio ? `<p class="pw-bio" dir="auto">${esc(p.bio)}</p>` : ''}
     <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${t('Progress to next rank')}"><i style="width:${pct}%"></i></div>
     <p class="xp-note">${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}</p>
@@ -957,11 +962,11 @@ function openProfile(isNew = false) {
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
   $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(t(c.label))}</span></label>`).join('');
   // hats and frames: unlocked with XP (and tournament trophies)
-  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0) };
+  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0), owned: store.get(`shop:${auth.profileKey()}`, {}).owned || [] };
   const styleOpt = (kind, item, look) => {
     const open = unlocked(item, stats);
     const checked = (p[kind] || 'none') === item.id;
-    const need = item.trophy ? t('win a trophy') : item.stat ? t(item.need) : t('{n} XP', { n: item.xp });
+    const need = item.trophy ? t('win a trophy') : item.stat || item.shop ? t(item.need) : t('{n} XP', { n: item.xp });
     return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
       <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
   };
@@ -1215,7 +1220,11 @@ function boot() {
     remember: (items) => items.forEach((i) => { if (!feed.get(i.key)) extraItems.set(i.key, i); }),
     trends: () => trends(feed.all(), 8),
     aiEnabled: () => !!auth.apiBase,
-    ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages } }),
+    ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages, persona: auth.getProfile().persona } }),
+    persona: () => auth.getProfile().persona,
+    ownsPersona: (id) => ownsLook('persona', id, store.get(`shop:${auth.profileKey()}`, {}).owned || []),
+    setPersona: (id) => auth.saveProfile({ ...auth.getProfile(), persona: id }),
+    openShop: (kind) => shop?.open(kind),
     onAsk: () => { const d = getData(); d.codmeAsks = (d.codmeAsks || 0) + 1; setData(d); checkAchievements(); },
   });
 
@@ -1282,6 +1291,8 @@ function boot() {
   initGuess({ openAuth, openStory: storyOpener, onDone: (kind, right) => { addXp(right * 2); bump('guessGames'); } });
   cards = initCards({ openAuth });
   initSquads({ openAuth, openGroup: (id) => community?.openGroup(id) });
+  shop = initShop({ openAuth });
+  initPet({ openShop: (kind) => shop?.open(kind) });
   parties = initParties({ openAuth, openStory: storyOpener });
   debates = initDebates({ openAuth, openStory: storyOpener });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });

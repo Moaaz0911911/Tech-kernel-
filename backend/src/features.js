@@ -24,6 +24,8 @@ import { getSquad, createSquad, inviteToSquad, answerInvite, leaveSquad } from '
 import { listParties, getParty, partyChat, partyHype, rsvpParty, reportPartyMessage, createParty, deleteParty } from './parties.js';
 import { listDebates, startDebate, getDebate, voteDebate, argue, likeArgument, reportArgument } from './debates.js';
 import { voteChatPoll } from './chatpolls.js';
+import { getShop, buy } from './shop.js';
+import { getPet, adoptPet, renamePet, feedPet, treatPet } from './pet.js';
 import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
@@ -368,6 +370,27 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     if (debAct[1] === 'argue') { await assertNotMuted(env, user); return json(await argue(env, user, body)); }
     if (debAct[1] === 'like') return json(await likeArgument(env, user, body));
     return json(await reportArgument(env, user, body));
+  }
+
+  // ---- 🧈 Butter Shop ----
+  if (path === '/api/shop' && m === 'GET') return json(await getShop(env, await requireUser(request, env)));
+  if (path === '/api/shop/buy' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `shop:${user.id}`, 60, 3600_000);
+    return json(await buy(env, user, await readJson(request, 500)));
+  }
+
+  // ---- 🐣 Kernel Pet ----
+  if (path === '/api/pet' && m === 'GET') return json(await getPet(env, await requireUser(request, env)));
+  const petAct = path.match(/^\/api\/pet\/(adopt|name|feed|treat)$/);
+  if (petAct && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `pet:${user.id}`, 120, 3600_000);
+    const body = await readJson(request, 500);
+    if (petAct[1] === 'adopt') { await assertNotMuted(env, user); return json(await adoptPet(env, user, body)); }
+    if (petAct[1] === 'name') { await assertNotMuted(env, user); return json(await renamePet(env, user, body)); }
+    if (petAct[1] === 'feed') return json(await feedPet(env, user));
+    return json(await treatPet(env, user));
   }
 
   // ---- 📊 polls in chats ----

@@ -17,6 +17,8 @@ import { forgetGroupsOf } from './groups.js';
 import { sendMorningDrops, notifyTopics } from './discover.js';
 import { updatePrices, awardMarket } from './market.js';
 import { weekUpdate, forgetSquadOf } from './squads.js';
+import { shopOf, cleanShopLook, BUTTER_SQL } from './shop.js';
+import { ownsLook } from '../../js/shop-data.js';
 import { remindParties } from './parties.js';
 import { makeDailyDebate, settleDebates } from './debates.js';
 import { dropPopStatements } from './pops.js';
@@ -106,7 +108,8 @@ async function route(request, env, ctx) {
     const user = await requireUser(request, env);
     const body = await readJson(request, 10_000);
     const prev = parse(user.profile, {});
-    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { ...statsOf(user), xp: user.xp || 0, trophies: await trophyCount(env, user.id) }) };
+    const owned = shopOf(user).owned;
+    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { ...statsOf(user), xp: user.xp || 0, trophies: await trophyCount(env, user.id), owned }), ...cleanShopLook(body, prev, owned) };
     if (typeof body.bio === 'string') profile.bio = cleanText(body.bio.replace(/\s+/g, ' ')).slice(0, 80);
     if (['everyone', 'following', 'nobody'].includes(body.dms)) profile.dms = body.dms;
     await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();
@@ -117,7 +120,7 @@ async function route(request, env, ctx) {
     await rateLimit(env, `data:${user.id}`, 600, 3600_000);
     const before = parse(user.data, {});
     const data = mergeDataPatch(before, await readJson(request, 400_000));
-    await env.DB.prepare('UPDATE users SET data = ?, xp = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), data.xp || 0, Date.now(), user.id).run();
+    await env.DB.prepare(`UPDATE users SET data = ?, ${BUTTER_SQL}, xp = ?, updated = ? WHERE id = ?`).bind(JSON.stringify(data), data.xp || 0, data.xp || 0, data.xp || 0, Date.now(), user.id).run();
     const gained = (data.xp || 0) - (user.xp || 0);
     if (gained > 0) await env.DB.batch([seasonUpdate(env, user, gained), weekUpdate(env, user, gained)]);
     const events = activityFromData({ ...before, xp: user.xp || 0 }, data); // rank-ups and new badges → friends' feed
@@ -294,7 +297,9 @@ async function route(request, env, ctx) {
     await rateLimit(env, 'codme:global', Number(env.CODME_GLOBAL_DAY) || 2000, 864e5);
     const body = await readJson(request, 30_000);
     const nickname = user ? parse(user.profile, {}).nickname : null;
-    return json(await codmeReply(env, body, nickname));
+    // the personality: the one saved on the account (checked against purchases), or a free one for guests
+    const persona = user ? parse(user.profile, {}).persona : ownsLook('persona', body.persona, []) ? body.persona : 'classic';
+    return json(await codmeReply(env, { ...body, persona }, nickname));
   }
 
   const extra = await featureRoute(request, env, ctx, { path, m, url, ip });

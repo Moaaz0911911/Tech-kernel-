@@ -15,7 +15,8 @@ export const liveStreak = (u) => (u.last_day && u.last_day >= yesterday() ? u.st
 /** The public look of a person: avatar, hat and frame. */
 export function look(profileJson) {
   const p = typeof profileJson === 'string' ? parse(profileJson, {}) : profileJson || {};
-  return { avatar: p.avatar || '🍿', hat: hatById(p.hat).emoji || '', frame: frameById(p.frame).id, photo: p.photo || '' };
+  const extra = (k) => (p[k] && p[k] !== 'none' ? p[k] : '');
+  return { avatar: p.avatar || '🍿', hat: hatById(p.hat).emoji || '', frame: frameById(p.frame).id, photo: p.photo || '', bubble: extra('bubble'), fx: extra('fx') };
 }
 
 /** Check a requested hat/frame against what the person has unlocked. */
@@ -65,7 +66,7 @@ function toComment(r, me, reacts = { counts: {}, mine: {} }) {
   return {
     id: r.id, key: r.story_key, text: r.hidden ? '' : r.text, hidden: !!r.hidden, created: r.created, mine: !!me && r.user_id === me.id,
     reactions: reacts.counts[r.id] || {}, myReaction: reacts.mine[r.id] || null,
-    user: { username: r.username, nickname: r.nickname || r.username, avatar: l.avatar || r.avatar, hat: l.hat, frame: l.frame, photo: l.photo, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
+    user: { username: r.username, nickname: r.nickname || r.username, avatar: l.avatar || r.avatar, hat: l.hat, frame: l.frame, photo: l.photo, fx: l.fx || '', streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
   };
 }
 

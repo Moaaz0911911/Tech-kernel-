@@ -52,6 +52,9 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🎉 **Watch Parties**: moderators schedule a party for a big launch or event. Tap 🔔 to get reminded; the room opens 15 minutes early with a live chat, a viewer count and a hype meter, and every emoji anyone taps floats up on everyone's screen.
 - ⚖️ **Debate Rooms**: every day the biggest story gets a "Is this a big deal?" debate, and anyone can start one from the reader (up to 3 a day). Pick a side, post up to 3 arguments, ❤️ the good ones. After 48 hours the side with more votes wins, and the best-liked argument on it earns XP (three wins unlock the ⚖️ Debate champ hat).
 - 📊 **Polls in chats**: tap 📊 in any private or group chat to ask a question with 2–4 answers. Votes update live; tap your answer again to take your vote back.
+- 🧈 **Butter Shop**: every XP you earn also gives you 1 🧈 butter (plus 200 to start), and spending it never lowers your XP or rank. Buy 🧊 streak freezes (they save your streak by themselves if you miss a day), card packs, pet treats, shop-only hats, name effects (✨ shimmer, 💡 neon, 🌈 rainbow, 📺 glitch), chat bubble colours and profile-card backgrounds that everyone sees.
+- 🐣 **Kernel Pet**: adopt a chick, dino, kitty or robot on the Me tab and name it. Feed it once a day (+5 XP) and it hatches and grows through five stages; a 7-day streak makes it grow twice as fast. It gets hungry when you skip a day but never goes away. Tap it to say hi, give it treats, and it shows on your profile card.
+- 🎭 **codme personalities**: tap 🎭 in codme to switch costumes — Professor Kern (free), Captain Byte the pirate, Wizard Kernelius, Coach Hype, Purrcy the cat and Teta Kernel, an Egyptian grandma. They greet you, present results and sign off in character; with an AI key on the server, the AI answers in character too (with the same facts).
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -211,6 +214,9 @@ js/cards.js       🃏 packs, collection, gifts and trades (cards-ui.js draws a 
 js/squads.js      👥 Squads
 js/parties.js     🎉 Watch Parties
 js/debates.js     ⚖️ Debate Rooms
+js/shop.js        🧈 Butter Shop (shop-data.js lists the items, shared with the server)
+js/pet.js         🐣 Kernel Pet (pet-data.js: kinds and stages, shared with the server)
+js/personas.js    🎭 codme's personalities (shared with the server for the AI)
 js/emoji.js       the emoji dictionary (shared with the server)
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped

@@ -7,6 +7,7 @@ import { trophiesOf } from './play.js';
 import { relation } from './people.js';
 import { seasonMedals } from './arena.js';
 import { popStatus } from './pops.js';
+import { petBadge } from './pet.js';
 import { tr, langOfProfile } from './i18n.js';
 
 export const ROOMS = [
@@ -41,7 +42,7 @@ function toMessage(r, myReacts = {}) {
   const l = r.u_profile ? look(r.u_profile) : { avatar: r.avatar || '🍿', hat: '', frame: 'none', photo: '' };
   return {
     id: r.id, room: r.room,
-    user: { username: r.username, nickname: r.nickname || r.username, avatar: r.bot ? r.avatar : l.avatar, hat: l.hat, frame: l.frame, photo: r.bot ? '' : l.photo, rank: r.rank_emoji || '🌽', bot: !!r.bot, streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
+    user: { username: r.username, nickname: r.nickname || r.username, avatar: r.bot ? r.avatar : l.avatar, hat: l.hat, frame: l.frame, photo: r.bot ? '' : l.photo, rank: r.rank_emoji || '🌽', bot: !!r.bot, bubble: r.bot ? '' : l.bubble || '', fx: r.bot ? '' : l.fx || '', streak: r.u_last ? liveStreak({ streak: r.u_streak, last_day: r.u_last }) : 0 },
     text: r.hidden ? '' : r.text, stories: r.hidden ? [] : parse(r.stories, []), reactions: parse(r.reactions, {}), mine: myReacts[r.id] || null,
     hidden: !!r.hidden, created: r.created, updated: r.updated,
   };
@@ -199,6 +200,7 @@ export async function publicProfile(env, username, viewer = null) {
     ...(await relation(env, viewer, r)),
     seasons: await seasonMedals(env, r.id),
     ...(await popStatus(env, viewer, r.id)),
+    bg: p.bg && p.bg !== 'none' ? p.bg : '', pet: petBadge(r),
   };
 }
 

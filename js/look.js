@@ -25,3 +25,17 @@ export function lookHTML(p = {}, { cls = '', streak = 0, active = false } = {}) 
   const dot = active ? `<span class="ava-active" title="${esc(t('Active now'))}"></span>` : '';
   return `<span class="ava ${cls}${url ? ' has-photo' : ''}" data-frame="${frameId(p.frame)}" aria-hidden="true">${face}${hat ? `<span class="ava-hat">${esc(hat)}</span>` : ''}${flame}${dot}</span>`;
 }
+
+// ---------- 🧈 Butter Shop looks: name effects and chat bubble colours ----------
+const FX = new Set(['shimmer', 'neon', 'rainbow', 'glitch']);
+const BUBBLES = new Set(['mint', 'sky', 'peach', 'grape', 'gold']);
+/** Extra classes for a name with a shop effect (✨ shimmer, 💡 neon, 🌈 rainbow, 📺 glitch). */
+export const fxClass = (p) => (FX.has(p?.fx) ? ` nm-fx fx-${p.fx}` : '');
+/** A person's name, wearing their name effect. */
+export function nameHTML(p = {}, { tag = 'b', cls = '' } = {}) {
+  const name = p.nickname || p.username || '';
+  const fx = fxClass(p);
+  return `<${tag} class="${`${cls}${fx}`.trim()}" dir="auto"${fx ? ` data-text="${esc(name)}"` : ''}>${esc(name)}</${tag}>`;
+}
+/** ` data-bubble="…"` for a chat message from someone with a bubble colour (or nothing). */
+export const bubbleAttr = (p) => (BUBBLES.has(p?.bubble) ? ` data-bubble="${p.bubble}"` : '');

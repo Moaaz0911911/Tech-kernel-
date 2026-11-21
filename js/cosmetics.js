@@ -19,6 +19,12 @@ export const HATS = [
   { id: 'joker', emoji: '🃏', xp: 0, stat: 'cardSets', min: 1, need: 'complete a card set', name: 'Card shark' },
   { id: 'team', emoji: '🤝', xp: 0, stat: 'squadGoals', min: 3, need: 'reach your squad’s weekly goal 3 times', name: 'Team player' },
   { id: 'gavel', emoji: '⚖️', xp: 0, stat: 'debateWins', min: 3, need: 'write the winning argument in 3 debates', name: 'Debate champ' },
+  // only in the 🧈 Butter Shop
+  { id: 'blossom', emoji: '🌸', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Blossom' },
+  { id: 'mushroom', emoji: '🍄', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Mushroom cap' },
+  { id: 'octopus', emoji: '🐙', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Octopus pal' },
+  { id: 'disco', emoji: '🪩', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Disco ball' },
+  { id: 'diamond', emoji: '💎', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Diamond' },
 ];
 
 export const FRAMES = [
@@ -34,7 +40,7 @@ export const FRAMES = [
   { id: 'collector', xp: 0, stat: 'cardSets', min: 4, need: 'complete all 4 card sets', name: 'Master collector' },
 ];
 
-/** Is a hat or frame unlocked? Most need XP; some need tournament trophies or a special counter (invites, live wins…). */
-export const unlocked = (item, stats = {}) => !!item && (item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
+/** Is a hat or frame unlocked? Most need XP; some need tournament trophies, a special counter (invites, live wins…) or a Butter Shop purchase. */
+export const unlocked = (item, stats = {}) => !!item && (item.shop ? (stats.owned || []).includes(`hat-${item.id}`) : item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
 export const hatById = (id) => HATS.find((h) => h.id === id) || HATS[0];
 export const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];

@@ -6,6 +6,8 @@ import { CATEGORIES, catById, hotness, searchLocal, searchArchive, tokenize } fr
 import { JOKES, FACTS, lookupGlossary } from './content.js';
 import { sfx } from './fun.js';
 import { t, tn, langInfo } from './i18n.js';
+import { PERSONAS, personaById } from './personas.js';
+import { itemFor } from './shop-data.js';
 
 // ---------- understanding Arabic, German and Tagalog ----------
 // Questions in other languages are turned into codme's English keywords (headlines are in English).
@@ -140,7 +142,9 @@ export function initCodme(api) {
   let aiOff = false;  // the server said AI isn't switched on: stop trying this session
   let unread = 0;
 
-  const AVATAR = '<span class="msg-avatar" aria-hidden="true">🤖</span>';
+  // 🎭 personalities from the Butter Shop: codme wears one like a costume
+  const persona = () => personaById(api.persona?.());
+  const avatar = () => `<span class="msg-avatar" aria-hidden="true">${persona().emoji}</span>`;
 
   // ----- rendering -----
   function miniCard(it) {
@@ -159,7 +163,7 @@ export function initCodme(api) {
   function addMsg(who, html, { cards = [] } = {}) {
     const m = document.createElement('div');
     m.className = `msg msg-${who}`;
-    m.innerHTML = `${who === 'bot' ? AVATAR : ''}<div class="bubble">${html}${cards.length ? `<div class="msg-cards">${cards.map(miniCard).join('')}</div>` : ''}</div>`;
+    m.innerHTML = `${who === 'bot' ? avatar() : ''}<div class="bubble">${html}${cards.length ? `<div class="msg-cards">${cards.map(miniCard).join('')}</div>` : ''}</div>`;
     log.append(m);
     while (log.children.length > 80) log.firstElementChild.remove();
     log.scrollTop = log.scrollHeight;
@@ -174,7 +178,7 @@ export function initCodme(api) {
     if (on && !typingEl) {
       typingEl = document.createElement('div');
       typingEl.className = 'msg msg-bot typing';
-      typingEl.innerHTML = `${AVATAR}<div class="bubble" aria-label="${t('codme is typing')}"><i></i><i></i><i></i></div>`;
+      typingEl.innerHTML = `${avatar()}<div class="bubble" aria-label="${t('codme is typing')}"><i></i><i></i><i></i></div>`;
       log.append(typingEl);
       log.scrollTop = log.scrollHeight;
     } else if (!on && typingEl) {
@@ -188,6 +192,8 @@ export function initCodme(api) {
     const textLen = html.replace(/<[^>]+>/g, '').length;
     await sleep(Math.min(1000, 280 + textLen * 5));
     typing(false);
+    const pp = persona();
+    if (pp.tics && !opts.noTic && Math.random() < (opts.ticChance ?? 0.35)) html += ` <span class="persona-tic">${t(pick(pp.tics))}</span>`;
     addMsg('bot', html, opts);
     if (opts.cards?.length) api.remember(opts.cards);
     if (opts.chips) setChips(opts.chips);
@@ -206,6 +212,8 @@ export function initCodme(api) {
 
   // ----- skills -----
   async function greet() {
+    const pp = persona();
+    if (pp.hi) { await say(t(pp.hi, { name: esc(name()) }), { chips: CHIPS_DEFAULT, noTic: true }); return; }
     await say(t(pick([
       'Hey {name}! 👋 I’m <b>codme</b>. Ask me for any tech news — a topic, a company, a time range — and I’ll sniff it out.',
       'Yo {name}! 🤖 codme online and fully buttered. What news are we hunting today?',
@@ -231,7 +239,8 @@ export function initCodme(api) {
     }
     last = { title, results, offset: 5, ...ctx };
     const more = results.length > 5 ? `<br><small>${tn(Math.min(5, results.length - 5), 'Say <b>“more”</b> for {n} more story.', 'Say <b>“more”</b> for {n} more stories.')}</small>` : '';
-    await say(`${title}${more}`, { cards: results.slice(0, 5), chips: results.length > 5 ? ['➕ More', '🔥 What’s hot?', '🎲 Surprise me'] : ['🔥 What’s hot?', '📋 Summarize today', '🎲 Surprise me'] });
+    const intro = persona().found ? `${t(persona().found)}<br>` : '';
+    await say(`${intro}${title}${more}`, { cards: results.slice(0, 5), chips: results.length > 5 ? ['➕ More', '🔥 What’s hot?', '🎲 Surprise me'] : ['🔥 What’s hot?', '📋 Summarize today', '🎲 Surprise me'] });
   }
 
   async function more() {
@@ -306,6 +315,7 @@ export function initCodme(api) {
 
   async function sorry(q) {
     const trending = api.trends().slice(0, 4).map(([w]) => chip('🔎 News about {w}', { w }));
+    if (persona().none) { await say(t(persona().none, { q: esc(q) }), { chips: trending.length ? trending : CHIPS_DEFAULT, noTic: true }); return; }
     await say(t(pick([
       'I sniffed everywhere for “{q}”… nothing. 🐽💨 Try another word, or one of these trending ones?',
       'Zero kernels popped for “{q}”. 😢 Maybe check the spelling, or try something broader?',
@@ -451,6 +461,43 @@ export function initCodme(api) {
     setTimeout(() => { if (!panel.classList.contains('open')) panel.hidden = true; }, 220);
   }
   const toggle = () => (panel.hidden ? open() : close());
+
+  // ----- 🎭 personality picker -----
+  const picker = $('#codmePersonas');
+  const titleEl = panel.querySelector('.codme-title b');
+  const paintTitle = () => {
+    const pp = persona();
+    titleEl.textContent = pp.id === 'classic' ? 'codme' : `codme · ${pp.emoji} ${t(pp.name)}`;
+    launcher.dataset.persona = pp.id;
+    launcher.dataset.personaEmoji = pp.id === 'classic' ? '' : pp.emoji; // a little costume badge on the button
+  };
+  function paintPicker() {
+    picker.innerHTML = `<p class="tp-label">🎭 ${t('Pick codme’s personality')}</p>${PERSONAS.map((pp) => {
+      const item = itemFor('persona', pp.id);
+      const open = pp.id === 'classic' || api.ownsPersona?.(pp.id);
+      const on = persona().id === pp.id;
+      return `<button type="button" class="persona-opt${on ? ' on' : ''}" data-persona="${pp.id}" aria-pressed="${on}">
+        <span aria-hidden="true">${pp.emoji}</span><b>${esc(t(pp.name))}</b><small>${on ? '✓' : open ? '' : `🔒 🧈 ${item?.price ?? ''}`}</small></button>`;
+    }).join('')}`;
+  }
+  $('#codmePersonaBtn')?.addEventListener('click', () => {
+    picker.hidden = !picker.hidden;
+    if (!picker.hidden) paintPicker();
+  });
+  picker?.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-persona]');
+    if (!b) return;
+    const id = b.dataset.persona;
+    if (id !== 'classic' && !api.ownsPersona?.(id)) { picker.hidden = true; api.openShop?.('persona'); return; }
+    api.setPersona?.(id === 'classic' ? 'none' : id);
+    picker.hidden = true;
+    paintTitle();
+    aiHistory = []; // a fresh start in the new costume
+    sfx.ding();
+    greet();
+  });
+  document.addEventListener('kernel:look', (e) => { if (e.detail?.kind === 'persona') { paintTitle(); if (!panel.hidden) greet(); } });
+  paintTitle();
 
   launcher.addEventListener('click', toggle);
   $('#codmeClose').addEventListener('click', close);

@@ -4,7 +4,7 @@ import { catById } from './news.js';
 import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
-import { lookHTML } from './look.js';
+import { lookHTML, nameHTML, fxClass, bubbleAttr } from './look.js';
 import { initDM, mountPeopleSearch, activeText } from './dm.js';
 import { seasonMedalsHTML } from './arena.js';
 import { initPops } from './pops.js';
@@ -74,10 +74,10 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
     const mentionsMe = auth.user && !mine && new RegExp(`@${myName()}\\b`, 'i').test(m.text);
     const reacts = Object.entries(m.reactions || {}).filter(([, n]) => n > 0);
     const who = m.user.bot ? `<span class="cm-ava bot" aria-hidden="true">${esc(m.user.avatar)}</span>` : `<button type="button" class="cm-ava" data-user="${esc(m.user.username)}" aria-label="${esc(t('{name}’s profile', { name: m.user.nickname }))}">${lookHTML(m.user, { streak: m.user.streak })}</button>`;
-    return `<div class="cmsg${mine ? ' me' : ''}${mentionsMe ? ' mention' : ''}${m.user.bot ? ' bot' : ''}" data-id="${m.id}">
+    return `<div class="cmsg${mine ? ' me' : ''}${mentionsMe ? ' mention' : ''}${m.user.bot ? ' bot' : ''}" data-id="${m.id}"${bubbleAttr(m.user)}>
       ${who}
       <div class="cm-body">
-        <div class="cm-head">${m.user.bot ? `<b class="cm-name">${esc(m.user.nickname)}</b><span class="cm-handle">${t('bot')}</span>` : `<button type="button" class="cm-name" data-user="${esc(m.user.username)}">${esc(m.user.nickname)}</button><span class="cm-handle">@${esc(m.user.username)} ${esc(m.user.rank)}</span>`}<time data-time="${m.created}">${timeAgo(m.created)}</time></div>
+        <div class="cm-head">${m.user.bot ? `<b class="cm-name">${esc(m.user.nickname)}</b><span class="cm-handle">${t('bot')}</span>` : `<button type="button" class="cm-name${fxClass(m.user)}" data-user="${esc(m.user.username)}" data-text="${esc(m.user.nickname)}">${esc(m.user.nickname)}</button><span class="cm-handle">@${esc(m.user.username)} ${esc(m.user.rank)}</span>`}<time data-time="${m.created}">${timeAgo(m.created)}</time></div>
         ${m.text ? `<div class="cm-text" dir="auto">${formatText(m.text)}</div>` : ''}
         ${(m.stories || []).map(storyCard).join('')}
         <div class="cm-actions">
@@ -308,10 +308,10 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       const u = await auth.api(`/api/users/${encodeURIComponent(username)}`, { auth: true });
       const badges = u.badges.map(badgeInfo).filter(Boolean);
       const trophies = u.trophies || [];
-      body.innerHTML = `
+      body.innerHTML = `${u.bg ? `<div class="uc-cover" data-bg="${esc(u.bg)}" aria-hidden="true"></div>` : ''}
         ${u.pops ? `<button type="button" class="uc-ava pop-ring ${u.popsUnseen ? 'unseen' : 'seen'}" data-pops-of="${esc(u.username)}" aria-label="${esc(t('Pops from {name}', { name: u.nickname }))}">${lookHTML(u, { streak: u.streak, active: u.active })}</button>`
           : `<div class="uc-ava">${lookHTML(u, { streak: u.streak, active: u.active })}</div>`}
-        <h2 dir="auto">${esc(u.nickname)}</h2>
+        ${nameHTML(u, { tag: 'h2' })}
         <p class="muted">@${esc(u.username)} · ${t('joined {when}', { when: fmtDate(u.joined, { month: 'short', year: 'numeric' }) })}</p>
         ${u.bio ? `<p class="uc-bio" dir="auto">${esc(u.bio)}</p>` : ''}
         ${activeText(u) || u.followsYou ? `<p class="uc-status">${activeText(u) ? `<span>${u.active ? '🟢' : '⚪'} ${esc(activeText(u))}</span>` : ''}${u.followsYou ? `<span class="chip">${t('Follows you')}</span>` : ''}</p>` : ''}
@@ -324,6 +324,7 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
           <span><b>${u.following ?? 0}</b>${t('following')}</span>
           <span><b>${u.messages}</b>${t('chats')}</span>
         </div>
+        ${u.pet ? `<p class="uc-pet"><span aria-hidden="true">${esc(u.pet.emoji)}</span> <b dir="auto">${esc(u.pet.name)}</b> <small class="muted">${esc(t(u.pet.stageName))} · ${u.pet.mood === 'happy' ? '😊' : u.pet.mood === 'hungry' ? '🥺' : '😢'}</small></p>` : ''}
         ${seasonMedalsHTML(u.seasons)}
         ${trophies.length ? `<p class="uc-trophies" title="${esc(t('Real or Fake? tournament trophies'))}">${trophies.slice(0, 12).map((x) => `<span title="${esc(t('Week of {date}', { date: fmtDate(Date.parse(x.week)) }))}">${PLACE[x.place - 1] || '🏆'}</span>`).join('')} <small>${tn(trophies.length, '{n} trophy', '{n} trophies')}</small></p>` : ''}
         ${badges.length ? `<p class="uc-badges" aria-label="${t('Achievements')}">${badges.map((b) => `<span title="${esc(t(b.name))}">${b.emoji}</span>`).join('')}</p>` : `<p class="muted small">${t('No achievements yet — still warming up 🌽')}</p>`}

@@ -39,6 +39,9 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 👥 **Squads** | Up to 5 people. Each person's XP for the week is counted on `users.week_xp`, so the squad total is a cheap sum. The first time the total reaches the goal that week, everyone gets the bonus once. Joining creates (or grows) the squad's group chat. |
 | 🎉 **Watch Parties** | Moderators create them with `POST /api/mod/parties`. The phase (soon, lobby 15 minutes before, live, over) comes from the clock. Hype taps are counted in 2-second buckets so a busy room writes few rows; viewers are counted from a seen-time written at most every 20 seconds. Going people get a push when it starts. |
 | ⚖️ **Debates** | One automatic debate a day on the top story, plus up to 3 a day per person from the reader. 48 hours long; the cron settles closed ones, pays the best-liked argument on the winning side and writes nothing for a tie. 3 reports hide an argument. |
+| 🧈 **Butter Shop** | `users.butter` grows by the XP each save adds above `users.butter_mark` (the highest XP already paid out), so XP that drops and comes back can't print butter. A purchase pays and delivers in one `UPDATE … WHERE butter >= price AND shop = (what was read)`, so two quick taps can't spend the same butter. Owned items and streak freezes live in `users.shop`; the daily check-in uses a freeze for each missed day it can cover. Looks you switch on (bubble, background, name effect, codme personality, shop hats) are checked against what you own on every profile save. |
+| 🐣 **Kernel Pet** | `users.pet` holds the kind, name, growth and the day it was last fed. Feeding is once per UTC day, adds 1 growth (2 with a 7-day streak) and 5 XP. Mood comes from the last meal: today happy, yesterday hungry, longer sad. |
+| 🎭 **codme personalities** | For signed-in people the server uses the personality saved on their profile (so it must be owned); guests can only use the free ones. It goes in a second system block after codme's normal instructions. |
 | 📊 **Chat polls** | A poll is stored as JSON on the message itself (`dm_messages.poll`, `group_messages.poll`), with votes in `chat_poll_votes`. Only people in that chat can vote. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
@@ -156,6 +159,10 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/debates` (`?story=`) · `GET /api/debates/:id` · `POST /api/debates` | optional / Bearer | Open and recent debates · one debate with its arguments · `{ storyKey, question, sideA, sideB }` |
 | `POST /api/debates/vote` · `/argue` · `/like` · `/report` | Bearer | `{ id, side }` · `{ id, text }` · `{ id, like }` · `{ id }` |
 | `POST /api/dm` · `/api/groups/:id/messages` (also) | Bearer | `poll: { question, options: [2–4] }` sends a poll |
+| `GET /api/shop` · `POST /api/shop/buy` | Bearer | Your 🧈, owned items and streak freezes (the first visit adds the welcome gift) · `{ id }` |
+| `PUT /api/me/profile` (also) | Bearer | `bubble`, `bg`, `fx`, `persona` (`none` to switch off) and shop hats in `hat` |
+| `GET /api/pet` · `POST /api/pet/adopt` · `/name` · `/feed` · `/treat` | Bearer | Your pet (or `null`) and streak · `{ species: chick\|dino\|kitty\|bot, name }` · `{ name }` · feed once a day · give a treat |
+| `POST /api/codme` (also) | optional | `persona` for guests (free personalities only) |
 | `POST /api/chatpoll` | Bearer | `{ scope: d\|g, id: messageId, option }` (the same option again takes the vote back) |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
@@ -204,6 +211,8 @@ src/squads.js  Squads
 src/parties.js Watch Parties
 src/debates.js Debate Rooms
 src/chatpolls.js polls in private and group chats
+src/shop.js    Butter Shop (butter, purchases, streak freezes, shop looks)
+src/pet.js     Kernel Pet
 src/rewards.js server-given XP, special counters, invites
 src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine

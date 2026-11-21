@@ -4,7 +4,7 @@ import { $, esc, toast } from './utils.js';
 import { auth } from './auth.js';
 import { sfx, burstFrom } from './fun.js';
 import { t, tServer, fmtDate, fmtTime } from './i18n.js';
-import { lookHTML } from './look.js';
+import { lookHTML, nameHTML } from './look.js';
 import { makeDialog, inWords } from './arena.js';
 
 const POLL_MS = 2000;
@@ -66,7 +66,7 @@ export function initParties({ openAuth, openStory }) {
     const log = $('#ptLog');
     if (!log) return;
     const near = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
-    log.innerHTML = msgs.slice(-80).map((m) => `<div class="pt-msg${m.mine ? ' mine' : ''}" data-ptmsg="${m.id}">${lookHTML(m.user)}<span><b dir="auto">${esc(m.user.nickname)}</b> <span dir="auto">${esc(m.text)}</span></span>${m.mine ? '' : `<button type="button" class="pt-flag" data-pt-report="${m.id}" aria-label="${esc(t('Report message'))}">🚩</button>`}</div>`).join('')
+    log.innerHTML = msgs.slice(-80).map((m) => `<div class="pt-msg${m.mine ? ' mine' : ''}" data-ptmsg="${m.id}">${lookHTML(m.user)}<span>${nameHTML(m.user)} <span dir="auto">${esc(m.text)}</span></span>${m.mine ? '' : `<button type="button" class="pt-flag" data-pt-report="${m.id}" aria-label="${esc(t('Report message'))}">🚩</button>`}</div>`).join('')
       || `<p class="muted small">${t('Be the first to say hi! 👋')}</p>`;
     if (near) log.scrollTop = log.scrollHeight;
   }

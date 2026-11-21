@@ -54,7 +54,11 @@ CREATE TABLE IF NOT EXISTS users (
   season        TEXT,                         -- the month their season_xp belongs to (YYYY-MM)
   season_xp     INTEGER NOT NULL DEFAULT 0,
   week          TEXT,                         -- the week their week_xp belongs to (Monday's date)
-  week_xp       INTEGER NOT NULL DEFAULT 0
+  week_xp       INTEGER NOT NULL DEFAULT 0,
+  butter        INTEGER NOT NULL DEFAULT 0,   -- 🧈 shop money: 1 per XP earned
+  butter_mark   INTEGER,                      -- the highest XP butter was paid for (empty = the XP when the shop opened)
+  shop          TEXT,                         -- JSON: owned items, streak freezes, welcome gift taken
+  pet           TEXT                          -- JSON: the Kernel Pet
 );
 CREATE INDEX IF NOT EXISTS users_board ON users (on_board, xp DESC);
 

@@ -2,6 +2,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { HttpError } from './util.js';
 import { latestStories, searchStories, catById } from './news.js';
+import { personaById } from '../../js/personas.js';
 
 const MODEL = 'claude-opus-5-5';
 
@@ -48,13 +49,18 @@ export async function codmeReply(env, body, userName) {
     ...history.slice(1),
   ];
 
+  // A personality from the Butter Shop goes in its own block after the shared instructions, so those stay cacheable.
+  const persona = personaById(String(body.persona || ''));
+  const system = [{ type: 'text', text: SYSTEM }];
+  if (persona.style) system.push({ type: 'text', text: `Personality for this chat: you are ${persona.name} ${persona.emoji}, a costume codme is wearing. ${persona.style} Facts, citations and the rules above stay exactly the same.` });
+
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   let response;
   try {
     response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 2000,
-      system: SYSTEM,
+      system,
       messages,
       output_config: { effort: 'low' }, // chat: short, fast answers
       cache_control: { type: 'ephemeral' },
