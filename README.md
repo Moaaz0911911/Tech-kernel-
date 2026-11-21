@@ -37,6 +37,10 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🤖 **codme**, the news-sniffing robot: finds any story ("SpaceX in 2023"), explains tech words, summarises the day, tells jokes, takes voice input.
 - 🧠 **Explain like I'm 10 / ⚡ TL;DR** on every story, right in the reader. With an AI key on the server it's written by Claude in your language; without one, codme's quick explainer uses the headline, the publisher's summary and the glossary.
 - 🧠 **Daily Kernel Quiz**: 5 questions made from today's headlines (fill the missing word, which section, who published it, which got more upvotes, spot codme's fake). One go per day, with a daily board.
+- ⚔️ **Quiz Duels**: challenge a friend (from the Play tab, their profile card or the ⚔️ button in a chat) to 5 questions from today's news, 15 seconds each. You each play your turn when you like; the best score wins and the faster player wins a tie. The challenge arrives as a card in Messages. Winner +30 XP, loser +10, draw +15. After 48 hours, whoever played wins. Three wins unlock the ⚔️ Duel blade hat.
+- 📺 **kerNEl Live**: a trivia show every day at 12:00 and 18:00 UTC (shown in your own time). The lobby opens 10 minutes before. Then 10 questions, 12 seconds each, everyone at the same time; one wrong answer and you're out. After each question you see how many picked each answer. The last kernels standing win +60 XP and the 🎤 mic hat, and everyone who joined gets +15. With notifications on, kerNEl reminds you before the show.
+- 🔮 **Predictions**: every day kerNEl asks "Will this story reach N upvotes by tomorrow?" about two rising Hacker News stories, and checks the answer itself. Moderators can post their own questions (2 to 4 answers) and settle them. Right calls earn +15 XP; five unlock the 🔮 crystal ball hat.
+- 🏅 **Seasons**: every month is a season with its own leaderboard (the 🏆 board has an "All time / This season" switch). When the month ends, the top 3 get +200, +100 and +50 XP, a season medal on their profile card and the Season legend frame.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -62,7 +66,7 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🎧 **Daily audio briefing**: the top 5 stories read aloud, with pause and skip.
 - 📱 **Swipe mode**: one story at a time. Swipe up for the next one, right to save, left to skip, double-tap for 🔥.
 - 📼 **Tech Time Machine**: the biggest tech story on this day, every year back to 2007.
-- 💬 **kerNEl Chat** rooms, 🗳️ **Hot Take of the Day**, 🔔 **notifications** (also when kerNEl is closed), 📲 **installable app**, 🏆 **leaderboard**, 🔥 **streaks** and 🏅 **26 achievements**.
+- 💬 **kerNEl Chat** rooms, 🗳️ **Hot Take of the Day**, 🔔 **notifications** (also when kerNEl is closed), 📲 **installable app**, 🏆 **leaderboard**, 🔥 **streaks** and 🏅 **29 achievements**.
 - 🔐 **Accounts with a username and password** (no email). Everything is saved to the account: XP, saved stories, reactions, achievements, streak, theme, language, kids' stars.
 - 🎉 The fun extras are still there: chaos mode, popcorn rain, the doomscroll meter, keyboard shortcuts (`/` search, `r` refresh, `c` codme, `t` chat, `q` quiz, `s` swipe) and the Konami code.
 
@@ -176,6 +180,7 @@ js/i18n.js        languages: picking one, t() lookups, right-to-left, translated
 js/i18n-main.js   ← translations for the news site [English, Arabic, German, Tagalog]
 js/i18n-kids.js   ← translations for kerNEl Kids
 js/play.js        Daily Quiz, Popcorn Battle, weekly tournament
+js/arena.js       ⚔️ Quiz Duels, 📺 kerNEl Live, 🔮 Predictions, 🏅 season board
 js/social.js      story comments (+ reactions on comments), friends + activity feed
 js/mod.js         🛡️ moderator tools
 js/invite.js      🎟️ invite links and the invite widget

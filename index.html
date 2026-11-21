@@ -162,6 +162,14 @@
         <p class="view-sub">Daily games made from today’s news. New ones every day.</p>
       </header>
       <div class="grid">
+        <section class="widget widget-live" id="liveWidget" aria-labelledby="liveTitle" hidden>
+          <h3 id="liveTitle" class="widget-title">📺 kerNEl Live</h3>
+          <div id="liveBody"><div class="chat-empty"><span class="spin">📺</span></div></div>
+        </section>
+        <section class="widget widget-duels" id="duelWidget" aria-labelledby="duelTitle" hidden>
+          <h3 id="duelTitle" class="widget-title">⚔️ Quiz Duels</h3>
+          <div id="duelBody"></div>
+        </section>
         <section class="widget widget-quiz" id="quizWidget" aria-labelledby="quizTitle" hidden>
           <h3 id="quizTitle" class="widget-title">🧠 Daily Kernel Quiz</h3>
           <div id="quizSide"></div>
@@ -178,6 +186,10 @@
             <p><b>🏆 Weekly tournament</b><br><span id="tourneyLine">8 headlines, one go each. The top 3 win trophies!</span></p>
             <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
           </div>
+        </section>
+        <section class="widget widget-predict" id="predictWidget" aria-labelledby="predictTitle" hidden>
+          <h3 id="predictTitle" class="widget-title">🔮 Predictions</h3>
+          <div id="predictBody"></div>
         </section>
         <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
           <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
@@ -224,6 +236,7 @@
         </section>
         <section class="widget widget-board" aria-labelledby="boardTitle" id="boardWidget" hidden>
           <h3 id="boardTitle" class="widget-title">🏆 Top Kernels</h3>
+          <div class="seg board-seg" role="tablist" aria-label="Leaderboard"><button type="button" role="tab" data-board="all" aria-selected="true">All time</button><button type="button" role="tab" data-board="season" aria-selected="false">🏅 This season</button></div>
           <ol class="board" id="boardList"></ol>
           <p class="muted small" id="boardMe"></p>
         </section>
@@ -455,6 +468,7 @@
         <legend>Ping me when…</legend>
         <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
         <label class="check"><input type="checkbox" name="dms" checked> ✉️ someone sends me a message</label>
+        <label class="check"><input type="checkbox" name="games" checked> 🎮 kerNEl Live is about to start, or someone challenges me to a duel</label>
         <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
         <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
         <label class="check"><input type="checkbox" name="friends" checked> 👯 someone follows me, or a friend ranks up or wins a trophy</label>

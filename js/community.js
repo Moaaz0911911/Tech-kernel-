@@ -6,6 +6,7 @@ import { sfx, burstFrom } from './fun.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML } from './look.js';
 import { initDM, mountPeopleSearch, activeText } from './dm.js';
+import { seasonMedalsHTML } from './arena.js';
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -16,7 +17,7 @@ const DEFAULT_ROOMS = [ // shown instantly, before the server answers
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
-export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle, openStory, onDM }) {
+export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle, openStory, onDM, openDuel, challenge }) {
   const drawer = $('#chatDrawer');
   if (!auth.ready) { // community features need the kerNEl server
     drawer.remove();
@@ -37,7 +38,7 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
   let dmCount = 0;
   let mode = store.get('chat:mode', 'rooms') === 'dms' ? 'dms' : 'rooms';
   let lastSeen = store.get('chat:seen', 0);
-  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, onBadge: (n) => { dmCount = n; paintDot(); } });
+  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, onBadge: (n) => { dmCount = n; paintDot(); } });
 
   function setMode(m) {
     mode = m;
@@ -320,6 +321,7 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
           <span><b>${u.following ?? 0}</b>${t('following')}</span>
           <span><b>${u.messages}</b>${t('chats')}</span>
         </div>
+        ${seasonMedalsHTML(u.seasons)}
         ${trophies.length ? `<p class="uc-trophies" title="${esc(t('Real or Fake? tournament trophies'))}">${trophies.slice(0, 12).map((x) => `<span title="${esc(t('Week of {date}', { date: fmtDate(Date.parse(x.week)) }))}">${PLACE[x.place - 1] || '🏆'}</span>`).join('')} <small>${tn(trophies.length, '{n} trophy', '{n} trophies')}</small></p>` : ''}
         ${badges.length ? `<p class="uc-badges" aria-label="${t('Achievements')}">${badges.map((b) => `<span title="${esc(t(b.name))}">${b.emoji}</span>`).join('')}</p>` : `<p class="muted small">${t('No achievements yet — still warming up 🌽')}</p>`}
         ${u.topics.length ? `<p class="uc-topics">${u.topics.map((x) => `<span class="chip chip-cat" style="--cat-h:${catById(x).hue}">${catById(x).emoji} ${esc(t(catById(x).label))}</span>`).join(' ')}</p>` : ''}
@@ -327,7 +329,7 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
         ${u.blocked ? `<p class="uc-blocked">🚫 ${t('You blocked @{name}.', { name: esc(u.username) })}</p>` : ''}
         <div class="uc-actions">
           ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn ${u.isFollowing ? 'btn-ghost' : 'btn-primary'}" data-follow="${esc(u.username)}" data-on="${u.isFollowing ? 1 : 0}">${u.isFollowing ? t('✓ Following') : u.followsYou ? t('➕ Follow back') : t('➕ Follow')}</button>` : ''}
-          ${auth.user && !u.me && u.canMessage ? `<button type="button" class="btn btn-ghost" data-message="${esc(u.username)}">✉️ ${t('Message')}</button>` : ''}
+          ${auth.user && !u.me && u.canMessage ? `<button type="button" class="btn btn-ghost" data-message="${esc(u.username)}">✉️ ${t('Message')}</button><button type="button" class="btn btn-ghost" data-duel-user="${esc(u.username)}">⚔️ ${t('Duel')}</button>` : ''}
           ${!auth.user ? `<button type="button" class="btn btn-primary" data-action="signup">${t('➕ Sign up to follow')}</button>` : ''}
           ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn btn-ghost" data-mention="${esc(u.username)}">💬 ${t('Mention in chat')}</button>` : ''}
           ${u.me ? `<button type="button" class="btn btn-ghost" data-action="edit-profile">✏️ ${t('Edit profile')}</button>` : ''}
@@ -352,6 +354,8 @@ export function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, r
       input.focus();
       return;
     }
+    const duelBtn = el?.closest('[data-duel-user]');
+    if (duelBtn) { $('#userCard').close(); challenge?.(duelBtn.dataset.duelUser); return; }
     const msgBtn = el?.closest('[data-message]');
     if (msgBtn) { $('#userCard').close(); openDM(msgBtn.dataset.message); return; }
     if (el?.closest('[data-action="edit-profile"]')) { $('#userCard').close(); return; }

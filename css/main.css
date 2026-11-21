@@ -856,6 +856,75 @@ a.stat:hover { color: var(--text); }
 .uc-more .linkish { color: var(--muted); }
 .pw-bio { margin: 8px 0 0; font-size: .88rem; color: var(--muted); }
 
+/* ⚔️ duels · 📺 live · 🔮 predictions · 🏅 seasons */
+.duel-vs { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 4px 0 8px; }
+.duel-vs .ava, .duel-score .ava { width: 58px; height: 58px; font-size: 1.9rem; background: var(--card-2); }
+.duel-vs b { font: 900 1.1rem var(--font-display); letter-spacing: .08em; }
+.duel-note { margin: 4px 0; padding: 8px 14px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .9rem; }
+.duel-timer { height: 6px; border-radius: 999px; background: var(--card-2); overflow: hidden; margin: 6px 0 10px; }
+.duel-timer i { display: block; height: 100%; background: var(--accent); transform-origin: left; animation: duelTimer linear forwards; }
+[dir="rtl"] .duel-timer i { transform-origin: right; }
+@keyframes duelTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.duel-score { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 10px 0; }
+.duel-score span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.duel-score b { font: 900 2rem var(--font-display); }
+.duel-score small { color: var(--muted); font-size: .76rem; }
+.duel-score i { font-style: normal; color: var(--faint); font-size: 1.4rem; }
+.duel-list { list-style: none; margin: 10px 0 6px; padding: 0; }
+.duel-list button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 14px; background: none; color: var(--text); cursor: pointer; text-align: start; }
+.duel-list button:hover { background: var(--card-2); }
+.duel-list .ava { width: 32px; height: 32px; font-size: 1rem; background: var(--card-2); }
+.duel-list span[dir] { flex: 1; font-weight: 600; font-size: .88rem; }
+.duel-tag { padding: 3px 10px; border-radius: 999px; background: var(--card-2); font-size: .76rem; color: var(--muted); }
+.duel-tag.hot, .duel-tag.win { background: var(--accent); color: var(--on-accent); }
+.pick-dialog .modal-body { text-align: start; }
+.pick-list { max-height: 50vh; overflow-y: auto; margin-top: 8px; }
+.pick-dialog .people-search { margin: 0; }
+.dm-duel { display: flex; align-items: center; gap: 12px; width: 240px; max-width: 100%; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-align: start; cursor: pointer; }
+.dm-duel b { display: block; font-size: .88rem; }
+.dm-duel small { display: block; color: var(--muted); font-size: .74rem; margin-top: 2px; }
+.dm-duel-icon { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--accent); font-size: 1.4rem; }
+
+.live-next { margin: 8px 0; padding: 10px 14px; border-radius: 14px; background: var(--card-2); font-weight: 600; font-size: .9rem; }
+.live-next.live-on { background: var(--accent); color: var(--on-accent); }
+.live-dialog .modal-body { min-height: 360px; }
+.live-head { display: flex; justify-content: center; gap: 14px; margin: -4px 0 10px; font-size: .84rem; color: var(--muted); font-weight: 600; }
+.live-count { font: 900 3.4rem/1 var(--font-display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.live-in { padding: 8px 16px; border-radius: 999px; background: var(--card-2); font-weight: 600; }
+.live-q { text-align: center; }
+.live-timer { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 74px; height: 74px; border-radius: 50%; margin: 0 auto 6px; box-shadow: inset 0 0 0 4px var(--accent); }
+.live-timer b { font: 900 1.7rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.live-timer small { font-size: .58rem; color: var(--muted); }
+.quiz-opt { position: relative; overflow: hidden; }
+.quiz-opt.right { border-color: #30d158; box-shadow: inset 0 0 0 2px #30d158; }
+.quiz-opt.wrong { border-color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
+.live-pct { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.live-pct i { display: block; height: 6px; border-radius: 999px; background: var(--text); opacity: .7; min-width: 2px; transition: width .6s var(--ease); }
+.live-pct small { color: var(--muted); font-size: .74rem; }
+.live-status { margin: 12px 0 0; font-weight: 700; }
+.live-winners { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0; }
+.live-winners .ava { width: 40px; height: 40px; font-size: 1.3rem; background: var(--card-2); }
+
+.pred { padding: 12px; margin: 10px 0; border-radius: 16px; background: var(--card-2); }
+.pred.done { opacity: .85; }
+.pred-q { margin: 0 0 6px; font-weight: 700; font-size: .9rem; }
+.pred-story { display: block; width: 100%; margin: 0 0 8px; padding: 0; border: 0; background: none; color: var(--text); text-align: start; font-size: .86rem; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.pred-opts { display: grid; gap: 6px; }
+.pred-opt { display: grid; grid-template-columns: minmax(0, auto) 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-weight: 600; font-size: .86rem; cursor: pointer; text-align: start; }
+.pred-opt:disabled { cursor: default; }
+.pred-opt.mine { box-shadow: inset 0 0 0 2px var(--text); }
+.pred-opt.right { box-shadow: inset 0 0 0 2px #30d158; }
+.pred-opt b { font-size: .8rem; }
+.pred .muted.small { margin: 6px 0 0; }
+.mod-predict { display: grid; gap: 6px; margin-bottom: 12px; text-align: start; }
+.mod-predict textarea, .mod-predict select { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); padding: 8px 12px; font: inherit; }
+
+.board-seg { display: flex; margin: 0 0 10px; }
+.board-seg button { flex: 1; }
+.season-note { display: block; margin-top: 6px; font-size: .74rem; color: var(--muted); }
+.uc-seasons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 6px 0; }
+.uc-seasons span { padding: 3px 10px; border-radius: 999px; background: var(--card-2); font-size: .78rem; font-weight: 600; }
+
 /* 🎟️ invites */
 .invite-link { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
 .invite-link input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); font-size: .8rem; }

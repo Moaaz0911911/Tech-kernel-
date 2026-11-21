@@ -117,16 +117,16 @@ export async function unsubscribe(env, user, body) {
 export async function getPrefs(env, user) {
   const r = await env.DB.prepare('SELECT * FROM notify_prefs WHERE user_id = ?').bind(user.id).first();
   const devices = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subs WHERE user_id = ?').bind(user.id).first();
-  return { mentions: r ? !!r.mentions : true, news: r ? !!r.news : true, streak: r ? !!r.streak : true, friends: r ? r.friends !== 0 : true, dms: r ? r.dms !== 0 : true, tz: r?.tz ?? 0, devices: devices?.n || 0 };
+  return { mentions: r ? !!r.mentions : true, news: r ? !!r.news : true, streak: r ? !!r.streak : true, friends: r ? r.friends !== 0 : true, dms: r ? r.dms !== 0 : true, games: r ? r.games !== 0 : true, tz: r?.tz ?? 0, devices: devices?.n || 0 };
 }
 
 export async function savePrefs(env, user, body) {
   const prev = await getPrefs(env, user);
   const p = { ...prev, ...(body.prefs || {}) };
   const tz = Number.isFinite(Number(body.tz)) ? Math.max(-840, Math.min(840, Math.round(Number(body.tz)))) : prev.tz;
-  await env.DB.prepare(`INSERT INTO notify_prefs (user_id, mentions, news, streak, friends, dms, tz) VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET mentions = excluded.mentions, news = excluded.news, streak = excluded.streak, friends = excluded.friends, dms = excluded.dms, tz = excluded.tz`)
-    .bind(user.id, p.mentions ? 1 : 0, p.news ? 1 : 0, p.streak ? 1 : 0, p.friends ? 1 : 0, p.dms ? 1 : 0, tz).run();
+  await env.DB.prepare(`INSERT INTO notify_prefs (user_id, mentions, news, streak, friends, dms, games, tz) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET mentions = excluded.mentions, news = excluded.news, streak = excluded.streak, friends = excluded.friends, dms = excluded.dms, games = excluded.games, tz = excluded.tz`)
+    .bind(user.id, p.mentions ? 1 : 0, p.news ? 1 : 0, p.streak ? 1 : 0, p.friends ? 1 : 0, p.dms ? 1 : 0, p.games ? 1 : 0, tz).run();
   return getPrefs(env, user);
 }
 

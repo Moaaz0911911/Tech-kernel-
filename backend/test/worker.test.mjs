@@ -76,7 +76,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({
     ...(process.env.STORAGE === 'do'
       ? { durableObjects: { KERNEL_DB: { className: 'KernelDB', useSQLite: true } } }
       : { d1Databases: { DB: 'test-db' } }),
-    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy' },
+    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy', LIVE_TEST_PERIOD_MS: '60000', LIVE_TEST_STEP_MS: '2000' },
     outboundService: outbound,
   }],
 }));
@@ -685,6 +685,136 @@ try {
   ok('every action is logged', (await api('/api/mod/log', { token })).data.items.map((x) => x.action).includes('user:ban'));
   await api('/api/me', { method: 'DELETE', token: raniaToken });
   await api('/api/me', { method: 'DELETE', token: r.status === 200 ? (await api('/api/auth/login', { method: 'POST', body: { username: 'Lonely', password: 'Nobody-Asked-77!' }, ip: '9.9.9.5' })).data.token : lonelyToken });
+
+  console.log('⚔️ duels, 📺 live, 🔮 predictions, 🏅 seasons');
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+  const kenjiToken = (await api('/api/auth/register', { method: 'POST', body: { username: 'Kenji', password: 'Quiz-Master-2026!' }, ip: '3.3.3.1' })).data.token;
+  const laraToken = (await api('/api/auth/register', { method: 'POST', body: { username: 'Lara', password: 'Trivia-Queen-2026!' }, ip: '3.3.3.2' })).data.token;
+  const claimAll = async (tk) => (await api('/api/me/claim', { method: 'POST', token: tk })).data.claimed;
+  ok('you can’t duel yourself', (await api('/api/duels', { method: 'POST', token: kenjiToken, body: { to: 'Kenji' } })).status === 400);
+  ok('duels respect “who can message me”', (await api('/api/duels', { method: 'POST', token: kenjiToken, body: { to: 'Keiiii' } })).status === 403);
+  r = await api('/api/duels', { method: 'POST', token: kenjiToken, body: { to: 'Lara' } });
+  ok('challenge a friend to a duel', r.status === 200 && r.data.duel.status === 'open' && r.data.duel.total === 5 && r.data.duel.opponent.username === 'Lara');
+  const duelId = r.data.duel.id;
+  ok('…a second challenge reuses the open one', (await api('/api/duels', { method: 'POST', token: kenjiToken, body: { to: 'Lara' } })).data.existing === true);
+  r = await api('/api/dm', { token: laraToken });
+  ok('…it arrives as a card in their messages', r.data.threads.some((th) => th.other.username === 'Kenji' && th.last.duel));
+  ok('…and as a notification', (await api('/api/notifications', { token: laraToken })).data.items.some((n) => n.title.includes('challenged you to a Quiz Duel')));
+  r = await api(`/api/duels/${duelId}`, { token: laraToken });
+  ok('questions stay hidden until you press start', r.data.duel.questions === null && r.data.duel.started === false);
+  r = await api(`/api/duels/${duelId}/start`, { method: 'POST', token: laraToken });
+  ok('start shows the questions (without answers)', r.data.duel.questions.length === 5 && r.data.duel.questions.every((q) => q.answer === undefined));
+  const duelAnswers = JSON.parse((await db.prepare('SELECT quiz FROM duels WHERE id = ?').bind(duelId).first()).quiz).map((q) => q.answer);
+  r = await api(`/api/duels/${duelId}/answer`, { method: 'POST', token: laraToken, body: { answers: duelAnswers } });
+  ok('play your turn', r.data.duel.my.score === 5 && r.data.duel.their === null && r.data.duel.correct.length === 5);
+  r = await api(`/api/duels/${duelId}`, { token: kenjiToken });
+  ok('your opponent sees you played, but not your score', r.data.duel.their.done === true && r.data.duel.their.score === undefined);
+  ok('…and gets a “your turn” notification', (await api('/api/notifications', { token: kenjiToken })).data.items.some((n) => n.title.includes('played your duel')));
+  ok('answering before starting is refused', (await api(`/api/duels/${duelId}/answer`, { method: 'POST', token: kenjiToken, body: { answers: [0, 0, 0, 0, 0] } })).status === 409);
+  await api(`/api/duels/${duelId}/start`, { method: 'POST', token: kenjiToken });
+  r = await api(`/api/duels/${duelId}/answer`, { method: 'POST', token: kenjiToken, body: { answers: duelAnswers.map((x, i) => (i < 2 ? x : (x + 1) % 2)) } });
+  ok('when both have played, the best score wins', r.data.duel.status === 'done' && r.data.duel.winner === 'them' && r.data.duel.my.score <= 4);
+  ok('…the winner gets XP and a duel win', (await api('/api/me', { token: laraToken })).data.user.stats.duelsWon === 1 && (await api('/api/me', { token: laraToken })).data.user.pendingXp === 30);
+  ok('…the other player gets a little XP too', (await api('/api/me', { token: kenjiToken })).data.user.pendingXp === 10);
+  ok('strangers can’t see a duel', (await api(`/api/duels/${duelId}`, { token: keiToken })).status === 404);
+  r = await api('/api/duels', { token: laraToken });
+  ok('your duel record', r.data.record.won === 1 && r.data.duels[0].id === duelId);
+  await db.prepare("INSERT INTO duels (a, b, quiz, a_started, a_answers, a_score, a_ms, status, created) VALUES ((SELECT id FROM users WHERE username_lc = 'kenji'), (SELECT id FROM users WHERE username_lc = 'lara'), ?, 1, '[]', 3, 9000, 'open', ?)").bind(JSON.stringify([{ answer: 0, options: ['a', 'b'] }]), Date.now() - 49 * 3600_000).run();
+  await claimAll(kenjiToken);
+  r = await api('/api/duels', { token: kenjiToken });
+  ok('an unfinished duel ends after 48 hours (the one who played wins)', r.data.duels.some((d) => d.status === 'expired' && d.winner === 'me') && (await api('/api/me', { token: kenjiToken })).data.user.pendingXp === 20);
+  await claimAll(kenjiToken);
+  await claimAll(laraToken);
+
+  // 📺 a quick test show every minute (lobby 24 s, then 10 questions × 2 s)
+  const liveUntil = async (cond, tk, max = 95_000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < max) { const x = (await api('/api/live', { token: tk })).data; if (cond(x)) return x; await sleep(200); }
+    throw new Error('live show timed out');
+  };
+  let L = await liveUntil((x) => x.phase === 'lobby' && x.startsAt - x.now > 4000, kenjiToken);
+  ok('kerNEl Live: the lobby opens before the show', L.phase === 'lobby' && L.total >= 5 && !L.question, `${L.total} questions`);
+  for (const tk of [kenjiToken, laraToken, token]) await api('/api/live/join', { method: 'POST', token: tk });
+  ok('…people join the lobby', (await api('/api/live', { token: kenjiToken })).data.players === 3);
+  const liveAnswers = JSON.parse((await db.prepare('SELECT v FROM kv WHERE k = ?').bind(`live:${L.slot}`).first()).v).questions.map((q) => q.answer);
+  const seen = new Set();
+  const checks = {};
+  let done = null;
+  while (!done) {
+    const x = (await api('/api/live', { token: kenjiToken })).data;
+    if (x.phase === 'question' && !seen.has(x.q)) {
+      seen.add(x.q);
+      const right = liveAnswers[x.q];
+      const wrong = (right + 1) % x.question.options.length;
+      checks.noAnswer ??= x.question.answer === undefined;
+      await api('/api/live/answer', { method: 'POST', token: kenjiToken, body: { q: x.q, choice: right } });
+      if (x.q === 0) await api('/api/live/answer', { method: 'POST', token: laraToken, body: { q: 0, choice: right } });
+      if (x.q === 1) {
+        await api('/api/live/answer', { method: 'POST', token: laraToken, body: { q: 1, choice: wrong } });
+        checks.lateJoin = (await api('/api/live/join', { method: 'POST', token: keiToken })).status;
+        checks.azzyOut = (await api('/api/live/answer', { method: 'POST', token, body: { q: 1, choice: right } })).status;
+      }
+      if (x.q === 2) checks.laraOut = (await api('/api/live/answer', { method: 'POST', token: laraToken, body: { q: 2, choice: right } })).status;
+    }
+    if (x.phase === 'reveal' && checks.late === undefined) {
+      checks.late = (await api('/api/live/answer', { method: 'POST', token: kenjiToken, body: { q: x.q, choice: 0 } })).status;
+      checks.reveal = x.reveal && x.reveal.answer === liveAnswers[x.q] && x.reveal.counts.reduce((a2, b2) => a2 + b2, 0) >= 1;
+    }
+    if (x.phase === 'done') done = x;
+    else await sleep(150);
+  }
+  ok('questions arrive without their answers', checks.noAnswer === true);
+  ok('the reveal shows the right answer and how people voted', checks.reveal === true);
+  ok('answers after the timer are refused', checks.late === 409);
+  ok('you can’t join once the show has started', checks.lateJoin === 409);
+  ok('one wrong (or missing) answer and you’re out', checks.azzyOut === 403 && checks.laraOut === 403);
+  ok('the last kernel standing wins', done.winnerCount === 1 && done.winners[0].username === 'Kenji', `${seen.size} questions played`);
+  r = await api('/api/me', { token: kenjiToken });
+  ok('…and gets XP and a live win (the mic hat)', r.data.user.pendingXp === 60 && r.data.user.stats.liveWins === 1);
+  ok('…everyone else who played gets a little XP', (await api('/api/me', { token: laraToken })).data.user.pendingXp === 15);
+  await claimAll(kenjiToken);
+  await claimAll(laraToken);
+
+  r = await api('/api/predictions', { token: laraToken });
+  const auto = r.data.open.find((p) => p.kind === 'upvotes');
+  ok('🔮 automatic predictions from today’s news', !!auto && auto.data.threshold >= 100 && auto.options.length === 2, auto && `“${auto.question}” → ${auto.data.threshold} upvotes?`);
+  await api('/api/predictions/vote', { method: 'POST', token: laraToken, body: { id: auto.id, choice: 1 } });
+  await api('/api/predictions/vote', { method: 'POST', token: laraToken, body: { id: auto.id, choice: 0 } });
+  await api('/api/predictions/vote', { method: 'POST', token: kenjiToken, body: { id: auto.id, choice: 1 } });
+  r = await api('/api/predictions', { token: laraToken });
+  const pv = r.data.open.find((p) => p.id === auto.id);
+  ok('vote (and change your mind before it closes)', pv.mine === 0 && pv.counts[0] === 1 && pv.counts[1] === 1);
+  await db.prepare('UPDATE predictions SET closes = ?, resolves = ? WHERE id = ?').bind(Date.now() - 1000, Date.now() - 1000, auto.id).run();
+  ok('voting closes on time', (await api('/api/predictions/vote', { method: 'POST', token: kenjiToken, body: { id: auto.id, choice: 0 } })).status === 409);
+  await db.prepare('UPDATE stories SET points = ? WHERE key = ?').bind(auto.data.threshold + 10, (await db.prepare('SELECT story_key FROM predictions WHERE id = ?').bind(auto.id).first()).story_key).run();
+  await worker.scheduled({ cron: '*/5 * * * *' });
+  r = await api('/api/predictions', { token: laraToken });
+  ok('predictions settle themselves when they’re due', r.data.resolved.some((p) => p.id === auto.id && p.answer === 0) && r.data.record.right === 1);
+  r = await api('/api/me', { token: laraToken });
+  ok('…people who called it get XP (toward the 🔮 hat)', r.data.user.pendingXp === 15 && r.data.user.stats.prophet === 1 && (await api('/api/me', { token: kenjiToken })).data.user.pendingXp === 0);
+  ok('only moderators write their own predictions', (await api('/api/mod/predictions', { method: 'POST', token: laraToken, body: { question: 'Will it rain?', options: ['Yes', 'No'] } })).status === 403);
+  r = await api('/api/mod/predictions', { method: 'POST', token, body: { question: 'Which phone sells best this month?', options: ['iPhone', 'Pixel', 'Galaxy'], hours: 24 } });
+  const modPred = r.data.prediction.id;
+  ok('a moderator writes a prediction', (await api('/api/predictions')).data.open.some((p) => p.id === modPred && p.kind === 'mod' && p.options.length === 3));
+  await api('/api/predictions/vote', { method: 'POST', token: kenjiToken, body: { id: modPred, choice: 2 } });
+  r = await api('/api/mod/predictions/resolve', { method: 'POST', token, body: { id: modPred, answer: 2 } });
+  ok('…and settles it', r.data.winners === 1 && (await api('/api/me', { token: kenjiToken })).data.user.pendingXp === 15);
+  await claimAll(kenjiToken);
+  await claimAll(laraToken);
+
+  await api('/api/me/data', { method: 'PUT', token: kenjiToken, body: { xp: 120 } });
+  r = await api('/api/leaderboard?season=1', { token: kenjiToken });
+  ok('🏅 this month’s season board', r.data.season === new Date().toISOString().slice(0, 7) && r.data.top.some((u) => u.username === 'Kenji' && u.xp === 120) && r.data.me.xp === 120 && r.data.endsAt > Date.now());
+  const lastSeason = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
+  await db.prepare("UPDATE users SET season = ?, season_xp = 999 WHERE username_lc = 'lara'").bind(lastSeason).run();
+  await worker.scheduled({ cron: '*/5 * * * *' });
+  r = await api('/api/me', { token: laraToken });
+  ok('last month’s top kernels get prizes', r.data.user.pendingXp === 200 && r.data.user.stats.seasonWins === 1);
+  ok('…a medal on their profile card', (await api('/api/users/Lara')).data.seasons.some((x) => x.season === lastSeason && x.place === 1));
+  ok('…and the Season legend frame', (await api('/api/me/profile', { method: 'PUT', token: laraToken, body: { frame: 'legend' } })).data.profile.frame === 'legend');
+  await api('/api/me', { method: 'DELETE', token: kenjiToken });
+  await api('/api/me', { method: 'DELETE', token: laraToken });
+  ok('deleting accounts removes their duels and votes', (await db.prepare("SELECT (SELECT COUNT(*) FROM duels) + (SELECT COUNT(*) FROM prediction_votes) AS n").first()).n === 0);
 
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });

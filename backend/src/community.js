@@ -5,6 +5,7 @@ import { codmeReply } from './codme.js';
 import { look, liveStreak, followCounts, isFollowing } from './social.js';
 import { trophiesOf } from './play.js';
 import { relation } from './people.js';
+import { seasonMedals } from './arena.js';
 import { tr, langOfProfile } from './i18n.js';
 
 export const ROOMS = [
@@ -195,6 +196,7 @@ export async function publicProfile(env, username, viewer = null) {
     badges: Object.keys(d.badges || {}), kidsStars: Object.values(d.kids?.stars || {}).reduce((a, b) => a + b, 0),
     messages: msgs?.n || 0, joined: r.created,
     ...(await relation(env, viewer, r)),
+    seasons: await seasonMedals(env, r.id),
   };
 }
 

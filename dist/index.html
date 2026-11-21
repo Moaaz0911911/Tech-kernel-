@@ -876,6 +876,75 @@ a.stat:hover { color: var(--text); }
 .uc-more .linkish { color: var(--muted); }
 .pw-bio { margin: 8px 0 0; font-size: .88rem; color: var(--muted); }
 
+/* ⚔️ duels · 📺 live · 🔮 predictions · 🏅 seasons */
+.duel-vs { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 4px 0 8px; }
+.duel-vs .ava, .duel-score .ava { width: 58px; height: 58px; font-size: 1.9rem; background: var(--card-2); }
+.duel-vs b { font: 900 1.1rem var(--font-display); letter-spacing: .08em; }
+.duel-note { margin: 4px 0; padding: 8px 14px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .9rem; }
+.duel-timer { height: 6px; border-radius: 999px; background: var(--card-2); overflow: hidden; margin: 6px 0 10px; }
+.duel-timer i { display: block; height: 100%; background: var(--accent); transform-origin: left; animation: duelTimer linear forwards; }
+[dir="rtl"] .duel-timer i { transform-origin: right; }
+@keyframes duelTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.duel-score { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 10px 0; }
+.duel-score span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.duel-score b { font: 900 2rem var(--font-display); }
+.duel-score small { color: var(--muted); font-size: .76rem; }
+.duel-score i { font-style: normal; color: var(--faint); font-size: 1.4rem; }
+.duel-list { list-style: none; margin: 10px 0 6px; padding: 0; }
+.duel-list button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 14px; background: none; color: var(--text); cursor: pointer; text-align: start; }
+.duel-list button:hover { background: var(--card-2); }
+.duel-list .ava { width: 32px; height: 32px; font-size: 1rem; background: var(--card-2); }
+.duel-list span[dir] { flex: 1; font-weight: 600; font-size: .88rem; }
+.duel-tag { padding: 3px 10px; border-radius: 999px; background: var(--card-2); font-size: .76rem; color: var(--muted); }
+.duel-tag.hot, .duel-tag.win { background: var(--accent); color: var(--on-accent); }
+.pick-dialog .modal-body { text-align: start; }
+.pick-list { max-height: 50vh; overflow-y: auto; margin-top: 8px; }
+.pick-dialog .people-search { margin: 0; }
+.dm-duel { display: flex; align-items: center; gap: 12px; width: 240px; max-width: 100%; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-align: start; cursor: pointer; }
+.dm-duel b { display: block; font-size: .88rem; }
+.dm-duel small { display: block; color: var(--muted); font-size: .74rem; margin-top: 2px; }
+.dm-duel-icon { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--accent); font-size: 1.4rem; }
+
+.live-next { margin: 8px 0; padding: 10px 14px; border-radius: 14px; background: var(--card-2); font-weight: 600; font-size: .9rem; }
+.live-next.live-on { background: var(--accent); color: var(--on-accent); }
+.live-dialog .modal-body { min-height: 360px; }
+.live-head { display: flex; justify-content: center; gap: 14px; margin: -4px 0 10px; font-size: .84rem; color: var(--muted); font-weight: 600; }
+.live-count { font: 900 3.4rem/1 var(--font-display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.live-in { padding: 8px 16px; border-radius: 999px; background: var(--card-2); font-weight: 600; }
+.live-q { text-align: center; }
+.live-timer { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 74px; height: 74px; border-radius: 50%; margin: 0 auto 6px; box-shadow: inset 0 0 0 4px var(--accent); }
+.live-timer b { font: 900 1.7rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.live-timer small { font-size: .58rem; color: var(--muted); }
+.quiz-opt { position: relative; overflow: hidden; }
+.quiz-opt.right { border-color: #30d158; box-shadow: inset 0 0 0 2px #30d158; }
+.quiz-opt.wrong { border-color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
+.live-pct { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.live-pct i { display: block; height: 6px; border-radius: 999px; background: var(--text); opacity: .7; min-width: 2px; transition: width .6s var(--ease); }
+.live-pct small { color: var(--muted); font-size: .74rem; }
+.live-status { margin: 12px 0 0; font-weight: 700; }
+.live-winners { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0; }
+.live-winners .ava { width: 40px; height: 40px; font-size: 1.3rem; background: var(--card-2); }
+
+.pred { padding: 12px; margin: 10px 0; border-radius: 16px; background: var(--card-2); }
+.pred.done { opacity: .85; }
+.pred-q { margin: 0 0 6px; font-weight: 700; font-size: .9rem; }
+.pred-story { display: block; width: 100%; margin: 0 0 8px; padding: 0; border: 0; background: none; color: var(--text); text-align: start; font-size: .86rem; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.pred-opts { display: grid; gap: 6px; }
+.pred-opt { display: grid; grid-template-columns: minmax(0, auto) 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-weight: 600; font-size: .86rem; cursor: pointer; text-align: start; }
+.pred-opt:disabled { cursor: default; }
+.pred-opt.mine { box-shadow: inset 0 0 0 2px var(--text); }
+.pred-opt.right { box-shadow: inset 0 0 0 2px #30d158; }
+.pred-opt b { font-size: .8rem; }
+.pred .muted.small { margin: 6px 0 0; }
+.mod-predict { display: grid; gap: 6px; margin-bottom: 12px; text-align: start; }
+.mod-predict textarea, .mod-predict select { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); padding: 8px 12px; font: inherit; }
+
+.board-seg { display: flex; margin: 0 0 10px; }
+.board-seg button { flex: 1; }
+.season-note { display: block; margin-top: 6px; font-size: .74rem; color: var(--muted); }
+.uc-seasons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 6px 0; }
+.uc-seasons span { padding: 3px 10px; border-radius: 999px; background: var(--card-2); font-size: .78rem; font-weight: 600; }
+
 /* 🎟️ invites */
 .invite-link { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
 .invite-link input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); font-size: .8rem; }
@@ -1344,6 +1413,14 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <p class="view-sub">Daily games made from today’s news. New ones every day.</p>
       </header>
       <div class="grid">
+        <section class="widget widget-live" id="liveWidget" aria-labelledby="liveTitle" hidden>
+          <h3 id="liveTitle" class="widget-title">📺 kerNEl Live</h3>
+          <div id="liveBody"><div class="chat-empty"><span class="spin">📺</span></div></div>
+        </section>
+        <section class="widget widget-duels" id="duelWidget" aria-labelledby="duelTitle" hidden>
+          <h3 id="duelTitle" class="widget-title">⚔️ Quiz Duels</h3>
+          <div id="duelBody"></div>
+        </section>
         <section class="widget widget-quiz" id="quizWidget" aria-labelledby="quizTitle" hidden>
           <h3 id="quizTitle" class="widget-title">🧠 Daily Kernel Quiz</h3>
           <div id="quizSide"></div>
@@ -1360,6 +1437,10 @@ html.kids-open, html.kids-open body { overflow: hidden; }
             <p><b>🏆 Weekly tournament</b><br><span id="tourneyLine">8 headlines, one go each. The top 3 win trophies!</span></p>
             <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
           </div>
+        </section>
+        <section class="widget widget-predict" id="predictWidget" aria-labelledby="predictTitle" hidden>
+          <h3 id="predictTitle" class="widget-title">🔮 Predictions</h3>
+          <div id="predictBody"></div>
         </section>
         <section class="widget widget-poll" id="pollWidget" aria-labelledby="pollTitle" hidden>
           <h3 id="pollTitle" class="widget-title">🗳️ Hot Take of the Day</h3>
@@ -1406,6 +1487,7 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         </section>
         <section class="widget widget-board" aria-labelledby="boardTitle" id="boardWidget" hidden>
           <h3 id="boardTitle" class="widget-title">🏆 Top Kernels</h3>
+          <div class="seg board-seg" role="tablist" aria-label="Leaderboard"><button type="button" role="tab" data-board="all" aria-selected="true">All time</button><button type="button" role="tab" data-board="season" aria-selected="false">🏅 This season</button></div>
           <ol class="board" id="boardList"></ol>
           <p class="muted small" id="boardMe"></p>
         </section>
@@ -1637,6 +1719,7 @@ html.kids-open, html.kids-open body { overflow: hidden; }
         <legend>Ping me when…</legend>
         <label class="check"><input type="checkbox" name="mentions" checked> 💬 someone @mentions me in chat</label>
         <label class="check"><input type="checkbox" name="dms" checked> ✉️ someone sends me a message</label>
+        <label class="check"><input type="checkbox" name="games" checked> 🎮 kerNEl Live is about to start, or someone challenges me to a duel</label>
         <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
         <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
         <label class="check"><input type="checkbox" name="friends" checked> 👯 someone follows me, or a friend ranks up or wins a trophy</label>
@@ -3397,6 +3480,127 @@ const MAIN_STRINGS = [
   ['Privacy & your data', 'الخصوصية وبياناتك', 'Datenschutz & deine Daten', 'Privacy at ang data mo'],
   ['How kerNEl handles your data 🔒', 'kerNEl بيتعامل مع بياناتك إزاي 🔒', 'So geht kerNEl mit deinen Daten um 🔒', 'Paano hinahawakan ng kerNEl ang data mo 🔒'],
   ['🔒 Privacy', '🔒 الخصوصية', '🔒 Datenschutz', '🔒 Privacy'],
+  // ⚔️ duels, 📺 live, 🔮 predictions, 🏅 seasons
+  ['Duelist', 'المبارز', 'Duellant', 'Duelista'],
+  ['Win a Quiz Duel', 'اكسب مبارزة كويز', 'Gewinne ein Quiz-Duell', 'Manalo sa isang Quiz Duel'],
+  ['Last One Standing', 'آخر واحد صامد', 'Der Letzte im Spiel', 'Huling Nakatayo'],
+  ['Win a kerNEl Live show', 'اكسب شو kerNEl Live', 'Gewinne eine kerNEl-Live-Show', 'Manalo sa isang kerNEl Live show'],
+  ['Called It', 'توقعتها', 'Vorhergesagt', 'Nahulaan Ko'],
+  ['Get a prediction right', 'توقّع حاجة صح', 'Lieg bei einer Vorhersage richtig', 'Tamaan ang isang hula'],
+  ['Predictions', 'التوقعات', 'Vorhersagen', 'Mga hula'],
+  ['🔮 Predictions', '🔮 التوقعات', '🔮 Vorhersagen', '🔮 Mga hula'],
+  ['📺 kerNEl Live', '📺 kerNEl Live', '📺 kerNEl Live', '📺 kerNEl Live'],
+  ['⚔️ Quiz Duels', '⚔️ مبارزات الكويز', '⚔️ Quiz-Duelle', '⚔️ Mga Quiz Duel'],
+  ['All time', 'كل الأوقات', 'Allzeit', 'Lahat ng panahon'],
+  ['🏅 This season', '🏅 الموسم ده', '🏅 Diese Saison', '🏅 Ngayong season'],
+  ['Leaderboard', 'الترتيب', 'Bestenliste', 'Leaderboard'],
+  ['🎮 kerNEl Live is about to start, or someone challenges me to a duel', '🎮 kerNEl Live هيبدأ، أو حد يتحداني في مبارزة', '🎮 kerNEl Live startet gleich, oder jemand fordert mich zum Duell heraus', '🎮 Malapit nang magsimula ang kerNEl Live, o may humamon sa akin sa duel'],
+  ['No', 'لأ', 'Nein', 'Hindi'],
+  ['Duel', 'مبارزة', 'Duell', 'Duel'],
+  ['Challenge to a Quiz Duel', 'اتحداه في مبارزة كويز', 'Zum Quiz-Duell herausfordern', 'Hamunin sa Quiz Duel'],
+  ['Quiz Duel challenge', 'تحدي مبارزة كويز', 'Quiz-Duell-Herausforderung', 'Hamon sa Quiz Duel'],
+  ['You sent a Quiz Duel challenge', 'بعت تحدي مبارزة كويز', 'Du hast zu einem Quiz-Duell herausgefordert', 'Nagpadala ka ng hamon sa Quiz Duel'],
+  ['Quiz Duel challenge!', 'تحدي مبارزة كويز!', 'Quiz-Duell-Herausforderung!', 'Hamon sa Quiz Duel!'],
+  ['5 questions from today’s news · tap to play', '5 أسئلة من أخبار النهارده · دوس عشان تلعب', '5 Fragen zu den heutigen News · tippen zum Spielen', '5 tanong mula sa balita ngayon · i-tap para maglaro'],
+  ['Question', 'السؤال', 'Frage', 'Tanong'],
+  ['e.g. Which phone sells best this month?', 'زي: أنهي موبايل هيتباع أكتر الشهر ده؟', 'z. B. Welches Handy verkauft sich diesen Monat am besten?', 'hal. Aling phone ang pinakamabenta ngayong buwan?'],
+  ['Answers (one per line, 2 to 4)', 'الإجابات (واحدة في كل سطر، من 2 لـ 4)', 'Antworten (eine pro Zeile, 2 bis 4)', 'Mga sagot (isa bawat linya, 2 hanggang 4)'],
+  ['Voting closes in', 'التصويت بيقفل بعد', 'Abstimmung endet in', 'Magsasara ang botohan sa'],
+  ['1 day', 'يوم', '1 Tag', '1 araw'],
+  ['3 days', '3 أيام', '3 Tage', '3 araw'],
+  ['1 week', 'أسبوع', '1 Woche', '1 linggo'],
+  ['1 month', 'شهر', '1 Monat', '1 buwan'],
+  ['Post prediction', 'انشر التوقع', 'Vorhersage posten', 'I-post ang hula'],
+  ['Your open predictions', 'توقعاتك المفتوحة', 'Deine offenen Vorhersagen', 'Mga bukas mong hula'],
+  ['closes {when}', 'بيقفل {when}', 'endet {when}', 'magsasara {when}'],
+  ['The answer was:', 'الإجابة كانت:', 'Die Antwort war:', 'Ang sagot ay:'],
+  ['Automatic “will it reach N upvotes?” predictions settle themselves.', 'توقعات «هتوصل N لايك؟» الأوتوماتيك بتتحسم لوحدها.', 'Automatische „Erreicht es N Upvotes?“-Vorhersagen werden von selbst aufgelöst.', 'Kusang nareresolba ang mga awtomatikong hulang “aabot ba sa N upvotes?”.'],
+  ['Prediction posted! 🔮', 'التوقع اتنشر! 🔮', 'Vorhersage gepostet! 🔮', 'Na-post ang hula! 🔮'],
+  ['Settle this prediction? Everyone who picked that answer gets XP.', 'تحسم التوقع ده؟ كل اللي اختار الإجابة دي هياخد XP.', 'Diese Vorhersage auflösen? Alle, die diese Antwort gewählt haben, bekommen XP.', 'Iresolba ang hulang ito? Lahat ng pumili ng sagot na iyan ay makakakuha ng XP.'],
+  ['{n} kernels called it!', '{n} حباية توقعوها صح!', '{n} Kerne lagen richtig!', '{n} kernel ang nakahula!'],
+  ['Quiz Duel', 'مبارزة كويز', 'Quiz-Duell', 'Quiz Duel'],
+  ['Sign in to duel your friends ⚔️', 'سجّل دخول عشان تبارز صحابك ⚔️', 'Melde dich an, um deine Freunde zum Duell herauszufordern ⚔️', 'Mag-sign in para maka-duel ang mga kaibigan mo ⚔️'],
+  ['Challenge sent to @{name}! Now play your turn ⚔️', 'التحدي اتبعت لـ @{name}! العب دورك دلوقتي ⚔️', 'Herausforderung an @{name} gesendet! Jetzt bist du dran ⚔️', 'Naipadala ang hamon kay @{name}! Ikaw na ang maglaro ⚔️'],
+  ['You vs @{name}', 'إنت ضد @{name}', 'Du gegen @{name}', 'Ikaw laban kay @{name}'],
+  ['{n} questions from today’s news, {s} seconds each. Best score wins — the faster player wins a tie.', '{n} أسئلة من أخبار النهارده، {s} ثانية لكل سؤال. أعلى سكور يكسب — ولو اتعادلتوا الأسرع يكسب.', '{n} Fragen zu den heutigen News, je {s} Sekunden. Die beste Punktzahl gewinnt – bei Gleichstand der Schnellere.', '{n} tanong mula sa balita ngayon, {s} segundo bawat isa. Panalo ang pinakamataas na score — kapag tabla, panalo ang mas mabilis.'],
+  ['@{name} already played. Your turn!', '@{name} لعب خلاص. دورك!', '@{name} hat schon gespielt. Du bist dran!', 'Nakapaglaro na si @{name}. Ikaw na!'],
+  ['Start the duel ⚔️', 'ابدأ المبارزة ⚔️', 'Duell starten ⚔️', 'Simulan ang duel ⚔️'],
+  ['The duel ends in {time}.', 'المبارزة بتخلص بعد {time}.', 'Das Duell endet in {time}.', 'Matatapos ang duel sa loob ng {time}.'],
+  ['This duel ran out of time.', 'وقت المبارزة دي خلص.', 'Für dieses Duell ist die Zeit abgelaufen.', 'Naubusan ng oras ang duel na ito.'],
+  ['{s} / {n}! Now it’s @{name}’s turn.', '{s} / {n}! دلوقتي دور @{name}.', '{s} / {n}! Jetzt ist @{name} dran.', '{s} / {n}! Si @{name} na ang susunod.'],
+  ['We’ll let you know who won.', 'هنقولك مين كسب.', 'Wir sagen dir, wer gewonnen hat.', 'Sasabihin namin sa iyo kung sino ang nanalo.'],
+  ['You won the duel!', 'كسبت المبارزة!', 'Du hast das Duell gewonnen!', 'Panalo ka sa duel!'],
+  ['It’s a draw!', 'تعادل!', 'Unentschieden!', 'Tabla!'],
+  ['@{name} won this time.', '@{name} كسب المرة دي.', '@{name} hat diesmal gewonnen.', 'Si @{name} ang nanalo ngayon.'],
+  ['Rematch', 'ماتش تاني', 'Revanche', 'Rematch'],
+  ['Challenge a friend to 5 questions from today’s news. Winner takes the XP!', 'اتحدى صاحبك في 5 أسئلة من أخبار النهارده. الكسبان ياخد الـ XP!', 'Fordere einen Freund zu 5 Fragen zu den heutigen News heraus. Der Gewinner bekommt die XP!', 'Hamunin ang kaibigan sa 5 tanong mula sa balita ngayon. Sa nanalo ang XP!'],
+  ['Sign up to duel', 'اعمل حساب عشان تبارز', 'Registrieren zum Duellieren', 'Mag-sign up para mag-duel'],
+  ['Your turn!', 'دورك!', 'Du bist dran!', 'Ikaw na!'],
+  ['Waiting…', 'مستني…', 'Warten…', 'Naghihintay…'],
+  ['Challenge someone', 'اتحدى حد', 'Jemanden herausfordern', 'Humamon ng isang tao'],
+  ['Wins {w} · Losses {l} · Draws {d}', 'فوز {w} · خسارة {l} · تعادل {d}', 'Siege {w} · Niederlagen {l} · Unentschieden {d}', 'Panalo {w} · Talo {l} · Tabla {d}'],
+  ['Duels are napping — back soon. 😴', 'المبارزات نايمة — راجعين قريب. 😴', 'Duelle machen ein Nickerchen – gleich zurück. 😴', 'Natutulog muna ang mga duel — babalik agad. 😴'],
+  ['Who do you want to duel?', 'عايز تبارز مين؟', 'Wen willst du herausfordern?', 'Sino ang gusto mong ka-duel?'],
+  ['Next show: {time} (in {wait})', 'الشو الجاي: {time} (بعد {wait})', 'Nächste Show: {time} (in {wait})', 'Susunod na show: {time} (sa loob ng {wait})'],
+  ['{n} questions, 12 seconds each. One wrong answer and you’re out. Last kernels standing win 60 XP and the 🎤 mic hat!', '{n} أسئلة، 12 ثانية لكل سؤال. إجابة غلط واحدة وتطلع. آخر حبايات صامدة تكسب 60 XP وقبعة المايك 🎤!', '{n} Fragen, je 12 Sekunden. Eine falsche Antwort und du bist raus. Die letzten Kerne im Spiel gewinnen 60 XP und den 🎤 Mikro-Hut!', '{n} tanong, 12 segundo bawat isa. Isang maling sagot at out ka na. Ang mga huling kernel na nakatayo ay mananalo ng 60 XP at ang 🎤 mic hat!'],
+  ['Every day at {a} and {b} (your time).', 'كل يوم الساعة {a} و {b} (بتوقيتك).', 'Jeden Tag um {a} und {b} (deine Zeit).', 'Araw-araw sa {a} at {b} (oras mo).'],
+  ['Remind me before shows', 'فكّرني قبل الشو', 'Vor Shows erinnern', 'Paalalahanan ako bago ang show'],
+  ['Lobby open — starts in {t}', 'اللوبي مفتوح — هيبدأ بعد {t}', 'Lobby offen – startet in {t}', 'Bukas na ang lobby — magsisimula sa loob ng {t}'],
+  ['The show just ended — see who won!', 'الشو لسه خالص — شوف مين كسب!', 'Die Show ist gerade zu Ende – sieh, wer gewonnen hat!', 'Kakatapos lang ng show — tingnan kung sino ang nanalo!'],
+  ['🔴 LIVE NOW — question {i} of {n}', '🔴 لايف دلوقتي — سؤال {i} من {n}', '🔴 JETZT LIVE – Frage {i} von {n}', '🔴 LIVE NGAYON — tanong {i} sa {n}'],
+  ['Join the lobby 📺', 'ادخل اللوبي 📺', 'Lobby betreten 📺', 'Pumasok sa lobby 📺'],
+  ['Watch the show 📺', 'اتفرج على الشو 📺', 'Show ansehen 📺', 'Panoorin ang show 📺'],
+  ['No show right now', 'مفيش شو دلوقتي', 'Gerade keine Show', 'Walang show ngayon'],
+  ['The show starts soon!', 'الشو هيبدأ قريب!', 'Die Show beginnt gleich!', 'Malapit nang magsimula ang show!'],
+  ['You’re in! Get ready… 🍿', 'إنت جوه! جهّز نفسك… 🍿', 'Du bist dabei! Mach dich bereit… 🍿', 'Kasali ka na! Maghanda… 🍿'],
+  ['Join the show', 'ادخل الشو', 'Bei der Show mitmachen', 'Sumali sa show'],
+  ['Sign in to play', 'سجّل دخول عشان تلعب', 'Melde dich an, um zu spielen', 'Mag-sign in para maglaro'],
+  ['You’re watching — join the next show!', 'إنت بتتفرج — ادخل الشو الجاي!', 'Du schaust zu – mach bei der nächsten Show mit!', 'Nanonood ka — sumali sa susunod na show!'],
+  ['Still in! {n} left', 'لسه جوه! فاضل {n}', 'Noch dabei! {n} übrig', 'Nasa laro pa! {n} ang natitira'],
+  ['You’re out — watch and cheer!', 'خرجت — اتفرج وشجّع!', 'Du bist raus – schau zu und feuere an!', 'Out ka na — manood at mag-cheer!'],
+  ['Answer locked in…', 'الإجابة اتثبتت…', 'Antwort eingeloggt…', 'Naka-lock na ang sagot…'],
+  ['Pick fast!', 'اختار بسرعة!', 'Schnell wählen!', 'Pumili nang mabilis!'],
+  ['seconds', 'ثانية', 'Sekunden', 'segundo'],
+  ['next question', 'السؤال الجاي', 'nächste Frage', 'susunod na tanong'],
+  ['You won kerNEl Live! +60 XP and the 🎤 mic hat', 'كسبت kerNEl Live! +60 XP وقبعة المايك 🎤', 'Du hast kerNEl Live gewonnen! +60 XP und der 🎤 Mikro-Hut', 'Nanalo ka sa kerNEl Live! +60 XP at ang 🎤 mic hat'],
+  ['Nobody survived all {n} questions!', 'محدش صمد في الـ {n} سؤال كلهم!', 'Niemand hat alle {n} Fragen überstanden!', 'Walang nakalampas sa lahat ng {n} tanong!'],
+  ['kerNEl Live is napping — back soon. 😴', 'kerNEl Live نايم — راجع قريب. 😴', 'kerNEl Live macht ein Nickerchen – gleich zurück. 😴', 'Natutulog muna ang kerNEl Live — babalik agad. 😴'],
+  ['{n} minutes', '{n} دقيقة', '{n} Minuten', '{n} minuto'],
+  ['{n} players', '{n} لاعب', '{n} Spieler', '{n} manlalaro'],
+  ['{n} still in', '{n} لسه جوه', '{n} noch dabei', '{n} pa ang nasa laro'],
+  ['{n} kernels survived every question!', '{n} حباية صمدوا في كل الأسئلة!', '{n} Kerne haben jede Frage überstanden!', '{n} kernel ang nakalampas sa bawat tanong!'],
+  ['Will this story reach {n} upvotes by tomorrow?', 'الخبر ده هيوصل {n} لايك لحد بكرة؟', 'Erreicht diese Story bis morgen {n} Upvotes?', 'Aabot ba ang balitang ito sa {n} upvotes bukas?'],
+  ['You didn’t vote on this one.', 'مصوّتش على ده.', 'Hier hast du nicht abgestimmt.', 'Hindi ka bumoto rito.'],
+  ['You called it! +{xp} XP', 'توقعتها صح! +{xp} XP', 'Richtig vorhergesagt! +{xp} XP', 'Nahulaan mo! +{xp} XP'],
+  ['Missed this one.', 'المرة دي فاتتك.', 'Diesmal daneben.', 'Sablay ito.'],
+  ['Voting closed — results soon.', 'التصويت قفل — النتيجة قريب.', 'Abstimmung beendet – Ergebnis bald.', 'Sarado na ang botohan — resulta mamaya.'],
+  ['closes in {time}', 'بيقفل بعد {time}', 'endet in {time}', 'magsasara sa loob ng {time}'],
+  ['Call it before it happens. Right calls earn +{xp} XP, and 5 unlock the 🔮 crystal ball hat.', 'توقّعها قبل ما تحصل. كل توقع صح بـ +{xp} XP، و5 توقعات بيفتحوا قبعة الكرة السحرية 🔮.', 'Sag es voraus, bevor es passiert. Richtige Tipps bringen +{xp} XP, und 5 schalten den 🔮 Kristallkugel-Hut frei.', 'Hulaan bago mangyari. +{xp} XP sa bawat tamang hula, at ang 5 ay magbubukas ng 🔮 crystal ball hat.'],
+  ['Your calls: {r} right out of {n}', 'توقعاتك: {r} صح من {n}', 'Deine Tipps: {r} von {n} richtig', 'Mga hula mo: {r} tama sa {n}'],
+  ['No open predictions right now — new ones pop daily.', 'مفيش توقعات مفتوحة دلوقتي — بيطلع جديد كل يوم.', 'Gerade keine offenen Vorhersagen – jeden Tag kommen neue.', 'Walang bukas na hula ngayon — may bago araw-araw.'],
+  ['Recently settled', 'اتحسمت مؤخرًا', 'Kürzlich aufgelöst', 'Kamakailang naresolba'],
+  ['Sign up to make predictions', 'اعمل حساب عشان تتوقع', 'Registrieren für Vorhersagen', 'Mag-sign up para manghula'],
+  ['Predictions are napping — back soon. 😴', 'التوقعات نايمة — راجعة قريب. 😴', 'Vorhersagen machen ein Nickerchen – gleich zurück. 😴', 'Natutulog muna ang mga hula — babalik agad. 😴'],
+  ['Nobody yet this season — your chance to grab #1! 🍿', 'لسه محدش الموسم ده — فرصتك تاخد المركز الأول! 🍿', 'Diese Saison noch niemand – deine Chance auf Platz 1! 🍿', 'Wala pa ngayong season — pagkakataon mong makuha ang #1! 🍿'],
+  ['You’re <b>#{place}</b> this season with {xp} XP.', 'إنت <b>#{place}</b> الموسم ده بـ {xp} XP.', 'Du bist diese Saison <b>#{place}</b> mit {xp} XP.', 'Ikaw ay <b>#{place}</b> ngayong season na may {xp} XP.'],
+  ['Earn XP this month to join the season.', 'اكسب XP الشهر ده عشان تدخل الموسم.', 'Sammle diesen Monat XP, um bei der Saison mitzumachen.', 'Kumita ng XP ngayong buwan para makasali sa season.'],
+  ['Season {month} · ends in {time} · prizes: 🥇{a} 🥈{b} 🥉{c} XP', 'موسم {month} · بيخلص بعد {time} · الجوايز: 🥇{a} 🥈{b} 🥉{c} XP', 'Saison {month} · endet in {time} · Preise: 🥇{a} 🥈{b} 🥉{c} XP', 'Season {month} · matatapos sa {time} · premyo: 🥇{a} 🥈{b} 🥉{c} XP'],
+  ['The questions are still popping — try again in a minute!', 'الأسئلة لسه بتتحضّر — جرّب كمان دقيقة!', 'Die Fragen werden noch vorbereitet – versuch es in einer Minute nochmal!', 'Inihahanda pa ang mga tanong — subukan ulit pagkalipas ng isang minuto!'],
+  ['Duel not found', 'المبارزة مش موجودة', 'Duell nicht gefunden', 'Hindi nakita ang duel'],
+  ['You can’t duel yourself (you’d win and lose at the same time)', 'مينفعش تبارز نفسك (هتكسب وتخسر في نفس الوقت)', 'Du kannst dich nicht selbst herausfordern (du würdest gleichzeitig gewinnen und verlieren)', 'Hindi mo puwedeng i-duel ang sarili mo (mananalo at matatalo ka nang sabay)'],
+  ['This duel is over', 'المبارزة دي خلصت', 'Dieses Duell ist vorbei', 'Tapos na ang duel na ito'],
+  ['You already played this duel', 'إنت لعبت المبارزة دي خلاص', 'Du hast dieses Duell schon gespielt', 'Nalaro mo na ang duel na ito'],
+  ['Start the duel first', 'ابدأ المبارزة الأول', 'Starte zuerst das Duell', 'Simulan muna ang duel'],
+  ['There’s no show right now — come back for the next one!', 'مفيش شو دلوقتي — تعالى في الشو الجاي!', 'Gerade läuft keine Show – komm zur nächsten wieder!', 'Walang show ngayon — bumalik sa susunod!'],
+  ['The show already started — join the next one!', 'الشو بدأ خلاص — ادخل الجاي!', 'Die Show läuft schon – mach bei der nächsten mit!', 'Nagsimula na ang show — sumali sa susunod!'],
+  ['Too late for that question!', 'اتأخرت على السؤال ده!', 'Zu spät für diese Frage!', 'Huli na para sa tanong na iyan!'],
+  ['Join the show first', 'ادخل الشو الأول', 'Tritt zuerst der Show bei', 'Sumali muna sa show'],
+  ['You’re out of this show — watch and cheer!', 'إنت خرجت من الشو ده — اتفرج وشجّع!', 'Du bist aus dieser Show raus – schau zu und feuere an!', 'Out ka na sa show na ito — manood at mag-cheer!'],
+  ['Prediction not found', 'التوقع مش موجود', 'Vorhersage nicht gefunden', 'Hindi nakita ang hula'],
+  ['Voting closed for this one', 'التصويت على ده قفل', 'Die Abstimmung dafür ist beendet', 'Sarado na ang botohan dito'],
+  ['Write a question first', 'اكتب سؤال الأول', 'Schreib zuerst eine Frage', 'Sumulat muna ng tanong'],
+  ['Give at least two answers', 'اكتب إجابتين على الأقل', 'Gib mindestens zwei Antworten an', 'Magbigay ng hindi bababa sa dalawang sagot'],
+  ['Unknown duel', 'مبارزة مش معروفة', 'Unbekanntes Duell', 'Hindi kilalang duel'],
 ];
 addStrings(MAIN_STRINGS);
 
@@ -5084,6 +5288,7 @@ const SKELETON = () => `
       <button type="button" class="icon-btn" data-dm="back" aria-label="${esc(t('Back to messages'))}"><span class="dm-back" aria-hidden="true">‹</span></button>
       <button type="button" class="dm-who" id="dmWho"></button>
       <span class="dm-streak" id="dmStreak" hidden></span>
+      <button type="button" class="icon-btn" data-dm="duel" id="dmDuelBtn" title="${esc(t('Challenge to a Quiz Duel'))}" aria-label="${esc(t('Challenge to a Quiz Duel'))}">⚔️</button>
       <button type="button" class="icon-btn" data-dm="menu" aria-label="${esc(t('More options'))}" aria-haspopup="menu">⋯</button>
       <div class="dm-menu glass" id="dmMenu" role="menu" hidden></div>
     </header>
@@ -5102,7 +5307,7 @@ const SKELETON = () => `
     <button type="button" class="btn btn-ghost" data-cm="signin">${t('Sign in')}</button>
   </div>`;
 
-function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
+function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challenge }) {
   pane.innerHTML = SKELETON();
   const inbox = pane.querySelector('[data-view="inbox"]');
   const convo = pane.querySelector('[data-view="convo"]');
@@ -5144,7 +5349,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
   // ---------------- inbox ----------------
   const lastText = (th) => {
     if (!th.last) return '';
-    const body = th.last.deleted ? t('Message deleted') : th.last.story && !th.last.text ? `📰 ${t('Shared a story')}` : th.last.text;
+    const body = th.last.deleted ? t('Message deleted') : th.last.duel ? `⚔️ ${t('Quiz Duel challenge')}` : th.last.story && !th.last.text ? `📰 ${t('Shared a story')}` : th.last.text;
     return th.last.mine ? `${t('You')}: ${body}` : body;
   };
   const threadRow = (th) => `<button type="button" class="dm-row${th.unread ? ' unread' : ''}" data-thread="${th.id}">
@@ -5227,8 +5432,9 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     const pic = s.image && safeUrl(s.image) !== '#' ? `<img src="${esc(safeUrl(s.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="dm-story-emoji" aria-hidden="true">${c.emoji}</span>`;
     return `<button type="button" class="dm-story" data-dstory="${id}">${pic}<span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}</small></span></button>`;
   };
+  const duelCardHTML = (m) => `<button type="button" class="dm-duel" data-dduel="${m.duel}"><span class="dm-duel-icon" aria-hidden="true">⚔️</span><span><b>${m.mine ? t('You sent a Quiz Duel challenge') : t('Quiz Duel challenge!')}</b><small>${t('5 questions from today’s news · tap to play')}</small></span></button>`;
   const msgHTML = (m) => `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}">
-      <div class="dm-bubble${m.deleted ? ' deleted' : ''}${m.story && !m.text ? ' only-story' : ''}" dir="auto">${m.deleted ? `<i>${t('Message deleted')}</i>` : `${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.story ? storyHTML(m.story, m.id) : ''}`}</div>
+      <div class="dm-bubble${m.deleted ? ' deleted' : ''}${(m.story || m.duel) && !m.text ? ' only-story' : ''}" dir="auto">${m.deleted ? `<i>${t('Message deleted')}</i>` : `${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`}</div>
       ${m.myReact || m.theirReact ? `<span class="dm-reacts">${esc([m.theirReact, m.myReact].filter(Boolean).join(''))}</span>` : ''}
       ${m.deleted ? '' : `<div class="dm-actions glass">${REACTS.map((e) => `<button type="button" data-dreact="${e}" aria-pressed="${m.myReact === e}">${e}</button>`).join('')}${m.mine ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>` : ''}</div>`}
     </div>`;
@@ -5239,6 +5445,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     const who = $('#dmWho');
     who.dataset.user = o.username;
     who.innerHTML = `${lookHTML(o, { active: o.active })}<span><b dir="auto">${esc(o.nickname)}</b><small>${esc(activeText(o) || `@${o.username}`)}</small></span>`;
+    $('#dmDuelBtn').hidden = !!(cur.blocked || cur.blockedMe || cur.request || (!cur.id && cur.canMessage === false));
     const st = $('#dmStreak');
     st.hidden = !(cur.streak >= 1);
     st.textContent = `🔥${cur.streak}`;
@@ -5458,6 +5665,8 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     if (th) return openThread(Number(th.dataset.thread));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const dd = el.closest('[data-dduel]');
+    if (dd) return openDuel?.(Number(dd.dataset.dduel));
     const story = el.closest('[data-dstory]');
     if (story) {
       const s = story.dataset.dstory === 'pending' ? share : msgs.get(Number(story.dataset.dstory))?.story;
@@ -5470,6 +5679,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     if (d) {
       const what = d.dataset.dm;
       if (what === 'back') return back();
+      if (what === 'duel') return challenge?.(cur.other.username, cur.other);
       if (what === 'menu') { paintMenu(); menu.hidden = !menu.hidden; return; }
       if (what === 'requests' || what === 'requests-close') { showRequests = what === 'requests'; return renderInbox(); }
       if (what === 'unshare') { share = null; return cur ? paintComposer() : renderInbox(); }
@@ -5549,6 +5759,703 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
 return { activeText, findPeople, personHTML, mountPeopleSearch, initDM };
 })();
 
+// ===== play.js =====
+__m["play"] = (() => {
+// Games that everyone plays together (questions and answers live on the kerNEl server):
+// 🧠 the Daily Kernel Quiz, 🍿 Popcorn Battles and the 🏆 weekly Real or Fake? tournament.
+const { $, esc, safeUrl, store, toast } = __m["utils"];
+const { catById } = __m["news"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+
+const today = () => new Date().toISOString().slice(0, 10);
+const headline = (text) => `<span dir="ltr" lang="en">${esc(text)}</span>`;
+const until = (ts) => {
+  const h = Math.max(0, Math.floor((ts - Date.now()) / 36e5));
+  return h >= 24 ? tn(Math.floor(h / 24), '{n} day', '{n} days') : tn(h, '{n} hour', '{n} hours');
+};
+const boardHTML = (rows, score) => (rows?.length
+  ? `<ol class="mini-board">${rows.slice(0, 5).map((r) => `<li data-user="${esc(r.username)}">${['🥇', '🥈', '🥉'][r.place - 1] || r.place} ${lookHTML(r)} <span dir="auto">${esc(r.nickname)}</span><b>${score(r)}</b></li>`).join('')}</ol>`
+  : `<p class="muted small">${t('Nobody on the board yet — be the first!')}</p>`);
+
+/** How a quiz question reads (shared by the Daily Quiz, ⚔️ duels and 📺 kerNEl Live). */
+function questionView(q) {
+  if (q.type === 'missing') return { ask: t('Fill in the missing word:'), lead: q.headline, opts: q.options.map((o) => headline(o)) };
+  if (q.type === 'category') return { ask: t('Which kerNEl section is this story in?'), lead: q.headline, opts: q.options.map((id) => `${catById(id).emoji} ${esc(t(catById(id).label))}`) };
+  if (q.type === 'source') return { ask: t('Who published this headline?'), lead: q.headline, opts: q.options.map((o) => esc(o)) };
+  if (q.type === 'hotter') return { ask: t('Which story got more upvotes?'), lead: null, opts: q.options.map((o) => headline(o)) };
+  return { ask: t('Three are real headlines from today. Which one did codme make up? 🤡'), lead: null, opts: q.options.map((o) => headline(o)) };
+}
+const headlineHTML = headline;
+
+function initPlay({ openAuth, onQuiz, onBattle, onTourney }) {
+  if (!auth.ready) { ['#quizWidget', '#battleWidget', '#tourneyPromo'].forEach((s) => $(s)?.remove()); return null; }
+
+  // ====================================================================================
+  // 🧠 Daily Kernel Quiz
+  // ====================================================================================
+  const qDlg = $('#quizDialog');
+  const qBody = $('#quizBody');
+  let quiz = null;
+  let answers = [];
+  let step = 0;
+
+  const questionHTML = questionView;
+
+  function showQuestion() {
+    const q = quiz.questions[step];
+    const v = questionHTML(q);
+    qBody.innerHTML = `
+      <div class="quiz-progress">${quiz.questions.map((_, i) => `<i class="${i < step ? 'done' : ''}"></i>`).join('')}</div>
+      <p class="quiz-q">${t('Question {i} of {n}', { i: step + 1, n: quiz.questions.length })} · ${v.ask}</p>
+      ${v.lead ? `<p class="quiz-headline">${headline(v.lead)}</p>` : ''}
+      <div class="quiz-opts">${v.opts.map((o, i) => `<button type="button" class="quiz-opt" data-a="${i}">${o}</button>`).join('')}</div>`;
+    qBody.querySelector('.quiz-opt')?.focus();
+  }
+
+  function resultHTML(r) {
+    const perfect = r.score === r.total;
+    const review = quiz.questions.map((q, i) => {
+      const right = r.answers?.[i] === r.correct[i];
+      const v = questionHTML(q);
+      return `<li>${right ? '✅' : '❌'} ${v.ask} <b>${v.opts[r.correct[i]]}</b></li>`;
+    }).join('');
+    return `<div class="game-end"><span class="game-big">${perfect ? '🧠' : r.score >= 3 ? '🍿' : '🌽'}</span>
+      <h3>${r.score} / ${r.total} ${perfect ? t('— big brain!') : r.score >= 3 ? t('— nice popping!') : t('— the news got you today!')}</h3>
+      ${r.already ? `<p class="muted small">${t('You already played today — here’s your score.')}</p>` : ''}
+      ${!auth.user ? `<p class="small"><button type="button" class="linkish" data-action="signup">${t('Sign up')}</button> ${t('to get on the daily board.')}</p>` : ''}
+      <ul class="quiz-review">${review}</ul>
+      <h4>${t('Today’s quiz board')}</h4>${boardHTML(r.board, (b) => `${b.score}/${r.total}`)}
+      <p class="muted small">${t('A new quiz pops every day at midnight (UTC).')}</p></div>`;
+  }
+
+  async function finish() {
+    qBody.innerHTML = `<div class="auth-mascot spin">🍿</div><p class="muted">${t('Checking your answers…')}</p>`;
+    try {
+      const r = await auth.api('/api/quiz', { method: 'POST', body: { answers } });
+      qBody.innerHTML = resultHTML(r);
+      if (r.score === r.total) { rain(['🧠', '🍿', '✨'], 40); sfx.win(); } else sfx.ding();
+      const guestDone = !auth.user && store.get('quiz:guestDay', '') === today();
+      if (!r.already && !guestDone) { store.set('quiz:guestDay', today()); onQuiz?.(r.score, r.total); }
+      renderSide({ ...r, played: true });
+    } catch (e) { qBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  async function openQuiz() {
+    if (!qDlg.open) qDlg.showModal();
+    qBody.innerHTML = `<div class="auth-mascot spin">🍿</div><p class="muted">${t('Popping today’s questions…')}</p>`;
+    try {
+      quiz = await auth.api('/api/quiz');
+      answers = [];
+      step = 0;
+      if (quiz.played) { qBody.innerHTML = resultHTML({ ...quiz.played, total: quiz.total, already: true, board: quiz.board }); return; }
+      qBody.innerHTML = `<div class="game-end"><span class="game-big">🧠</span>
+        <h3>${t('{n} questions from today’s headlines', { n: quiz.questions.length })}</h3>
+        <p>${t('One go per day — no peeking at the feed! 👀 Fast answers win ties on the board.')}</p>
+        <button type="button" class="btn btn-primary btn-big" data-quiz="go">${t('Let’s go! 🚀')}</button></div>`;
+      sfx.pop();
+    } catch (e) { qBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  qBody.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el.closest('[data-quiz="go"]')) { showQuestion(); return; }
+    const a = el.closest('[data-a]');
+    if (!a || a.disabled) return;
+    answers[step] = Number(a.dataset.a);
+    qBody.querySelectorAll('.quiz-opt').forEach((b) => { b.disabled = true; });
+    a.classList.add('picked');
+    burstFrom(a, { emojis: ['🍿', '✨'], count: 6, spread: 50 });
+    sfx.blip();
+    setTimeout(() => { step++; if (step < quiz.questions.length) showQuestion(); else finish(); }, 350);
+  });
+  qDlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) qDlg.close(); });
+
+  function renderSide(state) {
+    const box = $('#quizSide');
+    const played = state?.played;
+    box.innerHTML = `
+      <p class="small">${played ? t('You scored <b>{s}/{n}</b> today. Come back tomorrow for a fresh one!', { s: played.score ?? state.score, n: state.total }) : t('5 quick questions made from today’s headlines. How closely were you reading? 🤔')}</p>
+      <button type="button" class="btn ${played ? 'btn-ghost' : 'btn-primary'} btn-block" data-action="quiz">${played ? t('See my answers') : t('Play today’s quiz (+XP)')}</button>
+      ${boardHTML(state?.board, (b) => `${b.score}/${state.total}`)}`;
+  }
+  async function loadSide() {
+    try {
+      const q = await auth.api('/api/quiz');
+      $('#quizWidget').hidden = false;
+      renderSide({ played: q.played, total: q.total, board: q.board });
+    } catch { $('#quizWidget').hidden = true; }
+  }
+
+  // ====================================================================================
+  // 🍿 Popcorn Battle
+  // ====================================================================================
+  async function loadBattle() {
+    const box = $('#battleBody');
+    try {
+      const b = await auth.api('/api/battle');
+      $('#battleWidget').hidden = false;
+      const total = b.votes.a + b.votes.b;
+      const voted = !!b.mine;
+      const side = (k) => {
+        const s = b[k];
+        const pct = total ? Math.round((b.votes[k] / total) * 100) : 0;
+        const leading = total && b.votes[k] > b.votes[k === 'a' ? 'b' : 'a'];
+        return `<div class="battle-side${b.mine === k ? ' mine' : ''}${voted && leading ? ' win' : ''}">
+          <small>${catById(s.cat).emoji} ${esc(s.source || '')}</small>
+          <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer" dir="ltr" lang="en">${esc(s.title)}</a>
+          ${voted || !auth.user ? `<div class="battle-bar"><i style="width:${pct}%"></i></div><small>${pct}% · ${tn(b.votes[k], '{n} vote', '{n} votes')}</small>` : ''}
+          ${auth.user && !voted ? `<button type="button" class="btn btn-primary btn-sm" data-battle="${k}">${t('This one! 🍿')}</button>` : ''}
+          ${b.mine === k ? `<small>✓ ${t('your pick')}</small>` : ''}
+        </div>`;
+      };
+      box.innerHTML = `<p class="muted small">${t('Two of today’s hottest stories. Which one matters more? Winner becomes tomorrow’s Story of the Day.')}</p>
+        <div class="battle">${side('a')}<span class="battle-vs">VS</span>${side('b')}</div>
+        <p class="muted small">⏳ ${t('Voting closes in {time}', { time: until(b.endsAt) })}${!auth.user ? ` · <button type="button" class="linkish" data-action="signin">${t('Sign in')}</button> ${t('to vote')}` : ''}</p>
+        ${b.champion ? `<div class="champion">🏆 <b>${t('Story of the Day')}</b> <small>(${t('{n}% of {total} votes yesterday', { n: Math.round((b.champion.votes / b.champion.total) * 100), total: b.champion.total })})</small><br><a href="${esc(safeUrl(b.champion.story.url))}" target="_blank" rel="noopener noreferrer" dir="ltr" lang="en">${esc(b.champion.story.title)}</a></div>` : ''}`;
+    } catch { $('#battleWidget').hidden = true; }
+  }
+  $('#battleBody').addEventListener('click', async (e) => {
+    const btn = e.target instanceof Element && e.target.closest('[data-battle]');
+    if (!btn) return;
+    btn.disabled = true;
+    try {
+      const r = await auth.api('/api/battle', { method: 'POST', body: { pick: btn.dataset.battle } });
+      burstFrom(btn, { emojis: ['🍿', '🔥', '🥊'], count: 14 });
+      sfx.ding();
+      if (r.firstVote) onBattle?.();
+      loadBattle();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); btn.disabled = false; }
+  });
+
+  // ====================================================================================
+  // 🏆 Weekly Real or Fake? tournament
+  // ====================================================================================
+  const tDlg = $('#tourneyDialog');
+  const tBody = $('#tourneyBody');
+  let tour = null;
+  let picks = {};
+
+  const podium = (list) => (list?.length ? `<div class="podium">${list.map((w) => `<span data-user="${esc(w.username)}">${['🥇', '🥈', '🥉'][w.place - 1]}${lookHTML(w)}<small dir="auto">${esc(w.nickname)}</small></span>`).join('')}</div>` : '');
+
+  function tourneyResult(r) {
+    const reveal = new Map(r.reveal.map((x) => [x.id, x]));
+    return `<div class="game-end"><span class="game-big">${r.score === r.total ? '🏆' : '🕵️'}</span>
+      <h3>${r.score} / ${r.total}</h3>
+      ${r.already ? `<p class="muted small">${t('You already played this week’s tournament.')}</p>` : `<p class="muted small">${t('Locked in! The top 3 on Monday win trophies. 🏆')}</p>`}
+      <ul class="tourney-list">${tour.items.map((it) => {
+        const x = reveal.get(it.id);
+        const mine = r.answers?.[it.id];
+        const right = mine && (mine === 'real') === x.real;
+        return `<li class="${right ? 'right' : 'wrong'}"><span class="t-title" dir="ltr" lang="en">${esc(it.title)}</span><span>${x.real ? (x.story ? `<a href="${esc(safeUrl(x.story.url))}" target="_blank" rel="noopener noreferrer">✅ ${t('Real')}</a>` : `✅ ${t('Real')}`) : `🤡 ${t('Fake')}`}</span></li>`;
+      }).join('')}</ul>
+      <h4>${t('This week’s board')}</h4>${boardHTML(r.board, (b) => `${b.score}/${r.total}`)}</div>`;
+  }
+
+  function tourneyForm() {
+    const done = tour.items.every((it) => picks[it.id]);
+    tBody.innerHTML = `<p>${t('{n} headlines. Some are real stories from this week, some are fakes invented by codme. One go only — choose wisely!', { n: tour.items.length })}</p>
+      <p class="muted small">⏳ ${t('Ends in {time}', { time: until(tour.endsAt) })}</p>
+      <ul class="tourney-list">${tour.items.map((it) => `<li><span class="t-title" dir="ltr" lang="en">${esc(it.title)}</span><span class="t-pick">
+        <button type="button" data-pick="${it.id}:real" aria-pressed="${picks[it.id] === 'real'}" title="${t('Real')}">✅</button>
+        <button type="button" data-pick="${it.id}:fake" aria-pressed="${picks[it.id] === 'fake'}" title="${t('Fake')}">🤡</button></span></li>`).join('')}</ul>
+      <button type="button" class="btn btn-primary btn-big btn-block" data-tourney="submit" ${done ? '' : 'disabled'}>${done ? t('Lock in my answers 🔒') : t('Pick ✅ or 🤡 for every headline')}</button>`;
+  }
+
+  async function openTourney() {
+    if (!auth.user) { toast(t('Sign in to enter the tournament and win trophies! 🏆'), { emoji: '🏆' }); openAuth('signin'); return; }
+    if (!tDlg.open) tDlg.showModal();
+    tBody.innerHTML = `<div class="auth-mascot spin">🍿</div>`;
+    try {
+      tour = await auth.api('/api/tournament');
+      picks = {};
+      const last = tour.lastWinners?.length ? `<p class="small"><b>${t('Last week’s champions')}</b></p>${podium(tour.lastWinners)}` : '';
+      if (tour.played) { tBody.innerHTML = last + tourneyResult({ ...tour.played, total: tour.total, already: true, board: tour.board }); return; }
+      tourneyForm();
+      tBody.insertAdjacentHTML('afterbegin', last);
+    } catch (e) { tBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  tBody.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const p = el?.closest('[data-pick]');
+    if (p) {
+      const [id, v] = p.dataset.pick.split(':');
+      picks[id] = v;
+      const keep = tBody.querySelector('.podium')?.outerHTML || '';
+      tourneyForm();
+      if (keep) tBody.insertAdjacentHTML('afterbegin', keep);
+      sfx.blip();
+      return;
+    }
+    if (el?.closest('[data-tourney="submit"]')) {
+      try {
+        const r = await auth.api('/api/tournament', { method: 'POST', body: { answers: picks } });
+        tBody.innerHTML = tourneyResult(r);
+        if (r.score === r.total) rain(['🏆', '🕵️', '✨'], 40);
+        sfx.win();
+        if (!r.already) onTourney?.(r.score, r.total);
+        loadPromo();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+    }
+  });
+  tDlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) tDlg.close(); });
+
+  async function loadPromo() {
+    const promo = $('#tourneyPromo');
+    promo.hidden = false;
+    if (!auth.user) { $('#tourneyLine').textContent = t('8 headlines, one go each. The top 3 win trophies!'); return; }
+    try {
+      const r = await auth.api('/api/tournament');
+      $('#tourneyLine').textContent = r.played ? t('You scored {s}/{n} this week. Results on Monday! 🏆', { s: r.played.score, n: r.total }) : t('This week’s 8 headlines are waiting. Ends in {time}.', { time: until(r.endsAt) });
+    } catch { /* keep the default line */ }
+  }
+
+  const refresh = () => { loadSide(); loadBattle(); loadPromo(); };
+  refresh();
+  auth.addEventListener('signin', refresh);
+  auth.addEventListener('signout', refresh);
+  setInterval(() => { if (!document.hidden) loadBattle(); }, 5 * 60_000);
+  return { openQuiz, openTourney, refresh };
+}
+
+return { questionView, headlineHTML, initPlay };
+})();
+
+// ===== arena.js =====
+__m["arena"] = (() => {
+// kerNEl arena on the website: ⚔️ Quiz Duels, 📺 kerNEl Live, 🔮 Predictions and the 🏅 season board.
+const { $, esc, store, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tn, tServer, fmtDate } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { questionView, headlineHTML } = __m["play"];
+const { findPeople, personHTML } = __m["dm"];
+
+const fmtTime = (ts) => new Date(ts).toLocaleTimeString(document.documentElement.lang?.startsWith('ar') ? 'ar-EG-u-nu-latn' : document.documentElement.lang || undefined, { hour: '2-digit', minute: '2-digit' });
+function inWords(ms) {
+  const m = Math.max(0, Math.round(ms / 60000));
+  if (m < 60) return tn(m, '{n} minute', '{n} minutes');
+  const h = Math.floor(m / 60);
+  return h < 24 ? tn(h, '{n} hour', '{n} hours') : tn(Math.round(h / 24), '{n} day', '{n} days');
+}
+const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+function makeDialog(cls, title) {
+  const dlg = document.createElement('dialog');
+  dlg.className = `modal game-modal ${cls}`;
+  dlg.innerHTML = `<form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="${esc(t('Close'))}">✕</button></form><div class="modal-body"><h2>${title}</h2><div class="arena-body"></div></div>`;
+  document.body.append(dlg);
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  return { dlg, body: dlg.querySelector('.arena-body') };
+}
+
+function initArena({ openAuth, openStory, onWin }) {
+  if (!auth.ready) { ['#liveWidget', '#duelWidget', '#predictWidget'].forEach((s) => $(s)?.remove()); return null; }
+  const meLook = () => ({ ...auth.getProfile(), username: auth.user?.username });
+
+  // ====================================================================================
+  // ⚔️ Quiz Duels
+  // ====================================================================================
+  const D = makeDialog('duel-dialog', `⚔️ ${t('Quiz Duel')}`);
+  let duel = null;
+  let step = 0;
+  let answers = [];
+  let qTimer = 0;
+
+  async function openDuel(id) {
+    if (!auth.user) { openAuth('signin'); return; }
+    if (!D.dlg.open) D.dlg.showModal();
+    D.body.innerHTML = '<div class="auth-mascot spin">⚔️</div>';
+    try { duel = (await auth.api(`/api/duels/${id}`)).duel; paintDuel(); } catch (e) { D.body.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  async function challenge(username, person) {
+    if (!auth.user) { toast(t('Sign in to duel your friends ⚔️'), { emoji: '⚔️' }); openAuth('signin'); return; }
+    if (!D.dlg.open) D.dlg.showModal();
+    D.body.innerHTML = '<div class="auth-mascot spin">⚔️</div>';
+    try {
+      const r = await auth.api('/api/duels', { method: 'POST', body: { to: username } });
+      duel = r.duel;
+      if (!r.existing) toast(t('Challenge sent to @{name}! Now play your turn ⚔️', { name: username }), { emoji: '⚔️' });
+      paintDuel();
+      loadDuels();
+    } catch (e) { D.body.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  function paintDuel() {
+    const o = duel.opponent;
+    if (duel.my || duel.status !== 'open') { paintDuelResult(); return; }
+    if (duel.questions) { answers = []; step = 0; showDuelQuestion(); return; }
+    D.body.innerHTML = `<div class="game-end">
+      <div class="duel-vs">${lookHTML(meLook(), { cls: 'avatar-lg' })}<b>VS</b>${lookHTML(o, { cls: 'avatar-lg' })}</div>
+      <h3>${t('You vs @{name}', { name: esc(o.username) })}</h3>
+      <p>${t('{n} questions from today’s news, {s} seconds each. Best score wins — the faster player wins a tie.', { n: duel.total, s: duel.secondsEach })}</p>
+      ${duel.their?.done ? `<p class="duel-note">🔥 ${t('@{name} already played. Your turn!', { name: esc(o.username) })}</p>` : ''}
+      <button type="button" class="btn btn-primary btn-big" data-duel="go">${t('Start the duel ⚔️')}</button>
+      <p class="muted small">${t('The duel ends in {time}.', { time: inWords(duel.expires - Date.now()) })}</p></div>`;
+  }
+
+  function showDuelQuestion() {
+    const q = duel.questions[step];
+    const v = questionView(q);
+    D.body.innerHTML = `
+      <div class="quiz-progress">${duel.questions.map((_, i) => `<i class="${i < step ? 'done' : ''}"></i>`).join('')}</div>
+      <div class="duel-timer"><i style="animation-duration:${duel.secondsEach}s"></i></div>
+      <p class="quiz-q">${t('Question {i} of {n}', { i: step + 1, n: duel.questions.length })} · ${v.ask}</p>
+      ${v.lead ? `<p class="quiz-headline">${headlineHTML(v.lead)}</p>` : ''}
+      <div class="quiz-opts">${v.opts.map((o, i) => `<button type="button" class="quiz-opt" data-da="${i}">${o}</button>`).join('')}</div>`;
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => pickDuel(-1), duel.secondsEach * 1000);
+  }
+
+  function pickDuel(i, btn) {
+    clearTimeout(qTimer);
+    answers[step] = i;
+    D.body.querySelectorAll('.quiz-opt').forEach((b) => { b.disabled = true; });
+    if (btn) { btn.classList.add('picked'); burstFrom(btn, { emojis: ['⚔️', '✨'], count: 6, spread: 50 }); sfx.blip(); } else sfx.buzz();
+    setTimeout(() => { step++; if (step < duel.questions.length) showDuelQuestion(); else finishDuel(); }, 300);
+  }
+
+  async function finishDuel() {
+    D.body.innerHTML = `<div class="auth-mascot spin">⚔️</div><p class="muted">${t('Checking your answers…')}</p>`;
+    try { duel = (await auth.api(`/api/duels/${duel.id}/answer`, { method: 'POST', body: { answers } })).duel; paintDuelResult(true); loadDuels(); } catch (e) { D.body.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  function paintDuelResult(fresh = false) {
+    const o = duel.opponent;
+    const name = esc(o.username);
+    const secs = (ms) => (ms ? `${(ms / 1000).toFixed(1)}s` : '');
+    let html;
+    if (!duel.my && duel.status !== 'open') {
+      html = `<span class="game-big">⌛</span><h3>${t('This duel ran out of time.')}</h3>`;
+    } else if (!duel.winner) {
+      html = `<span class="game-big">🍿</span><h3>${t('{s} / {n}! Now it’s @{name}’s turn.', { s: duel.my.score, n: duel.total, name })}</h3><p class="muted">${t('We’ll let you know who won.')}</p>`;
+    } else {
+      const big = duel.winner === 'me' ? '🏆' : duel.winner === 'draw' ? '🤝' : '😤';
+      const head = duel.winner === 'me' ? t('You won the duel!') : duel.winner === 'draw' ? t('It’s a draw!') : t('@{name} won this time.', { name });
+      html = `<span class="game-big">${big}</span><h3>${head}</h3>
+        <div class="duel-score">
+          <span>${lookHTML(meLook())}<b>${duel.my ? duel.my.score : '–'}</b><small>${t('You')} ${secs(duel.my?.ms)}</small></span>
+          <i>—</i>
+          <span>${lookHTML(o)}<b>${duel.their ? duel.their.score : '–'}</b><small>@${name} ${secs(duel.their?.ms)}</small></span>
+        </div>`;
+      if (fresh && duel.winner === 'me') { rain(['🏆', '⚔️', '✨'], 36); sfx.win(); onWin?.('duel'); }
+    }
+    D.body.innerHTML = `<div class="game-end">${html}<button type="button" class="btn btn-ghost" data-rematch="${name}">⚔️ ${t('Rematch')}</button></div>`;
+  }
+
+  D.body.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el.closest('[data-duel="go"]')) {
+      auth.api(`/api/duels/${duel.id}/start`, { method: 'POST' }).then((r) => { duel = r.duel; answers = []; step = 0; showDuelQuestion(); sfx.pop(); })
+        .catch((err) => { D.body.innerHTML = `<p>😵 ${esc(tServer(err.message))}</p>`; });
+      return;
+    }
+    const a = el.closest('[data-da]');
+    if (a && !a.disabled) { pickDuel(Number(a.dataset.da), a); return; }
+    const rm = el.closest('[data-rematch]');
+    if (rm) challenge(rm.dataset.rematch);
+  });
+  D.dlg.addEventListener('close', () => clearTimeout(qTimer));
+
+  // the duels card on the Play tab
+  async function loadDuels() {
+    const box = $('#duelBody');
+    if (!box) return;
+    if (!auth.user) {
+      box.innerHTML = `<p class="small">${t('Challenge a friend to 5 questions from today’s news. Winner takes the XP!')}</p><button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to duel')}</button>`;
+      return;
+    }
+    try {
+      const r = await auth.api('/api/duels');
+      const label = (d) => {
+        if (d.status === 'open') return !d.my ? `<b class="duel-tag hot">${t('Your turn!')}</b>` : `<span class="duel-tag">${t('Waiting…')}</span>`;
+        if (d.winner === 'me') return `<b class="duel-tag win">🏆 ${d.my?.score ?? '–'}–${d.their?.score ?? '–'}</b>`;
+        if (d.winner === 'draw') return `<span class="duel-tag">🤝 ${d.my?.score}–${d.their?.score}</span>`;
+        if (d.winner === 'them') return `<span class="duel-tag">${d.my?.score ?? '–'}–${d.their?.score ?? '–'}</span>`;
+        return `<span class="duel-tag">⌛</span>`;
+      };
+      box.innerHTML = `
+        <p class="small">${t('Challenge a friend to 5 questions from today’s news. Winner takes the XP!')}</p>
+        <button type="button" class="btn btn-primary btn-block" data-duel-pick>⚔️ ${t('Challenge someone')}</button>
+        ${r.duels.length ? `<ul class="duel-list">${r.duels.slice(0, 6).map((d) => `<li><button type="button" data-open-duel="${d.id}">${lookHTML(d.opponent)}<span dir="auto">@${esc(d.opponent.username)}</span>${label(d)}</button></li>`).join('')}</ul>` : ''}
+        <p class="muted small">${t('Wins {w} · Losses {l} · Draws {d}', { w: r.record.won, l: r.record.lost, d: r.record.draws })}</p>`;
+    } catch { box.innerHTML = `<p class="muted small">${t('Duels are napping — back soon. 😴')}</p>`; }
+  }
+
+  // pick who to challenge
+  const P = makeDialog('pick-dialog', `⚔️ ${t('Who do you want to duel?')}`);
+  P.body.innerHTML = `<label class="people-search"><span class="sr-only">${t('Search people')}</span><span class="search-icon" aria-hidden="true">🔍</span><input type="search" placeholder="${esc(t('Search by name or @username'))}" autocomplete="off"></label><div class="pick-list"></div>`;
+  const pickInput = P.body.querySelector('input');
+  const pickList = P.body.querySelector('.pick-list');
+  let pickTimer = 0;
+  async function fillPick() {
+    try {
+      const people = (await findPeople(pickInput.value.trim())).filter((p) => !p.me && !p.blocked);
+      pickList.innerHTML = people.length ? people.map((p) => personHTML(p, { pick: 'data-challenge' })).join('') : `<p class="muted small">${t('No kernels found for “{q}”', { q: esc(pickInput.value.trim()) })}</p>`;
+    } catch (e) { pickList.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+  pickInput.addEventListener('input', () => { clearTimeout(pickTimer); pickTimer = setTimeout(fillPick, 220); });
+  P.body.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('[data-challenge]') : null;
+    if (!b) return;
+    P.dlg.close();
+    challenge(b.dataset.challenge);
+  });
+  function openPicker() {
+    if (!auth.user) { openAuth('signin'); return; }
+    pickInput.value = '';
+    pickList.innerHTML = '<div class="chat-empty"><span class="spin">⚔️</span></div>';
+    P.dlg.showModal();
+    fillPick();
+  }
+
+  // ====================================================================================
+  // 📺 kerNEl Live
+  // ====================================================================================
+  const L = makeDialog('live-dialog', '📺 kerNEl Live');
+  let live = null;
+  let skew = 0;
+  let liveTimer = 0;
+  let tick = 0;
+  let lastQ = -2;
+  let lastPhase = '';
+  const serverNow = () => Date.now() + skew;
+
+  async function fetchLive() {
+    const r = await auth.api('/api/live');
+    skew = r.now - Date.now();
+    live = r;
+    return r;
+  }
+
+  function nextShowText(r) {
+    if (!r.next) return '';
+    return t('Next show: {time} (in {wait})', { time: `${fmtDate(r.next, { weekday: 'short' })} ${fmtTime(r.next)}`, wait: inWords(r.next - serverNow()) });
+  }
+
+  function paintLiveWidget() {
+    const box = $('#liveBody');
+    if (!box || !live) return;
+    const rules = `<p class="small">${t('{n} questions, 12 seconds each. One wrong answer and you’re out. Last kernels standing win 60 XP and the 🎤 mic hat!', { n: live.total || 10 })}</p>`;
+    if (live.phase === 'idle') {
+      box.innerHTML = `${rules}<p class="live-next">⏰ ${esc(nextShowText(live))}</p>
+        <p class="muted small">${t('Every day at {a} and {b} (your time).', { a: fmtTime(Date.UTC(2026, 0, 1, live.slotsUtc[0])), b: fmtTime(Date.UTC(2026, 0, 1, live.slotsUtc[1])) })}</p>
+        <button type="button" class="btn btn-ghost btn-block" data-action="notify">🔔 ${t('Remind me before shows')}</button>`;
+      return;
+    }
+    const label = live.phase === 'lobby' ? t('Lobby open — starts in {t}', { t: mmss(live.startsAt - serverNow()) }) : live.phase === 'done' ? t('The show just ended — see who won!') : t('🔴 LIVE NOW — question {i} of {n}', { i: live.q + 1, n: live.total });
+    box.innerHTML = `${rules}<p class="live-next live-on">${esc(label)}</p><p class="muted small">👥 ${tn(live.players, '{n} player', '{n} players')}</p>
+      <button type="button" class="btn btn-primary btn-block" data-live-open>${live.phase === 'lobby' ? t('Join the lobby 📺') : t('Watch the show 📺')}</button>`;
+  }
+
+  function scheduleWidget() {
+    clearTimeout(tick);
+    const soon = live && (live.phase !== 'idle' || (live.next && live.next - serverNow() < 15 * 60_000));
+    tick = setTimeout(async () => { if (!document.hidden && !L.dlg.open) { try { await fetchLive(); paintLiveWidget(); } catch { /* offline */ } } scheduleWidget(); }, soon ? 4000 : 60_000);
+  }
+
+  function paintLive() {
+    const r = live;
+    const me = r.me || {};
+    const head = `<div class="live-head"><span>👥 ${tn(r.players || 0, '{n} player', '{n} players')}</span>${r.q >= 0 ? `<span>🔥 ${tn(r.alive || 0, '{n} still in', '{n} still in')}</span>` : ''}</div>`;
+    let html = '';
+    if (r.phase === 'idle') {
+      html = `<div class="game-end"><span class="game-big">📺</span><h3>${t('No show right now')}</h3><p>${esc(nextShowText(r))}</p></div>`;
+    } else if (r.phase === 'lobby') {
+      html = `<div class="game-end"><span class="live-count" data-countdown="${r.startsAt}">${mmss(r.startsAt - serverNow())}</span>
+        <h3>${t('The show starts soon!')}</h3>
+        ${me.joined ? `<p class="live-in">✅ ${t('You’re in! Get ready… 🍿')}</p>` : auth.user ? `<button type="button" class="btn btn-primary btn-big" data-live-join>${t('Join the show')}</button>` : `<button type="button" class="btn btn-primary btn-big" data-action="signin">${t('Sign in to play')}</button>`}
+        <p class="muted small">${t('{n} questions, 12 seconds each. One wrong answer and you’re out. Last kernels standing win 60 XP and the 🎤 mic hat!', { n: r.total })}</p></div>`;
+    } else if (r.phase === 'question' || r.phase === 'reveal') {
+      const v = questionView(r.question);
+      const reveal = r.phase === 'reveal' ? r.reveal : null;
+      const total = reveal ? reveal.counts.reduce((a, b) => a + b, 0) || 1 : 1;
+      const canAnswer = r.phase === 'question' && me.joined && me.alive && me.choice == null;
+      const status = !me.joined ? `👀 ${t('You’re watching — join the next show!')}`
+        : r.phase === 'reveal' ? (me.alive ? `✅ ${t('Still in! {n} left', { n: r.alive })}` : `💀 ${t('You’re out — watch and cheer!')}`)
+          : !me.alive ? `💀 ${t('You’re out — watch and cheer!')}` : me.choice != null ? `🔒 ${t('Answer locked in…')}` : `⏱️ ${t('Pick fast!')}`;
+      html = `<div class="live-q">
+        <div class="live-timer"><b data-countdown="${r.deadline}">${Math.max(0, Math.ceil((r.deadline - serverNow()) / 1000))}</b><small>${r.phase === 'question' ? t('seconds') : t('next question')}</small></div>
+        <p class="quiz-q">${t('Question {i} of {n}', { i: r.q + 1, n: r.total })} · ${v.ask}</p>
+        ${v.lead ? `<p class="quiz-headline">${headlineHTML(v.lead)}</p>` : ''}
+        <div class="quiz-opts">${v.opts.map((o, i) => {
+          const pct = reveal ? Math.round((reveal.counts[i] / total) * 100) : 0;
+          const cls = [reveal && i === reveal.answer ? 'right' : '', reveal && me.choice === i && i !== reveal.answer ? 'wrong' : '', me.choice === i ? 'picked' : ''].filter(Boolean).join(' ');
+          return `<button type="button" class="quiz-opt ${cls}" data-la="${i}" ${canAnswer ? '' : 'disabled'}>${o}${reveal ? `<span class="live-pct"><i style="width:${pct}%"></i><small>${pct}%</small></span>` : ''}</button>`;
+        }).join('')}</div>
+        <p class="live-status">${status}</p></div>`;
+    } else { // done
+      const won = auth.user && (r.winners || []).some((w) => w.username === auth.user.username);
+      html = `<div class="game-end"><span class="game-big">${won ? '🏆' : r.winnerCount ? '🎉' : '😱'}</span>
+        <h3>${won ? t('You won kerNEl Live! +60 XP and the 🎤 mic hat') : r.winnerCount ? tn(r.winnerCount, '{n} kernel survived every question!', '{n} kernels survived every question!') : t('Nobody survived all {n} questions!', { n: r.total })}</h3>
+        ${(r.winners || []).length ? `<div class="live-winners">${r.winners.slice(0, 24).map((w) => `<button type="button" class="friend" data-user="${esc(w.username)}" title="@${esc(w.username)}">${lookHTML(w)}</button>`).join('')}</div>` : ''}
+        <p class="muted">${esc(nextShowText(r))}</p></div>`;
+      if (won && lastPhase !== 'done') { rain(['🏆', '🎤', '✨'], 50); sfx.win(); onWin?.('live'); }
+    }
+    if (r.phase !== lastPhase || r.q !== lastQ) {
+      if (r.phase === 'question') sfx.pop();
+      if (r.phase === 'reveal' && me.joined && me.choice === r.reveal.answer) sfx.ding();
+      if (r.phase === 'reveal' && me.joined && me.alive === false && lastPhase === 'question') sfx.buzz();
+    }
+    lastPhase = r.phase;
+    lastQ = r.q;
+    L.body.innerHTML = head + html;
+  }
+
+  function liveLoop() {
+    clearTimeout(liveTimer);
+    if (!L.dlg.open) return;
+    // tick the countdowns every 250 ms; ask the server again when a deadline passes (or every few seconds in the lobby)
+    L.body.querySelectorAll('[data-countdown]').forEach((el) => {
+      const left = Number(el.dataset.countdown) - serverNow();
+      el.textContent = el.classList.contains('live-count') ? mmss(left) : String(Math.max(0, Math.ceil(left / 1000)));
+    });
+    const due = live && live.deadline && serverNow() > live.deadline + 120;
+    const age = Date.now() - (live?._at || 0);
+    const lobbyRefresh = live && live.phase === 'lobby' && age > 3000;
+    // between shows, look again now and then so an open dialog moves on to the next lobby by itself
+    const quietRefresh = live && (live.phase === 'idle' || live.phase === 'done') && age > 15_000;
+    if (due || lobbyRefresh || quietRefresh || (live && live.phase === 'done' && !live.winners)) {
+      fetchLive().then((r) => { r._at = Date.now(); paintLive(); }).catch(() => {}).finally(() => { liveTimer = setTimeout(liveLoop, 250); });
+      return;
+    }
+    liveTimer = setTimeout(liveLoop, 250);
+  }
+
+  async function openLive() {
+    if (!L.dlg.open) L.dlg.showModal();
+    L.body.innerHTML = '<div class="auth-mascot spin">📺</div>';
+    try { const r = await fetchLive(); r._at = Date.now(); paintLive(); liveLoop(); } catch (e) { L.body.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  L.body.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el.closest('[data-live-join]')) {
+      try { const r = await auth.api('/api/live/join', { method: 'POST' }); skew = r.now - Date.now(); live = r; live._at = Date.now(); paintLive(); burstFrom(el, { emojis: ['📺', '🍿', '✨'], count: 10 }); sfx.ding(); } catch (err) { toast(tServer(err.message), { emoji: '📺' }); }
+      return;
+    }
+    const a = el.closest('[data-la]');
+    if (a && !a.disabled && live?.phase === 'question') {
+      const choice = Number(a.dataset.la);
+      L.body.querySelectorAll('[data-la]').forEach((b) => { b.disabled = true; });
+      a.classList.add('picked');
+      burstFrom(a, { emojis: ['🍿', '✨'], count: 6, spread: 40 });
+      try { await auth.api('/api/live/answer', { method: 'POST', body: { q: live.q, choice } }); live.me = { ...live.me, choice }; paintLive(); } catch (err) { toast(tServer(err.message), { emoji: '⏱️' }); }
+    }
+  });
+  L.dlg.addEventListener('close', () => { clearTimeout(liveTimer); fetchLive().then(paintLiveWidget).catch(() => {}); });
+
+  // ====================================================================================
+  // 🔮 Predictions
+  // ====================================================================================
+  let preds = null;
+  function predHTML(p, done = false) {
+    const total = p.total || 0;
+    const voted = p.mine != null;
+    const closed = done || Date.now() > p.closes;
+    const showBars = voted || closed;
+    const ask = p.kind === 'upvotes'
+      ? `<p class="pred-q">${t('Will this story reach {n} upvotes by tomorrow?', { n: p.data.threshold })}</p><button type="button" class="pred-story" data-pstory="${p.id}">${headlineHTML(p.question)}</button>`
+      : `<p class="pred-q" dir="auto">${esc(p.question)}</p>`;
+    const opts = p.options.map((o, i) => {
+      const pct = total ? Math.round((p.counts[i] / total) * 100) : 0;
+      const label = p.kind === 'upvotes' ? t(o) : o;
+      const cls = [p.mine === i ? 'mine' : '', done && p.answer === i ? 'right' : ''].filter(Boolean).join(' ');
+      return `<button type="button" class="pred-opt ${cls}" data-pvote="${p.id}:${i}" ${closed || !auth.user ? 'disabled' : ''}><span dir="auto">${esc(label)}${p.mine === i ? ' ✓' : ''}</span>${showBars ? `<span class="poll-bar"><i style="width:${pct}%"></i></span><b>${pct}%</b>` : ''}</button>`;
+    }).join('');
+    const foot = done
+      ? (p.mine == null ? t('You didn’t vote on this one.') : p.mine === p.answer ? `🔮 ${t('You called it! +{xp} XP', { xp: preds.xp })}` : `🙈 ${t('Missed this one.')}`)
+      : closed ? t('Voting closed — results soon.') : `${tn(total, '{n} vote', '{n} votes')} · ${t('closes in {time}', { time: inWords(p.closes - Date.now()) })}`;
+    return `<div class="pred${done ? ' done' : ''}">${ask}<div class="pred-opts">${opts}</div><p class="muted small">${foot}</p></div>`;
+  }
+  async function loadPredictions() {
+    const box = $('#predictBody');
+    if (!box) return;
+    try {
+      preds = await auth.api('/api/predictions');
+      box.innerHTML = `
+        <p class="small">${t('Call it before it happens. Right calls earn +{xp} XP, and 5 unlock the 🔮 crystal ball hat.', { xp: preds.xp })}</p>
+        ${preds.record ? `<p class="muted small">${t('Your calls: {r} right out of {n}', { r: preds.record.right, n: preds.record.total })}</p>` : ''}
+        ${preds.open.length ? preds.open.map((p) => predHTML(p)).join('') : `<p class="muted small">${t('No open predictions right now — new ones pop daily.')}</p>`}
+        ${preds.resolved.length ? `<h4 class="mini-title">${t('Recently settled')}</h4>${preds.resolved.slice(0, 4).map((p) => predHTML(p, true)).join('')}` : ''}
+        ${!auth.user ? `<button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to make predictions')}</button>` : ''}`;
+    } catch { box.innerHTML = `<p class="muted small">${t('Predictions are napping — back soon. 😴')}</p>`; }
+  }
+  $('#predictWidget')?.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const s = el?.closest('[data-pstory]');
+    if (s) {
+      const p = [...(preds?.open || []), ...(preds?.resolved || [])].find((x) => String(x.id) === s.dataset.pstory);
+      if (p?.storyKey) openStory?.({ key: p.storyKey, title: p.question, url: p.data.url, source: 'Hacker News' });
+      return;
+    }
+    const v = el?.closest('[data-pvote]');
+    if (!v || v.disabled) return;
+    const [id, choice] = v.dataset.pvote.split(':').map(Number);
+    try {
+      preds = await auth.api('/api/predictions/vote', { method: 'POST', body: { id, choice } });
+      burstFrom(v, { emojis: ['🔮', '✨'], count: 8 });
+      sfx.blip();
+      loadPredictions();
+    } catch (err) { toast(tServer(err.message), { emoji: '🔮' }); }
+  });
+
+  // ---------------- Play tab cards ----------------
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el.closest('[data-duel-pick]')) openPicker();
+    const od = el.closest('[data-open-duel]');
+    if (od) openDuel(Number(od.dataset.openDuel));
+    if (el.closest('[data-live-open]')) openLive();
+  });
+
+  ['#liveWidget', '#duelWidget', '#predictWidget'].forEach((s) => { const w = $(s); if (w) w.hidden = false; });
+  fetchLive().then(paintLiveWidget).catch(() => { $('#liveBody').innerHTML = `<p class="muted small">${t('kerNEl Live is napping — back soon. 😴')}</p>`; }).finally(scheduleWidget);
+  loadDuels();
+  loadPredictions();
+  const refresh = () => { loadDuels(); loadPredictions(); fetchLive().then(paintLiveWidget).catch(() => {}); };
+  auth.addEventListener('signin', refresh);
+  auth.addEventListener('signout', refresh);
+  setInterval(() => { if (!document.hidden) { loadDuels(); loadPredictions(); } }, 2 * 60_000);
+
+  return { openDuel, challenge, openLive, openPicker, refresh };
+}
+
+// ====================================================================================
+// 🏅 the season board (used by the leaderboard card on the Me tab)
+// ====================================================================================
+async function seasonBoardHTML() {
+  const r = await auth.api('/api/leaderboard?season=1');
+  const medal = ['🥇', '🥈', '🥉'];
+  const month = fmtDate(Date.parse(`${r.season}-01T12:00:00Z`), { month: 'long', year: 'numeric' });
+  const rows = r.top.length
+    ? r.top.slice(0, 10).map((u) => `<li class="${auth.user && u.username === auth.user.username ? 'me' : ''}" data-user="${esc(u.username)}">
+        <span class="b-place">${medal[u.place - 1] || u.place}</span><span class="b-ava">${lookHTML(u)}</span>
+        <span class="b-name"><b dir="auto">${esc(u.nickname)}</b><small>@${esc(u.username)}${u.streak > 1 ? ` · 🔥${u.streak}` : ''}</small></span>
+        <span class="b-xp">${u.xp}<small>XP</small></span></li>`).join('')
+    : `<li class="muted small">${t('Nobody yet this season — your chance to grab #1! 🍿')}</li>`;
+  const me = !auth.user ? '' : r.me?.place ? t('You’re <b>#{place}</b> this season with {xp} XP.', { place: r.me.place, xp: r.me.xp }) : t('Earn XP this month to join the season.');
+  return {
+    rows,
+    me: `${me} <span class="season-note">${t('Season {month} · ends in {time} · prizes: 🥇{a} 🥈{b} 🥉{c} XP', { month, time: inWords(r.endsAt - Date.now()), a: r.prizes[0], b: r.prizes[1], c: r.prizes[2] })}</span>`,
+  };
+}
+
+/** Season medals on a profile card. */
+const seasonMedalsHTML = (list) => (list?.length ? `<p class="uc-seasons">${list.slice(0, 6).map((s) => `<span title="${esc(fmtDate(Date.parse(`${s.season}-01T12:00:00Z`), { month: 'long', year: 'numeric' }))}">${['🥇', '🥈', '🥉'][s.place - 1] || '🏅'} ${esc(fmtDate(Date.parse(`${s.season}-01T12:00:00Z`), { month: 'short', year: 'numeric' }))}</span>`).join('')}</p>` : '');
+
+return { initArena, seasonBoardHTML, seasonMedalsHTML };
+})();
+
 // ===== community.js =====
 __m["community"] = (() => {
 // kerNEl community on the website: chat rooms, the daily Hot Take poll and profile cards.
@@ -5559,6 +6466,7 @@ const { sfx, burstFrom } = __m["fun"];
 const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML } = __m["look"];
 const { initDM, mountPeopleSearch, activeText } = __m["dm"];
+const { seasonMedalsHTML } = __m["arena"];
 
 const REACTS = ['🔥', '😂', '🤯', '👍', '❤️'];
 const DEFAULT_ROOMS = [ // shown instantly, before the server answers
@@ -5569,7 +6477,7 @@ const DEFAULT_ROOMS = [ // shown instantly, before the server answers
 const OPEN_MS = 3000;    // refresh while the chat is open
 const CLOSED_MS = 45000; // light check for new messages while it's closed
 
-function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle, openStory, onDM }) {
+function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitle, openStory, onDM, openDuel, challenge }) {
   const drawer = $('#chatDrawer');
   if (!auth.ready) { // community features need the kerNEl server
     drawer.remove();
@@ -5590,7 +6498,7 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
   let dmCount = 0;
   let mode = store.get('chat:mode', 'rooms') === 'dms' ? 'dms' : 'rooms';
   let lastSeen = store.get('chat:seen', 0);
-  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, onBadge: (n) => { dmCount = n; paintDot(); } });
+  const dm = initDM({ pane: $('#dmPane'), openAuth, openStory, onSent: onDM, openDuel, challenge, onBadge: (n) => { dmCount = n; paintDot(); } });
 
   function setMode(m) {
     mode = m;
@@ -5873,6 +6781,7 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
           <span><b>${u.following ?? 0}</b>${t('following')}</span>
           <span><b>${u.messages}</b>${t('chats')}</span>
         </div>
+        ${seasonMedalsHTML(u.seasons)}
         ${trophies.length ? `<p class="uc-trophies" title="${esc(t('Real or Fake? tournament trophies'))}">${trophies.slice(0, 12).map((x) => `<span title="${esc(t('Week of {date}', { date: fmtDate(Date.parse(x.week)) }))}">${PLACE[x.place - 1] || '🏆'}</span>`).join('')} <small>${tn(trophies.length, '{n} trophy', '{n} trophies')}</small></p>` : ''}
         ${badges.length ? `<p class="uc-badges" aria-label="${t('Achievements')}">${badges.map((b) => `<span title="${esc(t(b.name))}">${b.emoji}</span>`).join('')}</p>` : `<p class="muted small">${t('No achievements yet — still warming up 🌽')}</p>`}
         ${u.topics.length ? `<p class="uc-topics">${u.topics.map((x) => `<span class="chip chip-cat" style="--cat-h:${catById(x).hue}">${catById(x).emoji} ${esc(t(catById(x).label))}</span>`).join(' ')}</p>` : ''}
@@ -5880,7 +6789,7 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
         ${u.blocked ? `<p class="uc-blocked">🚫 ${t('You blocked @{name}.', { name: esc(u.username) })}</p>` : ''}
         <div class="uc-actions">
           ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn ${u.isFollowing ? 'btn-ghost' : 'btn-primary'}" data-follow="${esc(u.username)}" data-on="${u.isFollowing ? 1 : 0}">${u.isFollowing ? t('✓ Following') : u.followsYou ? t('➕ Follow back') : t('➕ Follow')}</button>` : ''}
-          ${auth.user && !u.me && u.canMessage ? `<button type="button" class="btn btn-ghost" data-message="${esc(u.username)}">✉️ ${t('Message')}</button>` : ''}
+          ${auth.user && !u.me && u.canMessage ? `<button type="button" class="btn btn-ghost" data-message="${esc(u.username)}">✉️ ${t('Message')}</button><button type="button" class="btn btn-ghost" data-duel-user="${esc(u.username)}">⚔️ ${t('Duel')}</button>` : ''}
           ${!auth.user ? `<button type="button" class="btn btn-primary" data-action="signup">${t('➕ Sign up to follow')}</button>` : ''}
           ${auth.user && !u.me && !u.blocked ? `<button type="button" class="btn btn-ghost" data-mention="${esc(u.username)}">💬 ${t('Mention in chat')}</button>` : ''}
           ${u.me ? `<button type="button" class="btn btn-ghost" data-action="edit-profile">✏️ ${t('Edit profile')}</button>` : ''}
@@ -5905,6 +6814,8 @@ function initCommunity({ openAuth, onSent, onVote, onFollow, badgeInfo, rankTitl
       input.focus();
       return;
     }
+    const duelBtn = el?.closest('[data-duel-user]');
+    if (duelBtn) { $('#userCard').close(); challenge?.(duelBtn.dataset.duelUser); return; }
     const msgBtn = el?.closest('[data-message]');
     if (msgBtn) { $('#userCard').close(); openDM(msgBtn.dataset.message); return; }
     if (el?.closest('[data-action="edit-profile"]')) { $('#userCard').close(); return; }
@@ -6145,7 +7056,7 @@ function initNotify({ openAuth, openRoom }) {
     if (auth.user) {
       try {
         const p = await auth.api('/api/notify/prefs');
-        for (const k of ['mentions', 'dms', 'news', 'streak', 'friends']) $(`#notifyDialog [name="${k}"]`).checked = p[k] !== false;
+        for (const k of ['mentions', 'dms', 'games', 'news', 'streak', 'friends']) $(`#notifyDialog [name="${k}"]`).checked = p[k] !== false;
         $('#nsDevices').textContent = p.devices ? tn(p.devices, 'Push is on for {n} device.', 'Push is on for {n} devices.') : '';
       } catch { /* offline */ }
     }
@@ -6215,7 +7126,7 @@ function initNotify({ openAuth, openRoom }) {
     paintInstall();
   });
   $$('#notifyDialog .ns-kinds input').forEach((box) => box.addEventListener('change', () => {
-    const prefs = Object.fromEntries(['mentions', 'dms', 'news', 'streak', 'friends'].map((k) => [k, $(`#notifyDialog [name="${k}"]`).checked]));
+    const prefs = Object.fromEntries(['mentions', 'dms', 'games', 'news', 'streak', 'friends'].map((k) => [k, $(`#notifyDialog [name="${k}"]`).checked]));
     auth.api('/api/notify/prefs', { method: 'PUT', body: { prefs, tz: -new Date().getTimezoneOffset() } }).catch(() => {});
   }));
   $('#notifyDialog').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
@@ -6326,268 +7237,6 @@ function initGame({ getItems, onDone }) {
 }
 
 return { initGame };
-})();
-
-// ===== play.js =====
-__m["play"] = (() => {
-// Games that everyone plays together (questions and answers live on the kerNEl server):
-// 🧠 the Daily Kernel Quiz, 🍿 Popcorn Battles and the 🏆 weekly Real or Fake? tournament.
-const { $, esc, safeUrl, store, toast } = __m["utils"];
-const { catById } = __m["news"];
-const { auth } = __m["auth"];
-const { sfx, burstFrom, rain } = __m["fun"];
-const { t, tn, tServer } = __m["i18n"];
-const { lookHTML } = __m["look"];
-
-const today = () => new Date().toISOString().slice(0, 10);
-const headline = (text) => `<span dir="ltr" lang="en">${esc(text)}</span>`;
-const until = (ts) => {
-  const h = Math.max(0, Math.floor((ts - Date.now()) / 36e5));
-  return h >= 24 ? tn(Math.floor(h / 24), '{n} day', '{n} days') : tn(h, '{n} hour', '{n} hours');
-};
-const boardHTML = (rows, score) => (rows?.length
-  ? `<ol class="mini-board">${rows.slice(0, 5).map((r) => `<li data-user="${esc(r.username)}">${['🥇', '🥈', '🥉'][r.place - 1] || r.place} ${lookHTML(r)} <span dir="auto">${esc(r.nickname)}</span><b>${score(r)}</b></li>`).join('')}</ol>`
-  : `<p class="muted small">${t('Nobody on the board yet — be the first!')}</p>`);
-
-function initPlay({ openAuth, onQuiz, onBattle, onTourney }) {
-  if (!auth.ready) { ['#quizWidget', '#battleWidget', '#tourneyPromo'].forEach((s) => $(s)?.remove()); return null; }
-
-  // ====================================================================================
-  // 🧠 Daily Kernel Quiz
-  // ====================================================================================
-  const qDlg = $('#quizDialog');
-  const qBody = $('#quizBody');
-  let quiz = null;
-  let answers = [];
-  let step = 0;
-
-  function questionHTML(q) {
-    if (q.type === 'missing') return { ask: t('Fill in the missing word:'), lead: q.headline, opts: q.options.map((o) => headline(o)) };
-    if (q.type === 'category') return { ask: t('Which kerNEl section is this story in?'), lead: q.headline, opts: q.options.map((id) => `${catById(id).emoji} ${esc(t(catById(id).label))}`) };
-    if (q.type === 'source') return { ask: t('Who published this headline?'), lead: q.headline, opts: q.options.map((o) => esc(o)) };
-    if (q.type === 'hotter') return { ask: t('Which story got more upvotes?'), lead: null, opts: q.options.map((o) => headline(o)) };
-    return { ask: t('Three are real headlines from today. Which one did codme make up? 🤡'), lead: null, opts: q.options.map((o) => headline(o)) };
-  }
-
-  function showQuestion() {
-    const q = quiz.questions[step];
-    const v = questionHTML(q);
-    qBody.innerHTML = `
-      <div class="quiz-progress">${quiz.questions.map((_, i) => `<i class="${i < step ? 'done' : ''}"></i>`).join('')}</div>
-      <p class="quiz-q">${t('Question {i} of {n}', { i: step + 1, n: quiz.questions.length })} · ${v.ask}</p>
-      ${v.lead ? `<p class="quiz-headline">${headline(v.lead)}</p>` : ''}
-      <div class="quiz-opts">${v.opts.map((o, i) => `<button type="button" class="quiz-opt" data-a="${i}">${o}</button>`).join('')}</div>`;
-    qBody.querySelector('.quiz-opt')?.focus();
-  }
-
-  function resultHTML(r) {
-    const perfect = r.score === r.total;
-    const review = quiz.questions.map((q, i) => {
-      const right = r.answers?.[i] === r.correct[i];
-      const v = questionHTML(q);
-      return `<li>${right ? '✅' : '❌'} ${v.ask} <b>${v.opts[r.correct[i]]}</b></li>`;
-    }).join('');
-    return `<div class="game-end"><span class="game-big">${perfect ? '🧠' : r.score >= 3 ? '🍿' : '🌽'}</span>
-      <h3>${r.score} / ${r.total} ${perfect ? t('— big brain!') : r.score >= 3 ? t('— nice popping!') : t('— the news got you today!')}</h3>
-      ${r.already ? `<p class="muted small">${t('You already played today — here’s your score.')}</p>` : ''}
-      ${!auth.user ? `<p class="small"><button type="button" class="linkish" data-action="signup">${t('Sign up')}</button> ${t('to get on the daily board.')}</p>` : ''}
-      <ul class="quiz-review">${review}</ul>
-      <h4>${t('Today’s quiz board')}</h4>${boardHTML(r.board, (b) => `${b.score}/${r.total}`)}
-      <p class="muted small">${t('A new quiz pops every day at midnight (UTC).')}</p></div>`;
-  }
-
-  async function finish() {
-    qBody.innerHTML = `<div class="auth-mascot spin">🍿</div><p class="muted">${t('Checking your answers…')}</p>`;
-    try {
-      const r = await auth.api('/api/quiz', { method: 'POST', body: { answers } });
-      qBody.innerHTML = resultHTML(r);
-      if (r.score === r.total) { rain(['🧠', '🍿', '✨'], 40); sfx.win(); } else sfx.ding();
-      const guestDone = !auth.user && store.get('quiz:guestDay', '') === today();
-      if (!r.already && !guestDone) { store.set('quiz:guestDay', today()); onQuiz?.(r.score, r.total); }
-      renderSide({ ...r, played: true });
-    } catch (e) { qBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
-  }
-
-  async function openQuiz() {
-    if (!qDlg.open) qDlg.showModal();
-    qBody.innerHTML = `<div class="auth-mascot spin">🍿</div><p class="muted">${t('Popping today’s questions…')}</p>`;
-    try {
-      quiz = await auth.api('/api/quiz');
-      answers = [];
-      step = 0;
-      if (quiz.played) { qBody.innerHTML = resultHTML({ ...quiz.played, total: quiz.total, already: true, board: quiz.board }); return; }
-      qBody.innerHTML = `<div class="game-end"><span class="game-big">🧠</span>
-        <h3>${t('{n} questions from today’s headlines', { n: quiz.questions.length })}</h3>
-        <p>${t('One go per day — no peeking at the feed! 👀 Fast answers win ties on the board.')}</p>
-        <button type="button" class="btn btn-primary btn-big" data-quiz="go">${t('Let’s go! 🚀')}</button></div>`;
-      sfx.pop();
-    } catch (e) { qBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
-  }
-
-  qBody.addEventListener('click', (e) => {
-    const el = e.target instanceof Element ? e.target : null;
-    if (!el) return;
-    if (el.closest('[data-quiz="go"]')) { showQuestion(); return; }
-    const a = el.closest('[data-a]');
-    if (!a || a.disabled) return;
-    answers[step] = Number(a.dataset.a);
-    qBody.querySelectorAll('.quiz-opt').forEach((b) => { b.disabled = true; });
-    a.classList.add('picked');
-    burstFrom(a, { emojis: ['🍿', '✨'], count: 6, spread: 50 });
-    sfx.blip();
-    setTimeout(() => { step++; if (step < quiz.questions.length) showQuestion(); else finish(); }, 350);
-  });
-  qDlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) qDlg.close(); });
-
-  function renderSide(state) {
-    const box = $('#quizSide');
-    const played = state?.played;
-    box.innerHTML = `
-      <p class="small">${played ? t('You scored <b>{s}/{n}</b> today. Come back tomorrow for a fresh one!', { s: played.score ?? state.score, n: state.total }) : t('5 quick questions made from today’s headlines. How closely were you reading? 🤔')}</p>
-      <button type="button" class="btn ${played ? 'btn-ghost' : 'btn-primary'} btn-block" data-action="quiz">${played ? t('See my answers') : t('Play today’s quiz (+XP)')}</button>
-      ${boardHTML(state?.board, (b) => `${b.score}/${state.total}`)}`;
-  }
-  async function loadSide() {
-    try {
-      const q = await auth.api('/api/quiz');
-      $('#quizWidget').hidden = false;
-      renderSide({ played: q.played, total: q.total, board: q.board });
-    } catch { $('#quizWidget').hidden = true; }
-  }
-
-  // ====================================================================================
-  // 🍿 Popcorn Battle
-  // ====================================================================================
-  async function loadBattle() {
-    const box = $('#battleBody');
-    try {
-      const b = await auth.api('/api/battle');
-      $('#battleWidget').hidden = false;
-      const total = b.votes.a + b.votes.b;
-      const voted = !!b.mine;
-      const side = (k) => {
-        const s = b[k];
-        const pct = total ? Math.round((b.votes[k] / total) * 100) : 0;
-        const leading = total && b.votes[k] > b.votes[k === 'a' ? 'b' : 'a'];
-        return `<div class="battle-side${b.mine === k ? ' mine' : ''}${voted && leading ? ' win' : ''}">
-          <small>${catById(s.cat).emoji} ${esc(s.source || '')}</small>
-          <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer" dir="ltr" lang="en">${esc(s.title)}</a>
-          ${voted || !auth.user ? `<div class="battle-bar"><i style="width:${pct}%"></i></div><small>${pct}% · ${tn(b.votes[k], '{n} vote', '{n} votes')}</small>` : ''}
-          ${auth.user && !voted ? `<button type="button" class="btn btn-primary btn-sm" data-battle="${k}">${t('This one! 🍿')}</button>` : ''}
-          ${b.mine === k ? `<small>✓ ${t('your pick')}</small>` : ''}
-        </div>`;
-      };
-      box.innerHTML = `<p class="muted small">${t('Two of today’s hottest stories. Which one matters more? Winner becomes tomorrow’s Story of the Day.')}</p>
-        <div class="battle">${side('a')}<span class="battle-vs">VS</span>${side('b')}</div>
-        <p class="muted small">⏳ ${t('Voting closes in {time}', { time: until(b.endsAt) })}${!auth.user ? ` · <button type="button" class="linkish" data-action="signin">${t('Sign in')}</button> ${t('to vote')}` : ''}</p>
-        ${b.champion ? `<div class="champion">🏆 <b>${t('Story of the Day')}</b> <small>(${t('{n}% of {total} votes yesterday', { n: Math.round((b.champion.votes / b.champion.total) * 100), total: b.champion.total })})</small><br><a href="${esc(safeUrl(b.champion.story.url))}" target="_blank" rel="noopener noreferrer" dir="ltr" lang="en">${esc(b.champion.story.title)}</a></div>` : ''}`;
-    } catch { $('#battleWidget').hidden = true; }
-  }
-  $('#battleBody').addEventListener('click', async (e) => {
-    const btn = e.target instanceof Element && e.target.closest('[data-battle]');
-    if (!btn) return;
-    btn.disabled = true;
-    try {
-      const r = await auth.api('/api/battle', { method: 'POST', body: { pick: btn.dataset.battle } });
-      burstFrom(btn, { emojis: ['🍿', '🔥', '🥊'], count: 14 });
-      sfx.ding();
-      if (r.firstVote) onBattle?.();
-      loadBattle();
-    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); btn.disabled = false; }
-  });
-
-  // ====================================================================================
-  // 🏆 Weekly Real or Fake? tournament
-  // ====================================================================================
-  const tDlg = $('#tourneyDialog');
-  const tBody = $('#tourneyBody');
-  let tour = null;
-  let picks = {};
-
-  const podium = (list) => (list?.length ? `<div class="podium">${list.map((w) => `<span data-user="${esc(w.username)}">${['🥇', '🥈', '🥉'][w.place - 1]}${lookHTML(w)}<small dir="auto">${esc(w.nickname)}</small></span>`).join('')}</div>` : '');
-
-  function tourneyResult(r) {
-    const reveal = new Map(r.reveal.map((x) => [x.id, x]));
-    return `<div class="game-end"><span class="game-big">${r.score === r.total ? '🏆' : '🕵️'}</span>
-      <h3>${r.score} / ${r.total}</h3>
-      ${r.already ? `<p class="muted small">${t('You already played this week’s tournament.')}</p>` : `<p class="muted small">${t('Locked in! The top 3 on Monday win trophies. 🏆')}</p>`}
-      <ul class="tourney-list">${tour.items.map((it) => {
-        const x = reveal.get(it.id);
-        const mine = r.answers?.[it.id];
-        const right = mine && (mine === 'real') === x.real;
-        return `<li class="${right ? 'right' : 'wrong'}"><span class="t-title" dir="ltr" lang="en">${esc(it.title)}</span><span>${x.real ? (x.story ? `<a href="${esc(safeUrl(x.story.url))}" target="_blank" rel="noopener noreferrer">✅ ${t('Real')}</a>` : `✅ ${t('Real')}`) : `🤡 ${t('Fake')}`}</span></li>`;
-      }).join('')}</ul>
-      <h4>${t('This week’s board')}</h4>${boardHTML(r.board, (b) => `${b.score}/${r.total}`)}</div>`;
-  }
-
-  function tourneyForm() {
-    const done = tour.items.every((it) => picks[it.id]);
-    tBody.innerHTML = `<p>${t('{n} headlines. Some are real stories from this week, some are fakes invented by codme. One go only — choose wisely!', { n: tour.items.length })}</p>
-      <p class="muted small">⏳ ${t('Ends in {time}', { time: until(tour.endsAt) })}</p>
-      <ul class="tourney-list">${tour.items.map((it) => `<li><span class="t-title" dir="ltr" lang="en">${esc(it.title)}</span><span class="t-pick">
-        <button type="button" data-pick="${it.id}:real" aria-pressed="${picks[it.id] === 'real'}" title="${t('Real')}">✅</button>
-        <button type="button" data-pick="${it.id}:fake" aria-pressed="${picks[it.id] === 'fake'}" title="${t('Fake')}">🤡</button></span></li>`).join('')}</ul>
-      <button type="button" class="btn btn-primary btn-big btn-block" data-tourney="submit" ${done ? '' : 'disabled'}>${done ? t('Lock in my answers 🔒') : t('Pick ✅ or 🤡 for every headline')}</button>`;
-  }
-
-  async function openTourney() {
-    if (!auth.user) { toast(t('Sign in to enter the tournament and win trophies! 🏆'), { emoji: '🏆' }); openAuth('signin'); return; }
-    if (!tDlg.open) tDlg.showModal();
-    tBody.innerHTML = `<div class="auth-mascot spin">🍿</div>`;
-    try {
-      tour = await auth.api('/api/tournament');
-      picks = {};
-      const last = tour.lastWinners?.length ? `<p class="small"><b>${t('Last week’s champions')}</b></p>${podium(tour.lastWinners)}` : '';
-      if (tour.played) { tBody.innerHTML = last + tourneyResult({ ...tour.played, total: tour.total, already: true, board: tour.board }); return; }
-      tourneyForm();
-      tBody.insertAdjacentHTML('afterbegin', last);
-    } catch (e) { tBody.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
-  }
-
-  tBody.addEventListener('click', async (e) => {
-    const el = e.target instanceof Element ? e.target : null;
-    const p = el?.closest('[data-pick]');
-    if (p) {
-      const [id, v] = p.dataset.pick.split(':');
-      picks[id] = v;
-      const keep = tBody.querySelector('.podium')?.outerHTML || '';
-      tourneyForm();
-      if (keep) tBody.insertAdjacentHTML('afterbegin', keep);
-      sfx.blip();
-      return;
-    }
-    if (el?.closest('[data-tourney="submit"]')) {
-      try {
-        const r = await auth.api('/api/tournament', { method: 'POST', body: { answers: picks } });
-        tBody.innerHTML = tourneyResult(r);
-        if (r.score === r.total) rain(['🏆', '🕵️', '✨'], 40);
-        sfx.win();
-        if (!r.already) onTourney?.(r.score, r.total);
-        loadPromo();
-      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
-    }
-  });
-  tDlg.addEventListener('click', (e) => { if (e.target === e.currentTarget) tDlg.close(); });
-
-  async function loadPromo() {
-    const promo = $('#tourneyPromo');
-    promo.hidden = false;
-    if (!auth.user) { $('#tourneyLine').textContent = t('8 headlines, one go each. The top 3 win trophies!'); return; }
-    try {
-      const r = await auth.api('/api/tournament');
-      $('#tourneyLine').textContent = r.played ? t('You scored {s}/{n} this week. Results on Monday! 🏆', { s: r.played.score, n: r.total }) : t('This week’s 8 headlines are waiting. Ends in {time}.', { time: until(r.endsAt) });
-    } catch { /* keep the default line */ }
-  }
-
-  const refresh = () => { loadSide(); loadBattle(); loadPromo(); };
-  refresh();
-  auth.addEventListener('signin', refresh);
-  auth.addEventListener('signout', refresh);
-  setInterval(() => { if (!document.hidden) loadBattle(); }, 5 * 60_000);
-  return { openQuiz, openTourney, refresh };
-}
-
-return { initPlay };
 })();
 
 // ===== social.js =====
@@ -7325,10 +7974,10 @@ __m["mod"] = (() => {
 // 🛡️ Moderator tools (only for usernames in the server's ADMINS setting): reports, people, and a log.
 const { $, esc, timeAgo, toast } = __m["utils"];
 const { auth } = __m["auth"];
-const { t, tServer, fmtDate } = __m["i18n"];
+const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML, photoUrl } = __m["look"];
 
-const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['log', '📜', 'Log']];
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['log', '📜', 'Log']];
 
 function initMod() {
   const dlg = document.createElement('dialog');
@@ -7436,6 +8085,25 @@ function initMod() {
     box.dataset.username = u.username;
   }
 
+  async function predict() {
+    loading();
+    try {
+      const r = await api('/api/predictions');
+      const mine = r.open.filter((p) => p.kind === 'mod');
+      pane.innerHTML = `<form class="mod-predict" data-modpredict>
+          <label class="field"><span>${t('Question')}</span><input name="q" maxlength="160" placeholder="${esc(t('e.g. Which phone sells best this month?'))}" required></label>
+          <label class="field"><span>${t('Answers (one per line, 2 to 4)')}</span><textarea name="o" rows="3" required>Yes\nNo</textarea></label>
+          <label class="field"><span>${t('Voting closes in')}</span><select name="h"><option value="24">${t('1 day')}</option><option value="72" selected>${t('3 days')}</option><option value="168">${t('1 week')}</option><option value="720">${t('1 month')}</option></select></label>
+          <button class="btn btn-primary">🔮 ${t('Post prediction')}</button>
+        </form>
+        <h3 class="mini-title">${t('Your open predictions')} <small>${mine.length}</small></h3>
+        ${mine.length ? mine.map((p) => `<div class="mod-item"><p class="mod-text" dir="auto">${esc(p.question)}</p>
+          <p class="muted small">${tn(p.total, '{n} vote', '{n} votes')} · ${t('closes {when}', { when: when(p.closes) })}</p>
+          <div class="mod-actions">${t('The answer was:')} ${p.options.map((o, i) => `<button type="button" class="btn btn-sm btn-ghost" data-resolve="${p.id}:${i}">${esc(o)} <small>(${p.counts[i]})</small></button>`).join('')}</div></div>`).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}
+        <p class="muted small">${t('Automatic “will it reach N upvotes?” predictions settle themselves.')}</p>`;
+    } catch (e) { fail(e); }
+  }
+
   async function log() {
     loading();
     try {
@@ -7449,10 +8117,21 @@ function initMod() {
   const show = (name) => {
     tab = name;
     dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
-    ({ overview, reports, people, log })[name]();
+    ({ overview, reports, people, predict, log })[name]();
   };
 
-  dlg.addEventListener('submit', (e) => {
+  dlg.addEventListener('submit', async (e) => {
+    const pf = e.target.closest('[data-modpredict]');
+    if (pf) {
+      e.preventDefault();
+      const options = pf.elements.o.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      try {
+        await api('/api/mod/predictions', { question: pf.elements.q.value, options, hours: Number(pf.elements.h.value) });
+        toast(t('Prediction posted! 🔮'), { emoji: '🔮' });
+        predict();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const f = e.target.closest('[data-modsearch]');
     if (!f) return;
     e.preventDefault();
@@ -7468,6 +8147,13 @@ function initMod() {
     const lk = el.closest('[data-lookup]');
     if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
     const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    const rs = el.closest('[data-resolve]');
+    if (rs) {
+      const [id, answer] = rs.dataset.resolve.split(':').map(Number);
+      if (!confirm(t('Settle this prediction? Everyone who picked that answer gets XP.'))) return;
+      try { const r = await api('/api/mod/predictions/resolve', { id, answer }); toast(tn(r.winners, '{n} kernel called it!', '{n} kernels called it!'), { emoji: '🔮' }); predict(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     try {
       const c = el.closest('[data-content]');
       if (c) {
@@ -7828,6 +8514,7 @@ const { initTabs, initGlass } = __m["tabs"];
 const { initReader } = __m["reader"];
 const { pickPhoto } = __m["photo"];
 const { initMod } = __m["mod"];
+const { initArena, seasonBoardHTML } = __m["arena"];
 const { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } = __m["invite"];
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -7866,6 +8553,7 @@ let extras = null;
 let reader = null;
 let tabs = null;
 let mod = null;
+let arena = null;
 let invites = null;
 
 // ====================================================================================
@@ -7973,8 +8661,13 @@ const ACHIEVEMENTS = [
   { id: 'podcast_pal', emoji: '🎧', name: 'Podcast Pal', desc: 'Listen to a daily briefing', test: (d) => (d.counts?.briefings || 0) >= 1 },
   { id: 'swipe_lord', emoji: '📱', name: 'Swipe Lord', desc: 'Swipe through 30 stories', test: (d) => (d.counts?.swipes || 0) >= 30 },
   { id: 'time_traveler', emoji: '📼', name: 'Time Traveler', desc: 'Visit 5 years in the Time Machine', test: (d) => (d.counts?.timeTravels || 0) >= 5 },
+  { id: 'duelist', emoji: '⚔️', name: 'Duelist', desc: 'Win a Quiz Duel', test: () => (serverStats().duelsWon || 0) >= 1 },
+  { id: 'survivor', emoji: '🎤', name: 'Last One Standing', desc: 'Win a kerNEl Live show', test: () => (serverStats().liveWins || 0) >= 1 },
+  { id: 'oracle', emoji: '🔮', name: 'Called It', desc: 'Get a prediction right', test: () => (serverStats().prophet || 0) >= 1 },
   { id: 'polyglot', emoji: '🌐', name: 'Polyglot', desc: 'Read kerNEl in another language', test: (d) => (d.counts?.langs || 0) >= 1 || lang !== 'en' },
 ];
+
+function serverStats() { return auth.user ? store.get(`stats:${auth.profileKey()}`, {}) : {}; }
 
 function checkAchievements(extra = {}) {
   const d = getData();
@@ -8013,6 +8706,16 @@ async function loadLeaderboard() {
   box.hidden = false;
   clearTimeout(boardTimer);
   boardTimer = setTimeout(loadLeaderboard, 5 * 60_000);
+  const season = store.get('board', 'all') === 'season';
+  $$('[data-board]').forEach((b) => b.setAttribute('aria-selected', String((b.dataset.board === 'season') === season)));
+  if (season) {
+    try {
+      const s = await seasonBoardHTML();
+      $('#boardList').innerHTML = s.rows;
+      $('#boardMe').innerHTML = s.me;
+    } catch { $('#boardList').innerHTML = `<li class="muted small">${t('Leaderboard is napping — back soon. 😴')}</li>`; }
+    return;
+  }
   try {
     const { top, me } = await auth.leaderboard();
     const medal = ['🥇', '🥈', '🥉'];
@@ -8060,6 +8763,7 @@ function collectRewards(u) {
   if (!u || !auth.user) return;
   store.set(`stats:${auth.profileKey()}`, u.stats || {});
   store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
+  checkAchievements();
   if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); }
   if (u.pendingXp > 0) {
     auth.api('/api/me/claim', { method: 'POST' }).then((r) => {
@@ -8949,6 +9653,9 @@ function openDeepLink() {
   } else if (h.startsWith('user=')) community?.showProfile(h.slice(5));
   else if (h.startsWith('@')) community?.showProfile(h.slice(1));
   else if (h.startsWith('dm=')) community?.openDM(h.slice(3));
+  else if (h.startsWith('duel=')) arena?.openDuel(Number(h.slice(5)));
+  else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
+  else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
 
 function boot() {
@@ -8993,6 +9700,8 @@ function boot() {
     rankTitle: (xp) => rankFor(xp).title,
     openStory: (s) => reader?.open(findItem(s.key) || s),
     onDM: () => { bump('dms'); addXp(2); },
+    openDuel: (id) => arena?.openDuel(id),
+    challenge: (username, person) => arena?.challenge(username, person),
   });
 
   play = initPlay({
@@ -9038,6 +9747,7 @@ function boot() {
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
   invites = initInvites();
   catchInvite(openAuth);
+  arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
     onDone: (score, total) => {
@@ -9310,6 +10020,14 @@ function boot() {
     toast(t('Name tag updated — looking sharp!'), { emoji: '🏷️' });
     burst(window.innerWidth / 2, window.innerHeight / 2, { count: 18 });
     sfx.ding();
+  });
+
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-board]');
+    if (!b) return;
+    store.set('board', b.dataset.board);
+    loadLeaderboard();
+    sfx.blip();
   });
 
   // ---- keyboard shortcuts ----

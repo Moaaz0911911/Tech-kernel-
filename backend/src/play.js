@@ -14,19 +14,19 @@ const dayBefore = (day) => new Date(Date.parse(`${day}T00:00:00Z`) - 864e5).toIS
 const SOURCE_NAMES = ['Hacker News', 'DEV Community', 'The Verge', 'TechCrunch', 'Ars Technica', 'Engadget', 'Wired'];
 const STOP = new Set('the and for with from that this your how why what new are was will you into over about after just more than have has its their they them our out can get now all one two use using via'.split(' '));
 
-async function kvGet(env, k) { const r = await env.DB.prepare('SELECT v FROM kv WHERE k = ?').bind(k).first(); return r ? parse(r.v, null) : null; }
+export async function kvGet(env, k) { const r = await env.DB.prepare('SELECT v FROM kv WHERE k = ?').bind(k).first(); return r ? parse(r.v, null) : null; }
 /** Store once: if someone else made it first, theirs wins (so everyone sees the same game). */
-async function kvOnce(env, k, value) {
+export async function kvOnce(env, k, value) {
   await env.DB.prepare('INSERT OR IGNORE INTO kv (k, v) VALUES (?, ?)').bind(k, JSON.stringify(value)).run();
   return kvGet(env, k);
 }
-async function recentStories(env, hours = 36, limit = 300) {
+export async function recentStories(env, hours = 36, limit = 300) {
   let { results } = await env.DB.prepare('SELECT * FROM stories WHERE time > ? ORDER BY points DESC LIMIT ?').bind(Date.now() - hours * 3600_000, limit).all();
   if (results.length < 12) ({ results } = await env.DB.prepare('SELECT * FROM stories ORDER BY time DESC LIMIT ?').bind(limit).all());
   return results.map(rowToStory).filter((s) => s.title && s.title.length >= 20 && s.title.length <= 140 && !GIVEAWAY.test(s.title));
 }
-const snap = (s) => ({ key: s.key, title: s.title, url: s.url, source: s.source, cat: s.cat, image: s.image || null, domain: s.domain, points: s.points || 0, comments: s.comments || 0, time: s.time });
-const people = async (env, ids) => {
+export const snap = (s) => ({ key: s.key, title: s.title, url: s.url, source: s.source, cat: s.cat, image: s.image || null, domain: s.domain, points: s.points || 0, comments: s.comments || 0, time: s.time });
+export const people = async (env, ids) => {
   if (!ids.length) return {};
   const { results } = await env.DB.prepare(`SELECT id, username, profile FROM users WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
   return Object.fromEntries(results.map((r) => { const p = parse(r.profile, {}); return [r.id, { username: r.username, nickname: p.nickname || r.username, ...look(p) }]; }));
@@ -35,7 +35,7 @@ const people = async (env, ids) => {
 // ====================================================================================
 // 🧠 Daily Kernel Quiz: 5 questions made from today's headlines
 // ====================================================================================
-function makeQuiz(stories, day) {
+export function makeQuiz(stories, day) {
   const rand = seeded(`quiz:${day}`);
   const pool = shuffle(stories, rand);
   const used = new Set();
@@ -83,7 +83,22 @@ function makeQuiz(stories, day) {
   return { day, questions: questions.slice(0, 5) };
 }
 
-const publicQuestion = ({ answer, story, stories, ...q }) => q;
+export const publicQuestion = ({ answer, story, stories, ...q }) => q;
+
+/** n questions (a few quiz rounds, never the same story twice), for duels and live shows. */
+export function makeQuestions(stories, seed, n) {
+  const out = [];
+  const used = new Set();
+  for (let round = 0; out.length < n && round < 6; round++) {
+    const pool = stories.filter((s) => !used.has(s.key));
+    if (pool.length < 8) break;
+    for (const q of makeQuiz(pool, `${seed}:${round}`).questions) {
+      out.push(q);
+      for (const s of [q.story, ...(q.stories || [])].filter(Boolean)) used.add(s.key);
+    }
+  }
+  return out.slice(0, n);
+}
 
 export async function getQuiz(env, user) {
   const day = today();

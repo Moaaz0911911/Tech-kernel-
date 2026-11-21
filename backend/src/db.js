@@ -18,6 +18,10 @@ const MIGRATIONS = [
   'ALTER TABLE users ADD COLUMN banned_until INTEGER',
   'ALTER TABLE users ADD COLUMN invited_by TEXT',
   'ALTER TABLE dm_reports ADD COLUMN evidence TEXT',
+  'ALTER TABLE users ADD COLUMN season TEXT',
+  'ALTER TABLE users ADD COLUMN season_xp INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE notify_prefs ADD COLUMN games INTEGER NOT NULL DEFAULT 1',
+  'ALTER TABLE dm_messages ADD COLUMN duel INTEGER',
 ];
 
 export class KernelDB extends DurableObject {

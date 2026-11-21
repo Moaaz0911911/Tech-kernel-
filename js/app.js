@@ -20,6 +20,7 @@ import { initTabs, initGlass } from './tabs.js';
 import { initReader } from './reader.js';
 import { pickPhoto } from './photo.js';
 import { initMod } from './mod.js';
+import { initArena, seasonBoardHTML } from './arena.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -58,6 +59,7 @@ let extras = null;
 let reader = null;
 let tabs = null;
 let mod = null;
+let arena = null;
 let invites = null;
 
 // ====================================================================================
@@ -165,8 +167,13 @@ const ACHIEVEMENTS = [
   { id: 'podcast_pal', emoji: '🎧', name: 'Podcast Pal', desc: 'Listen to a daily briefing', test: (d) => (d.counts?.briefings || 0) >= 1 },
   { id: 'swipe_lord', emoji: '📱', name: 'Swipe Lord', desc: 'Swipe through 30 stories', test: (d) => (d.counts?.swipes || 0) >= 30 },
   { id: 'time_traveler', emoji: '📼', name: 'Time Traveler', desc: 'Visit 5 years in the Time Machine', test: (d) => (d.counts?.timeTravels || 0) >= 5 },
+  { id: 'duelist', emoji: '⚔️', name: 'Duelist', desc: 'Win a Quiz Duel', test: () => (serverStats().duelsWon || 0) >= 1 },
+  { id: 'survivor', emoji: '🎤', name: 'Last One Standing', desc: 'Win a kerNEl Live show', test: () => (serverStats().liveWins || 0) >= 1 },
+  { id: 'oracle', emoji: '🔮', name: 'Called It', desc: 'Get a prediction right', test: () => (serverStats().prophet || 0) >= 1 },
   { id: 'polyglot', emoji: '🌐', name: 'Polyglot', desc: 'Read kerNEl in another language', test: (d) => (d.counts?.langs || 0) >= 1 || lang !== 'en' },
 ];
+
+function serverStats() { return auth.user ? store.get(`stats:${auth.profileKey()}`, {}) : {}; }
 
 function checkAchievements(extra = {}) {
   const d = getData();
@@ -205,6 +212,16 @@ async function loadLeaderboard() {
   box.hidden = false;
   clearTimeout(boardTimer);
   boardTimer = setTimeout(loadLeaderboard, 5 * 60_000);
+  const season = store.get('board', 'all') === 'season';
+  $$('[data-board]').forEach((b) => b.setAttribute('aria-selected', String((b.dataset.board === 'season') === season)));
+  if (season) {
+    try {
+      const s = await seasonBoardHTML();
+      $('#boardList').innerHTML = s.rows;
+      $('#boardMe').innerHTML = s.me;
+    } catch { $('#boardList').innerHTML = `<li class="muted small">${t('Leaderboard is napping — back soon. 😴')}</li>`; }
+    return;
+  }
   try {
     const { top, me } = await auth.leaderboard();
     const medal = ['🥇', '🥈', '🥉'];
@@ -252,6 +269,7 @@ function collectRewards(u) {
   if (!u || !auth.user) return;
   store.set(`stats:${auth.profileKey()}`, u.stats || {});
   store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
+  checkAchievements();
   if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); }
   if (u.pendingXp > 0) {
     auth.api('/api/me/claim', { method: 'POST' }).then((r) => {
@@ -1141,6 +1159,9 @@ function openDeepLink() {
   } else if (h.startsWith('user=')) community?.showProfile(h.slice(5));
   else if (h.startsWith('@')) community?.showProfile(h.slice(1));
   else if (h.startsWith('dm=')) community?.openDM(h.slice(3));
+  else if (h.startsWith('duel=')) arena?.openDuel(Number(h.slice(5)));
+  else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
+  else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
 
 function boot() {
@@ -1185,6 +1206,8 @@ function boot() {
     rankTitle: (xp) => rankFor(xp).title,
     openStory: (s) => reader?.open(findItem(s.key) || s),
     onDM: () => { bump('dms'); addXp(2); },
+    openDuel: (id) => arena?.openDuel(id),
+    challenge: (username, person) => arena?.challenge(username, person),
   });
 
   play = initPlay({
@@ -1230,6 +1253,7 @@ function boot() {
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
   invites = initInvites();
   catchInvite(openAuth);
+  arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
     onDone: (score, total) => {
@@ -1502,6 +1526,14 @@ function boot() {
     toast(t('Name tag updated — looking sharp!'), { emoji: '🏷️' });
     burst(window.innerWidth / 2, window.innerHeight / 2, { count: 18 });
     sfx.ding();
+  });
+
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-board]');
+    if (!b) return;
+    store.set('board', b.dataset.board);
+    loadLeaderboard();
+    sfx.blip();
   });
 
   // ---- keyboard shortcuts ----

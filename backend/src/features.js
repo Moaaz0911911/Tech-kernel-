@@ -9,6 +9,10 @@ import {
   searchPeople, setBlock, listBlocked, listThreads, dmCounts, getThread, sendDM, acceptThread, hideThread, reactDM, deleteDM, reportDM,
   setPhoto, removePhoto, photoResponse, reportPhoto,
 } from './people.js';
+import {
+  createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
+  modCreatePrediction, modResolvePrediction,
+} from './arena.js';
 import { requireAdmin, overview, reports, moderateContent, moderateDmReport, moderatePhoto, moderateUser, lookupUser, modLog } from './admin.js';
 
 /** Returns a Response, or null when the path isn't one of these. */
@@ -58,7 +62,45 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     if (path === '/api/mod/dm' && m === 'POST') return json(await moderateDmReport(env, admin, body));
     if (path === '/api/mod/photo' && m === 'POST') return json(await moderatePhoto(env, admin, body));
     if (path === '/api/mod/user' && m === 'POST') return json(await moderateUser(env, admin, body));
+    if (path === '/api/mod/predictions' && m === 'POST') return json(await modCreatePrediction(env, admin, body));
+    if (path === '/api/mod/predictions/resolve' && m === 'POST') return json(await modResolvePrediction(env, admin, body));
     throw new HttpError(404, 'Not found');
+  }
+
+  // ---- ⚔️ duels ----
+  if (path === '/api/duels' && m === 'GET') return json(await listDuels(env, await requireUser(request, env)));
+  if (path === '/api/duels' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `duel:${user.id}`, 30, 3600_000);
+    return json(await createDuel(env, user, await readJson(request, 1_000), ctx));
+  }
+  const duel = path.match(/^\/api\/duels\/(\d+)(\/start|\/answer)?$/);
+  if (duel) {
+    const user = await requireUser(request, env);
+    if (!duel[2] && m === 'GET') return json(await getDuel(env, user, duel[1]));
+    if (duel[2] === '/start' && m === 'POST') return json(await startDuel(env, user, duel[1]));
+    if (duel[2] === '/answer' && m === 'POST') return json(await answerDuel(env, user, duel[1], await readJson(request, 2_000)));
+  }
+
+  // ---- 📺 kerNEl Live ----
+  if (path === '/api/live' && m === 'GET') {
+    await rateLimit(env, `live:${ip}`, 6000, 3600_000);
+    return json(await getLive(env, await currentUser(request, env)));
+  }
+  if (path === '/api/live/join' && m === 'POST') return json(await joinLive(env, await requireUser(request, env)));
+  if (path === '/api/live/answer' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `liveans:${user.id}`, 200, 3600_000);
+    return json(await answerLive(env, user, await readJson(request, 500)));
+  }
+
+  // ---- 🔮 predictions ----
+  if (path === '/api/predictions' && m === 'GET') return json(await listPredictions(env, await currentUser(request, env)));
+  if (path === '/api/predictions/vote' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `predvote:${user.id}`, 120, 3600_000);
+    return json(await votePrediction(env, user, await readJson(request, 500)));
   }
 
   // ---- 🔍 people ----

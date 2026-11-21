@@ -18,6 +18,10 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🧠 **Daily Kernel Quiz** | 5 questions generated from the day's headlines, the same for everyone. Answers stay on the server until you play; one go per person per day; a daily board (ties go to the fastest). |
 | 🍿 **Popcorn Battles** | Two of the day's hottest stories, one vote each; yesterday's winner is the Story of the Day. |
 | 🏆 **Weekly tournament** | 8 Real-or-Fake headlines per week (the fakes never name real people or companies). On Monday the top 3 get trophies and a notification. |
+| ⚔️ **Quiz Duels** | Two people, the same 5 questions from the day's news, played whenever each likes. Questions are kept on the server and checked there; the time each player takes counts from when they start. Winner by score, then speed. Open duels expire after 48 hours (whoever played wins). |
+| 📺 **kerNEl Live** | A scheduled trivia show (12:00 and 18:00 UTC): a 10-minute lobby, then 10 questions everyone answers at the same time from the server clock. A wrong or missing answer knocks you out; survivors get +60 XP and the `liveWins` counter, players +15. Reminders go out with the notification cron. |
+| 🔮 **Predictions** | Twice a day the news cron picks rising Hacker News stories and asks whether they'll reach a points target by tomorrow, then settles them from Hacker News. Moderators can post and settle their own. Right calls give +15 XP and the `prophet` counter. |
+| 🏅 **Seasons** | XP earned in a calendar month (UTC) counts for that season. On the 1st, the top 3 of last month get 200/100/50 XP, the `seasonWins` counter, a medal and a notification. |
 | 🗨️ **Comments** | Comments on any kerNEl story, with @mentions, the swear filter, reports (3 → hidden), mutes and comment counts in `/api/news`. |
 | 👯 **Friends** | Follow people; their rank-ups, achievements, quiz/tournament scores, trophies and streak milestones go to a friends feed, and the big ones to followers' phones. |
 | ✉️ **Messages** | Private chats between two people, with message requests for people you don't follow (3 messages until accepted), read receipts, reactions, day streaks, shared stories, blocking and reports (3 reports in a day mute someone for 24 hours). Messages are kept for a year. |
@@ -105,9 +109,17 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/dm/:id?since=` | Bearer | A conversation's messages (+ changes since a time), `theirRead` for "Seen" |
 | `POST /api/dm/accept` · `/hide` · `/react` · `/report` · `DELETE /api/dm/messages/:id` | Bearer | Accept a request · delete the chat for you · `{ id, emoji }` · report + block · delete your message |
 | `PUT` / `DELETE /api/me/photo` · `GET /api/photo/:username` · `POST /api/photo/report` | Bearer / – | `{ data: "data:image/jpeg;base64,…" }` · the image · `{ username }` |
+| `GET /api/duels` · `POST /api/duels` | Bearer | Your duels + record · `{ to: username }` → a new duel (also posted as a card in your chat) |
+| `GET /api/duels/:id` · `POST /api/duels/:id/start` · `/answer` | Bearer | A duel (questions only after you start) · start your clock · `{ answers: [n…] }` → score, and the result once both played |
+| `GET /api/live` · `POST /api/live/join` · `/answer` | optional / Bearer | The show's phase, current question, reveal, survivors and the next show times · join in the lobby · `{ q, choice }` |
+| `GET /api/predictions` · `POST /api/predictions/vote` | optional / Bearer | Open and recently settled predictions with your record · `{ id, choice }` |
+| `POST /api/mod/predictions` · `/resolve` | moderator | `{ question, options: [2–4], hours }` · `{ id, answer }` |
+| `GET /api/leaderboard?season=1` | optional | This month's season board, your place and last season's winners |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
+
+**Testing kerNEl Live:** set `LIVE_TEST_PERIOD_MS` (for example `90000`) and `LIVE_TEST_STEP_MS` (`4000`) to run a quick show every 90 seconds instead of twice a day. Don't set them on the real site.
 
 Limits you can change in `wrangler.toml`: `CODME_PER_IP_HOUR` (20), `CODME_PER_USER_DAY` (100), `CODME_GLOBAL_DAY` (2000), `EXPLAIN_PER_IP_HOUR` (40), `EXPLAIN_GLOBAL_DAY` (1500, counts only new explanations), `SIGNUPS_PER_IP_HOUR` (5).
 
@@ -135,6 +147,7 @@ src/community.js  chat rooms, @codme in chat, moderation, daily poll, profile ca
 src/push.js    notifications: inbox, Web Push encryption + VAPID, mention / big-news / streak triggers
 src/features.js  routes for the games and social features
 src/play.js    Daily Quiz, Popcorn Battles, weekly tournament + trophies
+src/arena.js   Quiz Duels, kerNEl Live, Predictions, Seasons
 src/social.js  comments, follows, friends' activity, avatar looks
 src/people.js  messages, people search, profile photos, blocking
 src/rewards.js server-given XP, special counters, invites

@@ -13,6 +13,7 @@ import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordAc
 import { awardTrophies } from './play.js';
 import { isAdmin } from './admin.js';
 import { statsOf, claimXp, myInvites } from './rewards.js';
+import { seasonBoard, seasonUpdate, remindLive, makeAutoPredictions, resolveAutoPredictions, awardSeason, seasonMedals } from './arena.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
 
 export { KernelDB };
@@ -110,6 +111,8 @@ async function route(request, env, ctx) {
     const before = parse(user.data, {});
     const data = mergeDataPatch(before, await readJson(request, 400_000));
     await env.DB.prepare('UPDATE users SET data = ?, xp = ?, updated = ? WHERE id = ?').bind(JSON.stringify(data), data.xp || 0, Date.now(), user.id).run();
+    const gained = (data.xp || 0) - (user.xp || 0);
+    if (gained > 0) await seasonUpdate(env, user, gained).run();
     const events = activityFromData({ ...before, xp: user.xp || 0 }, data); // rank-ups and new badges → friends' feed
     if (events.length) ctx.waitUntil(recordActivity(env, user, events).catch((e) => console.error('activity', e)));
     return json({ ok: true, xp: data.xp || 0 });
@@ -149,12 +152,18 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM photos WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM photo_reports WHERE owner_id = ? OR reporter_id = ?').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM invites WHERE invitee_id = ? OR inviter_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM duels WHERE a = ? OR b = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM live_players WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM live_answers WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM prediction_votes WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM season_winners WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
     return json({ ok: true });
   }
 
   // ---------- leaderboard ----------
+  if (path === '/api/leaderboard' && m === 'GET' && url.searchParams.get('season')) return json(await seasonBoard(env, await currentUser(request, env)));
   if (path === '/api/leaderboard' && m === 'GET') {
     const { results } = await env.DB.prepare('SELECT id, username, profile, xp, streak, last_day FROM users WHERE on_board = 1 AND xp > 0 ORDER BY xp DESC, created ASC LIMIT 20').all();
     const top = results.map((r, i) => {
@@ -288,6 +297,7 @@ export default {
         const budget = { left: MAX_PUSHES_PER_RUN };
         const news = await notifyBigNews(env, budget);
         const streaks = await notifyStreaks(env, budget);
+        await remindLive(env, budget).catch((e) => console.error('live reminder', e));
         await awardTrophies(env).catch((e) => console.error('trophies', e));
         await env.DB.prepare('DELETE FROM notifications WHERE created < ?').bind(Date.now() - 30 * 864e5).run();
         console.log(`notifications: ${news} news pushes, ${streaks} streak pushes`);
@@ -297,6 +307,9 @@ export default {
     ctx.waitUntil((async () => {
       const r = await collectNews(env);
       const t = await findThumbnails(env, 15);
+      await makeAutoPredictions(env).catch((e) => console.error('predictions', e));
+      await resolveAutoPredictions(env).catch((e) => console.error('predictions', e));
+      await awardSeason(env).catch((e) => console.error('season', e));
       await env.DB.batch([
         env.DB.prepare('DELETE FROM rate_limits WHERE reset < ?').bind(Date.now()),
         env.DB.prepare('DELETE FROM sessions WHERE expires < ?').bind(Date.now()),
@@ -317,6 +330,12 @@ export default {
         env.DB.prepare('DELETE FROM quiz_scores WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
         env.DB.prepare('DELETE FROM dm_messages WHERE created < ?').bind(Date.now() - 365 * 864e5), // messages keep a year
         env.DB.prepare('DELETE FROM dm_reports WHERE at < ?').bind(Date.now() - 30 * 864e5),
+        env.DB.prepare('DELETE FROM live_players WHERE at < ?').bind(Date.now() - 3 * 864e5),
+        env.DB.prepare('DELETE FROM live_answers WHERE at < ?').bind(Date.now() - 3 * 864e5),
+        env.DB.prepare("DELETE FROM kv WHERE k LIKE 'live:%' AND substr(k, 6, 10) < ?").bind(new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10)),
+        env.DB.prepare('DELETE FROM duels WHERE created < ?').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM prediction_votes WHERE pred_id IN (SELECT id FROM predictions WHERE resolved < ?)').bind(Date.now() - 60 * 864e5),
+        env.DB.prepare('DELETE FROM predictions WHERE resolved < ?').bind(Date.now() - 60 * 864e5),
         env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
       ]);
       console.log(`news: ${r.ok}/${r.total} sources ok, ${t} thumbnails checked`);

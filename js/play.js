@@ -17,6 +17,16 @@ const boardHTML = (rows, score) => (rows?.length
   ? `<ol class="mini-board">${rows.slice(0, 5).map((r) => `<li data-user="${esc(r.username)}">${['🥇', '🥈', '🥉'][r.place - 1] || r.place} ${lookHTML(r)} <span dir="auto">${esc(r.nickname)}</span><b>${score(r)}</b></li>`).join('')}</ol>`
   : `<p class="muted small">${t('Nobody on the board yet — be the first!')}</p>`);
 
+/** How a quiz question reads (shared by the Daily Quiz, ⚔️ duels and 📺 kerNEl Live). */
+export function questionView(q) {
+  if (q.type === 'missing') return { ask: t('Fill in the missing word:'), lead: q.headline, opts: q.options.map((o) => headline(o)) };
+  if (q.type === 'category') return { ask: t('Which kerNEl section is this story in?'), lead: q.headline, opts: q.options.map((id) => `${catById(id).emoji} ${esc(t(catById(id).label))}`) };
+  if (q.type === 'source') return { ask: t('Who published this headline?'), lead: q.headline, opts: q.options.map((o) => esc(o)) };
+  if (q.type === 'hotter') return { ask: t('Which story got more upvotes?'), lead: null, opts: q.options.map((o) => headline(o)) };
+  return { ask: t('Three are real headlines from today. Which one did codme make up? 🤡'), lead: null, opts: q.options.map((o) => headline(o)) };
+}
+export const headlineHTML = headline;
+
 export function initPlay({ openAuth, onQuiz, onBattle, onTourney }) {
   if (!auth.ready) { ['#quizWidget', '#battleWidget', '#tourneyPromo'].forEach((s) => $(s)?.remove()); return null; }
 
@@ -29,13 +39,7 @@ export function initPlay({ openAuth, onQuiz, onBattle, onTourney }) {
   let answers = [];
   let step = 0;
 
-  function questionHTML(q) {
-    if (q.type === 'missing') return { ask: t('Fill in the missing word:'), lead: q.headline, opts: q.options.map((o) => headline(o)) };
-    if (q.type === 'category') return { ask: t('Which kerNEl section is this story in?'), lead: q.headline, opts: q.options.map((id) => `${catById(id).emoji} ${esc(t(catById(id).label))}`) };
-    if (q.type === 'source') return { ask: t('Who published this headline?'), lead: q.headline, opts: q.options.map((o) => esc(o)) };
-    if (q.type === 'hotter') return { ask: t('Which story got more upvotes?'), lead: null, opts: q.options.map((o) => headline(o)) };
-    return { ask: t('Three are real headlines from today. Which one did codme make up? 🤡'), lead: null, opts: q.options.map((o) => headline(o)) };
-  }
+  const questionHTML = questionView;
 
   function showQuestion() {
     const q = quiz.questions[step];

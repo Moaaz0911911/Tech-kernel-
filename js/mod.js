@@ -1,10 +1,10 @@
 // 🛡️ Moderator tools (only for usernames in the server's ADMINS setting): reports, people, and a log.
 import { $, esc, timeAgo, toast } from './utils.js';
 import { auth } from './auth.js';
-import { t, tServer, fmtDate } from './i18n.js';
+import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML, photoUrl } from './look.js';
 
-const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['log', '📜', 'Log']];
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['log', '📜', 'Log']];
 
 export function initMod() {
   const dlg = document.createElement('dialog');
@@ -112,6 +112,25 @@ export function initMod() {
     box.dataset.username = u.username;
   }
 
+  async function predict() {
+    loading();
+    try {
+      const r = await api('/api/predictions');
+      const mine = r.open.filter((p) => p.kind === 'mod');
+      pane.innerHTML = `<form class="mod-predict" data-modpredict>
+          <label class="field"><span>${t('Question')}</span><input name="q" maxlength="160" placeholder="${esc(t('e.g. Which phone sells best this month?'))}" required></label>
+          <label class="field"><span>${t('Answers (one per line, 2 to 4)')}</span><textarea name="o" rows="3" required>Yes\nNo</textarea></label>
+          <label class="field"><span>${t('Voting closes in')}</span><select name="h"><option value="24">${t('1 day')}</option><option value="72" selected>${t('3 days')}</option><option value="168">${t('1 week')}</option><option value="720">${t('1 month')}</option></select></label>
+          <button class="btn btn-primary">🔮 ${t('Post prediction')}</button>
+        </form>
+        <h3 class="mini-title">${t('Your open predictions')} <small>${mine.length}</small></h3>
+        ${mine.length ? mine.map((p) => `<div class="mod-item"><p class="mod-text" dir="auto">${esc(p.question)}</p>
+          <p class="muted small">${tn(p.total, '{n} vote', '{n} votes')} · ${t('closes {when}', { when: when(p.closes) })}</p>
+          <div class="mod-actions">${t('The answer was:')} ${p.options.map((o, i) => `<button type="button" class="btn btn-sm btn-ghost" data-resolve="${p.id}:${i}">${esc(o)} <small>(${p.counts[i]})</small></button>`).join('')}</div></div>`).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}
+        <p class="muted small">${t('Automatic “will it reach N upvotes?” predictions settle themselves.')}</p>`;
+    } catch (e) { fail(e); }
+  }
+
   async function log() {
     loading();
     try {
@@ -125,10 +144,21 @@ export function initMod() {
   const show = (name) => {
     tab = name;
     dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
-    ({ overview, reports, people, log })[name]();
+    ({ overview, reports, people, predict, log })[name]();
   };
 
-  dlg.addEventListener('submit', (e) => {
+  dlg.addEventListener('submit', async (e) => {
+    const pf = e.target.closest('[data-modpredict]');
+    if (pf) {
+      e.preventDefault();
+      const options = pf.elements.o.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      try {
+        await api('/api/mod/predictions', { question: pf.elements.q.value, options, hours: Number(pf.elements.h.value) });
+        toast(t('Prediction posted! 🔮'), { emoji: '🔮' });
+        predict();
+      } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     const f = e.target.closest('[data-modsearch]');
     if (!f) return;
     e.preventDefault();
@@ -144,6 +174,13 @@ export function initMod() {
     const lk = el.closest('[data-lookup]');
     if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
     const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    const rs = el.closest('[data-resolve]');
+    if (rs) {
+      const [id, answer] = rs.dataset.resolve.split(':').map(Number);
+      if (!confirm(t('Settle this prediction? Everyone who picked that answer gets XP.'))) return;
+      try { const r = await api('/api/mod/predictions/resolve', { id, answer }); toast(tn(r.winners, '{n} kernel called it!', '{n} kernels called it!'), { emoji: '🔮' }); predict(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
     try {
       const c = el.closest('[data-content]');
       if (c) {

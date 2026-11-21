@@ -128,7 +128,7 @@ function toDM(r, me) {
   const reacts = parse(r.reacts, {});
   const story = r.deleted ? null : parse(r.story, null);
   return {
-    id: r.id, mine: r.user_id === me.id, text: r.deleted ? '' : r.text, story, deleted: !!r.deleted,
+    id: r.id, mine: r.user_id === me.id, text: r.deleted ? '' : r.text, story, deleted: !!r.deleted, duel: r.deleted ? null : r.duel || null,
     myReact: reacts[me.id] || null, theirReact: Object.entries(reacts).find(([k]) => k !== me.id)?.[1] || null,
     created: r.created, updated: r.updated,
   };
@@ -161,7 +161,7 @@ export async function listThreads(env, user) {
     const last = lastBy[r.id];
     return {
       id: r.id, other: person(byId[r.other], activeFields(seen[r.other])), streak: threadStreak(r), lastAt: r.last_at,
-      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
+      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, duel: !!last.duel && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
       unread: unreadBy[r.id] || 0, request: !r.accepted, pending: !r.their_accepted,
     };
   });
@@ -232,7 +232,9 @@ export async function sendDM(env, user, body, ctx) {
     const s = await env.DB.prepare('SELECT * FROM stories WHERE key = ?').bind(body.storyKey.slice(0, 300)).first();
     if (s) { const x = rowToStory(s); story = { key: x.key, title: x.title, url: x.url, source: x.source, cat: x.cat, image: x.image, domain: x.domain, time: x.time }; }
   }
-  if (!text && !story) throw new HttpError(400, 'Say something first!');
+  const duel = Number(body.duel) || null; // a ⚔️ Quiz Duel challenge (created by arena.js for these two people)
+  if (duel && !(await env.DB.prepare('SELECT 1 AS y FROM duels WHERE id = ? AND a = ? AND b = ?').bind(duel, user.id, other.id).first())) throw new HttpError(400, 'Unknown duel');
+  if (!text && !story && !duel) throw new HttpError(400, 'Say something first!');
 
   const theyFollowMe = await follows(env, other.id, user.id);
   const now = Date.now();
@@ -255,8 +257,8 @@ export async function sendDM(env, user, body, ctx) {
     const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM dm_messages WHERE thread_id = ? AND user_id = ? AND deleted = 0').bind(t.id, user.id).first();
     if ((n?.n || 0) >= MAX_REQUEST_MESSAGES) throw new HttpError(429, 'Wait until they accept your message request');
   }
-  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated) VALUES (?, ?, ?, ?, ?, 0, ?, ?) RETURNING *')
-    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now).first();
+  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated, duel) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?) RETURNING *')
+    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now, duel).first();
 
   // 🔥 streak: both people sent something today
   const today = day();
@@ -276,7 +278,9 @@ export async function sendDM(env, user, body, ctx) {
   const job = (async () => {
     const lang = langOfProfile(other.profile);
     const preview = text || (story ? `📰 ${story.title}` : '');
-    if (theirs.accepted) {
+    if (duel) {
+      await notify(env, other.id, { kind: 'games', title: tr(lang, 'duelChallenge', { who: user.username }), body: tr(lang, 'duelChallengeBody', { who: user.username }), url: `./#duel=${duel}`, tag: `duel-${duel}`, icon: '⚔️' }, { left: 4 });
+    } else if (theirs.accepted) {
       await notify(env, other.id, { kind: 'dms', title: tr(lang, 'dmTitle', { who: user.username }), body: preview.slice(0, 160), url: `./#dm=${user.username}`, tag: `dm-${user.username}`, icon: '✉️' }, { left: 4 });
     } else if (first || !mine.sent_day) {
       await notify(env, other.id, { kind: 'dms', title: tr(lang, 'dmRequest', { who: user.username }), body: tr(lang, 'dmRequestBody'), url: `./#dm=${user.username}`, tag: `dmreq-${user.username}`, icon: '📨' }, { left: 4 });

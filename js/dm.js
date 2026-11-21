@@ -81,6 +81,7 @@ const SKELETON = () => `
       <button type="button" class="icon-btn" data-dm="back" aria-label="${esc(t('Back to messages'))}"><span class="dm-back" aria-hidden="true">‹</span></button>
       <button type="button" class="dm-who" id="dmWho"></button>
       <span class="dm-streak" id="dmStreak" hidden></span>
+      <button type="button" class="icon-btn" data-dm="duel" id="dmDuelBtn" title="${esc(t('Challenge to a Quiz Duel'))}" aria-label="${esc(t('Challenge to a Quiz Duel'))}">⚔️</button>
       <button type="button" class="icon-btn" data-dm="menu" aria-label="${esc(t('More options'))}" aria-haspopup="menu">⋯</button>
       <div class="dm-menu glass" id="dmMenu" role="menu" hidden></div>
     </header>
@@ -99,7 +100,7 @@ const SKELETON = () => `
     <button type="button" class="btn btn-ghost" data-cm="signin">${t('Sign in')}</button>
   </div>`;
 
-export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
+export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challenge }) {
   pane.innerHTML = SKELETON();
   const inbox = pane.querySelector('[data-view="inbox"]');
   const convo = pane.querySelector('[data-view="convo"]');
@@ -141,7 +142,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
   // ---------------- inbox ----------------
   const lastText = (th) => {
     if (!th.last) return '';
-    const body = th.last.deleted ? t('Message deleted') : th.last.story && !th.last.text ? `📰 ${t('Shared a story')}` : th.last.text;
+    const body = th.last.deleted ? t('Message deleted') : th.last.duel ? `⚔️ ${t('Quiz Duel challenge')}` : th.last.story && !th.last.text ? `📰 ${t('Shared a story')}` : th.last.text;
     return th.last.mine ? `${t('You')}: ${body}` : body;
   };
   const threadRow = (th) => `<button type="button" class="dm-row${th.unread ? ' unread' : ''}" data-thread="${th.id}">
@@ -224,8 +225,9 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     const pic = s.image && safeUrl(s.image) !== '#' ? `<img src="${esc(safeUrl(s.image))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="dm-story-emoji" aria-hidden="true">${c.emoji}</span>`;
     return `<button type="button" class="dm-story" data-dstory="${id}">${pic}<span><b dir="auto">${esc(s.title)}</b><small>${esc(s.source || s.domain || '')}</small></span></button>`;
   };
+  const duelCardHTML = (m) => `<button type="button" class="dm-duel" data-dduel="${m.duel}"><span class="dm-duel-icon" aria-hidden="true">⚔️</span><span><b>${m.mine ? t('You sent a Quiz Duel challenge') : t('Quiz Duel challenge!')}</b><small>${t('5 questions from today’s news · tap to play')}</small></span></button>`;
   const msgHTML = (m) => `<div class="dmsg${m.mine ? ' mine' : ''}${m.id === selected ? ' sel' : ''}" data-mid="${m.id}">
-      <div class="dm-bubble${m.deleted ? ' deleted' : ''}${m.story && !m.text ? ' only-story' : ''}" dir="auto">${m.deleted ? `<i>${t('Message deleted')}</i>` : `${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.story ? storyHTML(m.story, m.id) : ''}`}</div>
+      <div class="dm-bubble${m.deleted ? ' deleted' : ''}${(m.story || m.duel) && !m.text ? ' only-story' : ''}" dir="auto">${m.deleted ? `<i>${t('Message deleted')}</i>` : `${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`}</div>
       ${m.myReact || m.theirReact ? `<span class="dm-reacts">${esc([m.theirReact, m.myReact].filter(Boolean).join(''))}</span>` : ''}
       ${m.deleted ? '' : `<div class="dm-actions glass">${REACTS.map((e) => `<button type="button" data-dreact="${e}" aria-pressed="${m.myReact === e}">${e}</button>`).join('')}${m.mine ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>` : ''}</div>`}
     </div>`;
@@ -236,6 +238,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     const who = $('#dmWho');
     who.dataset.user = o.username;
     who.innerHTML = `${lookHTML(o, { active: o.active })}<span><b dir="auto">${esc(o.nickname)}</b><small>${esc(activeText(o) || `@${o.username}`)}</small></span>`;
+    $('#dmDuelBtn').hidden = !!(cur.blocked || cur.blockedMe || cur.request || (!cur.id && cur.canMessage === false));
     const st = $('#dmStreak');
     st.hidden = !(cur.streak >= 1);
     st.textContent = `🔥${cur.streak}`;
@@ -455,6 +458,8 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     if (th) return openThread(Number(th.dataset.thread));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const dd = el.closest('[data-dduel]');
+    if (dd) return openDuel?.(Number(dd.dataset.dduel));
     const story = el.closest('[data-dstory]');
     if (story) {
       const s = story.dataset.dstory === 'pending' ? share : msgs.get(Number(story.dataset.dstory))?.story;
@@ -467,6 +472,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent }) {
     if (d) {
       const what = d.dataset.dm;
       if (what === 'back') return back();
+      if (what === 'duel') return challenge?.(cur.other.username, cur.other);
       if (what === 'menu') { paintMenu(); menu.hidden = !menu.hidden; return; }
       if (what === 'requests' || what === 'requests-close') { showRequests = what === 'requests'; return renderInbox(); }
       if (what === 'unshare') { share = null; return cur ? paintComposer() : renderInbox(); }

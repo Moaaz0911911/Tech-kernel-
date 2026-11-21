@@ -50,7 +50,9 @@ CREATE TABLE IF NOT EXISTS users (
   pending_xp    INTEGER NOT NULL DEFAULT 0,   -- XP the server gave (invites, duels, live shows…) waiting for the browser to collect
   stats         TEXT NOT NULL DEFAULT '{}',   -- JSON counters that unlock hats/frames: invites, liveWins, prophet, duelsWon, seasonWins
   banned_until  INTEGER,                      -- set by a moderator
-  invited_by    TEXT
+  invited_by    TEXT,
+  season        TEXT,                         -- the month their season_xp belongs to (YYYY-MM)
+  season_xp     INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS users_board ON users (on_board, xp DESC);
 
@@ -154,6 +156,7 @@ CREATE TABLE IF NOT EXISTS notify_prefs (
   streak          INTEGER NOT NULL DEFAULT 1,
   friends         INTEGER NOT NULL DEFAULT 1, -- follows, friends' rank-ups, trophies
   dms             INTEGER NOT NULL DEFAULT 1, -- direct messages
+  games           INTEGER NOT NULL DEFAULT 1, -- kerNEl Live reminders, duel challenges
   tz              INTEGER NOT NULL DEFAULT 0, -- minutes east of UTC
   news_day        TEXT,
   news_today      INTEGER NOT NULL DEFAULT 0,
@@ -285,6 +288,7 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   text        TEXT NOT NULL DEFAULT '',
   story       TEXT,                          -- JSON of a shared kerNEl story
   reacts      TEXT NOT NULL DEFAULT '{}',    -- JSON: { user id: emoji }
+  duel        INTEGER,                       -- a ⚔️ Quiz Duel challenge card
   deleted     INTEGER NOT NULL DEFAULT 0,
   created     INTEGER NOT NULL,
   updated     INTEGER NOT NULL
@@ -337,4 +341,68 @@ CREATE TABLE IF NOT EXISTS mod_log (
   target      TEXT,
   note        TEXT,
   at          INTEGER NOT NULL
+);
+
+-- ⚔️ Quiz Duels
+CREATE TABLE IF NOT EXISTS duels (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  a           TEXT NOT NULL,                 -- challenger
+  b           TEXT NOT NULL,                 -- opponent
+  quiz        TEXT NOT NULL,                 -- JSON questions (with answers)
+  a_started INTEGER, a_answers TEXT, a_score INTEGER, a_ms INTEGER,
+  b_started INTEGER, b_answers TEXT, b_score INTEGER, b_ms INTEGER,
+  status      TEXT NOT NULL DEFAULT 'open',  -- open | done | expired
+  winner      TEXT,                          -- user id or 'draw'
+  thread_id   INTEGER,
+  created     INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS duels_a ON duels (a, id);
+CREATE INDEX IF NOT EXISTS duels_b ON duels (b, id);
+
+-- 📺 kerNEl Live
+CREATE TABLE IF NOT EXISTS live_players (
+  slot        TEXT NOT NULL,                 -- e.g. 2026-11-21T18
+  user_id     TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (slot, user_id)
+);
+CREATE TABLE IF NOT EXISTS live_answers (
+  slot        TEXT NOT NULL,
+  q           INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  choice      INTEGER NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (slot, q, user_id)
+);
+
+-- 🔮 Predictions
+CREATE TABLE IF NOT EXISTS predictions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  question    TEXT NOT NULL,
+  options     TEXT NOT NULL,                 -- JSON array
+  kind        TEXT NOT NULL,                 -- 'upvotes' (automatic) | 'mod'
+  story_key   TEXT,
+  data        TEXT NOT NULL DEFAULT '{}',
+  closes      INTEGER NOT NULL,
+  resolves    INTEGER NOT NULL,
+  answer      INTEGER,
+  resolved    INTEGER,
+  created_by  TEXT,
+  created     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS prediction_votes (
+  pred_id     INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  choice      INTEGER NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (pred_id, user_id)
+);
+
+-- 🏅 Seasons
+CREATE TABLE IF NOT EXISTS season_winners (
+  season      TEXT NOT NULL,
+  place       INTEGER NOT NULL,
+  user_id     TEXT NOT NULL,
+  xp          INTEGER,
+  PRIMARY KEY (season, place)
 );

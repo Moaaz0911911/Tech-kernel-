@@ -15,6 +15,7 @@ function bundle(order) {
     let code = read(`js/${name}.js`);
     code = code.replace(/^import \{([^}]+)\} from '\.\/([\w-]+)\.js';$/gm, (_, names, mod) => {
       if (!order.includes(mod)) throw new Error(`${name}.js imports ${mod}.js which is not bundled`);
+      if (order.indexOf(mod) > order.indexOf(name)) throw new Error(`${name}.js imports ${mod}.js, so ${mod} must come before ${name} in the bundle order`);
       return `const {${names.replace(/\s+as\s+/g, ': ')}} = __m[${JSON.stringify(mod)}];`;
     });
     if (/^\s*import\s/m.test(code)) throw new Error(`Unsupported import in ${name}.js`);
@@ -87,7 +88,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'dm', 'community', 'notify', 'game', 'play', 'social', 'extras', 'photo', 'mod', 'invite', 'tabs', 'reader', 'app'])
+const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'dm', 'play', 'arena', 'community', 'notify', 'game', 'social', 'extras', 'photo', 'mod', 'invite', 'tabs', 'reader', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');
