@@ -8,7 +8,7 @@ import { questionView, headlineHTML } from './play.js';
 import { findPeople, personHTML } from './dm.js';
 
 const fmtTime = (ts) => new Date(ts).toLocaleTimeString(document.documentElement.lang?.startsWith('ar') ? 'ar-EG-u-nu-latn' : document.documentElement.lang || undefined, { hour: '2-digit', minute: '2-digit' });
-function inWords(ms) {
+export function inWords(ms) {
   const m = Math.max(0, Math.round(ms / 60000));
   if (m < 60) return tn(m, '{n} minute', '{n} minutes');
   const h = Math.floor(m / 60);
@@ -16,7 +16,7 @@ function inWords(ms) {
 }
 const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
-function makeDialog(cls, title) {
+export function makeDialog(cls, title) {
   const dlg = document.createElement('dialog');
   dlg.className = `modal game-modal ${cls}`;
   dlg.innerHTML = `<form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="${esc(t('Close'))}">✕</button></form><div class="modal-body"><h2>${title}</h2><div class="arena-body"></div></div>`;

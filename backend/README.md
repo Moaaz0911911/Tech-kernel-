@@ -32,6 +32,10 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🔔 **Followed topics** | Up to 20 companies or topics per person, matched as whole words in headlines. The notification cron sends at most 3 alerts a day, never twice for one story. "Trending now" suggestions come from names that keep appearing in the last day and a half of headlines. |
 | ☀️ **Morning Drop** | Five stories a day: up to two about your topics, then the biggest stories (at most two per section). Sent at the hour each person picks, in their time zone, once a day. |
 | 🕰️ **Timelines** | For a story, the server picks the words that name what it's about and asks Hacker News search for older stories, newest first, one per month further back. Cached until the story leaves kerNEl. |
+| 📈 **Story Stocks** | Every hour the cron turns each company's "buzz" (how many recent stories mention it, weighted by upvotes) into a smoothed price. Wallets start at 1,000 🪙 each week, trades are checked on the server (no overdrafts, at most 40 trades a day), and on Monday the top 3 portfolios get XP. |
+| 🎯 **Tech Bingo** | 40 headline patterns; each person gets 24 of them (seeded by week and user). This week's first matching headline marks a square. Prizes for a line, three lines and a full card are paid once each. |
+| 🔤 🌫️ **Guessing games** | Five rounds a day, the same for everyone. The server keeps the answers, starts the clock, and won't count answer times faster than the real time that passed. |
+| 🃏 **Cards** | Packs are dealt on the server with rarity weights. Only doubles can be gifted or traded; trades are claimed atomically so a card can't be spent twice. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
 | 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
@@ -136,6 +140,11 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/drop` | optional | Today's Morning Drop (personal when signed in) and your drop hour |
 | `PUT /api/notify/prefs` (also) | Bearer | `topics: true\|false` in `prefs` for topic alerts · `dropHour: 0–23 \| null` for the Morning Drop |
 | `GET /api/timeline?key=` | – | Earlier stories about the same thing |
+| `GET /api/stocks` · `POST /api/stocks/trade` | optional / Bearer | Prices with 24-hour sparklines, your wallet, the board · `{ sym, shares }` (negative to sell) |
+| `GET /api/bingo` · `POST /api/bingo/claim` | optional / Bearer | Your card for the week and the first bingos · collect prizes |
+| `GET /api/guess/emoji\|blur` · `POST …/start` · `POST …/answer` | optional / Bearer | Today's rounds (no answers) · start the clock · `{ answers: [{ pick, ms }] }` |
+| `GET /api/cards` (`?user=`) · `POST /api/cards/open` | Bearer | Your collection, packs and open trades (or someone's collection) · open a pack |
+| `POST /api/cards/offer` · `/answer` | Bearer | `{ to, give, want? }` (no `want` = gift) · `{ id, accept }` |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
@@ -175,6 +184,10 @@ src/groups.js  group chats
 src/pops.js    24-hour pops
 src/media.js   voice notes and typing
 src/discover.js  followed topics, Morning Drop, timelines
+src/market.js  Story Stocks
+src/bingo.js   Tech Bingo
+src/guess.js   Emoji Headlines + Blur Reveal
+src/cards.js   kerNEl Cards
 src/rewards.js server-given XP, special counters, invites
 src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine

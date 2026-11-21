@@ -16,6 +16,10 @@ import {
 import { createPop, listPops, viewPop, popViewers, deletePop, reportPop, popPhotoResponse } from './pops.js';
 import { voiceResponse } from './media.js';
 import { listTopics, followTopic, getDrop, storyTimeline } from './discover.js';
+import { getMarket, trade } from './market.js';
+import { getBingo, claimBingo } from './bingo.js';
+import { getGuess, startGuess, answerGuess } from './guess.js';
+import { getCards, openPack, offerCard, answerTrade } from './cards.js';
 import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
@@ -258,6 +262,56 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
   if (path === '/api/timeline' && m === 'GET') {
     await rateLimit(env, `timeline:${ip}`, 240, 3600_000);
     return json(await storyTimeline(env, url.searchParams.get('key')));
+  }
+
+  // ---- 📈 Story Stocks ----
+  if (path === '/api/stocks' && m === 'GET') {
+    await rateLimit(env, `stocks:${ip}`, 1200, 3600_000);
+    return json(await getMarket(env, await currentUser(request, env)));
+  }
+  if (path === '/api/stocks/trade' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `stocktrade:${user.id}`, 120, 3600_000);
+    return json(await trade(env, user, await readJson(request, 500)));
+  }
+
+  // ---- 🎯 Tech Bingo ----
+  if (path === '/api/bingo' && m === 'GET') return json(await getBingo(env, await currentUser(request, env)));
+  if (path === '/api/bingo/claim' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `bingo:${user.id}`, 60, 3600_000);
+    return json(await claimBingo(env, user));
+  }
+
+  // ---- 🔤 Emoji Headlines · 🌫️ Blur Reveal ----
+  const guess = path.match(/^\/api\/guess\/(emoji|blur)(\/start|\/answer)?$/);
+  if (guess) {
+    if (!guess[2] && m === 'GET') return json(await getGuess(env, await currentUser(request, env), guess[1]));
+    const user = await requireUser(request, env);
+    if (guess[2] === '/start' && m === 'POST') return json(await startGuess(env, user, guess[1]));
+    if (guess[2] === '/answer' && m === 'POST') return json(await answerGuess(env, user, guess[1], await readJson(request, 2_000)));
+  }
+
+  // ---- 🃏 kerNEl Cards ----
+  if (path === '/api/cards' && m === 'GET') {
+    const who = url.searchParams.get('user');
+    return json(await getCards(env, who ? await currentUser(request, env) : await requireUser(request, env), who));
+  }
+  if (path === '/api/cards/open' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `cardopen:${user.id}`, 60, 3600_000);
+    return json(await openPack(env, user));
+  }
+  if (path === '/api/cards/offer' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await assertNotMuted(env, user);
+    await rateLimit(env, `cardoffer:${user.id}`, 30, 3600_000);
+    return json(await offerCard(env, user, await readJson(request, 500), sendDM, ctx));
+  }
+  if (path === '/api/cards/answer' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `cardanswer:${user.id}`, 120, 3600_000);
+    return json(await answerTrade(env, user, await readJson(request, 500)));
   }
 
   // ---- 📷 profile photos ----

@@ -44,6 +44,10 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🔔 **Follow companies and topics** (Apple, SpaceX, Rust… or anything you type) on the Me tab, from "Trending now" and "Popular" suggestions, or with one tap in the reader. Followed topics fill your ⭐ For You feed, get spots in your Morning Drop, and send up to 3 alerts a day when they show up in fresh stories.
 - ☀️ **Morning Drop**: the 5 stories to know today, picked for you (your topics first, then the day's biggest stories, never more than 2 from one section). Open it from the News tab any time, or pick an hour on the Me tab to get it every day as a notification, in your own time.
 - 🕰️ **"How we got here"** in the reader: earlier Hacker News stories about the same thing, newest first, so you can see how a story developed.
+- 📈 **Story Stocks**: a pretend weekly market. Everyone gets 1,000 🪙 each week to buy and sell 16 companies whose prices follow how much the news talks about them (updated hourly). The top 3 portfolios win XP and the 📈 hat. Just a game, not real stock prices.
+- 🎯 **Tech Bingo**: a new 5×5 card every week, different for everyone, with squares like "a rocket launch" or "a hack or data leak". Squares fill in by themselves when a matching headline appears; a line, three lines and a full card pay XP and 🃏 card packs.
+- 🔤 **Emoji Headlines** and 🌫️ **Blur Reveal**: daily guessing games — pick the story from emojis, or from a photo that slowly un-blurs. Faster right answers score more, with a daily board; a perfect game earns a card pack.
+- 🃏 **kerNEl Cards**: 36 collectible cards in 4 sets (Retro Gadgets, Space Tech, AI & Robots, Code Legends), each with a fun fact. A free pack of 3 every day, bonus packs for bingo lines, duel wins, right predictions and perfect guessing games. Gift or trade your doubles — offers arrive as cards in Messages. One full set unlocks the 🃏 Card shark hat, all four the Master collector frame.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -196,6 +200,11 @@ js/groups.js      👥 new-group and group-settings dialogs
 js/pops.js        🫧 the pops row, full-screen viewer and composer
 js/voice.js       🎙️ voice note recorder and player
 js/discover.js    🔔 followed topics, ☀️ Morning Drop, 🕰️ reader timelines
+js/stocks.js      📈 Story Stocks
+js/bingo.js       🎯 Tech Bingo
+js/guess.js       🔤 Emoji Headlines + 🌫️ Blur Reveal
+js/cards.js       🃏 packs, collection, gifts and trades (cards-ui.js draws a card, cards-data.js lists them)
+js/emoji.js       the emoji dictionary (shared with the server)
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
 js/look.js        avatars with hats, frames and streak flames

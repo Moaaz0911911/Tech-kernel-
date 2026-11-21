@@ -6,6 +6,7 @@ import { rowToStory } from './news.js';
 import { notify } from './push.js';
 import { tr, langOfProfile } from './i18n.js';
 import { saveVoice, dropVoice, typingIn, setTypingIn } from './media.js';
+import { tradesByIds } from './cards.js';
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
 const ACTIVE_MS = 5 * 60_000;
@@ -130,7 +131,7 @@ function toDM(r, me) {
   const story = r.deleted ? null : parse(r.story, null);
   return {
     id: r.id, mine: r.user_id === me.id, text: r.deleted ? '' : r.text, story, deleted: !!r.deleted, duel: r.deleted ? null : r.duel || null,
-    voice: r.deleted ? null : parse(r.voice, null), pop: r.deleted ? null : parse(r.pop, null),
+    voice: r.deleted ? null : parse(r.voice, null), pop: r.deleted ? null : parse(r.pop, null), trade: r.deleted ? null : r.trade || null,
     myReact: reacts[me.id] || null, theirReact: Object.entries(reacts).find(([k]) => k !== me.id)?.[1] || null,
     created: r.created, updated: r.updated,
   };
@@ -163,7 +164,7 @@ export async function listThreads(env, user) {
     const last = lastBy[r.id];
     return {
       id: r.id, other: person(byId[r.other], activeFields(seen[r.other])), streak: threadStreak(r), lastAt: r.last_at,
-      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, duel: !!last.duel && !last.deleted, voice: !!last.voice && !last.deleted, pop: !!last.pop && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
+      last: last ? { text: last.deleted ? '' : last.text.slice(0, 120), story: !!last.story && !last.deleted, duel: !!last.duel && !last.deleted, trade: !!last.trade && !last.deleted, voice: !!last.voice && !last.deleted, pop: !!last.pop && !last.deleted, mine: last.user_id === user.id, deleted: !!last.deleted } : null,
       unread: unreadBy[r.id] || 0, request: !r.accepted, pending: !r.their_accepted,
     };
   });
@@ -198,8 +199,10 @@ export async function getThread(env, user, threadId, since = 0) {
   const b = await blockState(env, user, other.id);
   const seen = await lastSeen(env, [other.id]);
   const typing = (await typingIn(env, `d:${t.id}`, user.id)).length > 0;
+  const trades = await tradesByIds(env, rows.map((r) => r.trade));
   return {
     typing,
+    trades,
     thread: {
       id: t.id, other: person(other, activeFields(seen[other.id])), streak: threadStreak(t),
       request: !me.accepted, pending: !them.accepted, blocked: b.iBlocked, blockedMe: b.blockedMe,
@@ -244,7 +247,9 @@ export async function sendDM(env, user, body, ctx) {
   }
   const duel = Number(body.duel) || null; // a ⚔️ Quiz Duel challenge (created by arena.js for these two people)
   if (duel && !(await env.DB.prepare('SELECT 1 AS y FROM duels WHERE id = ? AND a = ? AND b = ?').bind(duel, user.id, other.id).first())) throw new HttpError(400, 'Unknown duel');
-  if (!text && !story && !duel && !body.voice) throw new HttpError(400, 'Say something first!');
+  const trade = Number(body.trade) || null; // a 🃏 card gift or trade (created by cards.js for these two people)
+  if (trade && !(await env.DB.prepare('SELECT 1 AS y FROM card_trades WHERE id = ? AND from_id = ? AND to_id = ?').bind(trade, user.id, other.id).first())) throw new HttpError(400, 'Unknown trade');
+  if (!text && !story && !duel && !trade && !body.voice) throw new HttpError(400, 'Say something first!');
 
   const theyFollowMe = await follows(env, other.id, user.id);
   const now = Date.now();
@@ -268,8 +273,8 @@ export async function sendDM(env, user, body, ctx) {
     if ((n?.n || 0) >= MAX_REQUEST_MESSAGES) throw new HttpError(429, 'Wait until they accept your message request');
   }
   const voice = body.voice ? await saveVoice(env, user, `d:${t.id}`, body) : null;
-  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated, duel, voice, pop) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?) RETURNING *')
-    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now, duel, voice ? JSON.stringify(voice) : null, pop ? JSON.stringify(pop) : null).first();
+  const msg = await env.DB.prepare('INSERT INTO dm_messages (thread_id, user_id, text, story, reacts, deleted, created, updated, duel, voice, pop, trade) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?) RETURNING *')
+    .bind(t.id, user.id, text, story ? JSON.stringify(story) : null, '{}', now, now, duel, voice ? JSON.stringify(voice) : null, pop ? JSON.stringify(pop) : null, trade).first();
 
   // 🔥 streak: both people sent something today
   const today = day();
@@ -290,7 +295,11 @@ export async function sendDM(env, user, body, ctx) {
   const job = (async () => {
     const lang = langOfProfile(other.profile);
     const preview = text || (story ? `📰 ${story.title}` : voice ? '🎙️' : '');
-    if (duel) {
+    if (trade) {
+      const tr0 = await env.DB.prepare('SELECT want FROM card_trades WHERE id = ?').bind(trade).first();
+      const k = tr0?.want ? 'cardTrade' : 'cardGift';
+      await notify(env, other.id, { kind: 'games', title: tr(lang, k, { who: user.username }), body: tr(lang, `${k}Body`), url: `./#dm=${user.username}`, tag: `cards-${user.username}`, icon: '🃏' }, { left: 4 });
+    } else if (duel) {
       await notify(env, other.id, { kind: 'games', title: tr(lang, 'duelChallenge', { who: user.username }), body: tr(lang, 'duelChallengeBody', { who: user.username }), url: `./#duel=${duel}`, tag: `duel-${duel}`, icon: '⚔️' }, { left: 4 });
     } else if (theirs.accepted) {
       await notify(env, other.id, { kind: 'dms', title: tr(lang, 'dmTitle', { who: user.username }), body: preview.slice(0, 160), url: `./#dm=${user.username}`, tag: `dm-${user.username}`, icon: '✉️' }, { left: 4 });

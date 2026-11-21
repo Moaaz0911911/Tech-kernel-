@@ -1521,6 +1521,130 @@ a.stat:hover { color: var(--text); }
 .tl-list a:hover { text-decoration: underline; }
 .tl-list small { color: var(--faint); font-size: .72rem; }
 .tp-chip, .tp-add, .tp-on { text-transform: none; letter-spacing: normal; }
+.ava[data-frame="collector"] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #ff9f0a, 0 0 0 6px var(--bg-2), 0 0 0 8px #bf5af2, 0 0 14px 4px rgba(255, 159, 10, .35); }
+
+/* ================= Wave E: 📈 stocks · 🎯 bingo · 🔤🌫️ guessing · 🃏 cards ================= */
+.spark { width: 80px; height: 24px; flex: none; }
+.spark polyline { stroke: var(--text); }
+.spark.down polyline { stroke: var(--muted); stroke-dasharray: 3 2; }
+.up { color: #1f9d55; } .down { color: #d70015; }
+:root[data-theme="dark"] .up { color: #30d158; } :root[data-theme="dark"] .down { color: #ff453a; }
+.st-me { display: flex; align-items: baseline; gap: 8px; margin: 6px 0; font-size: 1.1rem; }
+.st-me small { font-size: .78rem; color: var(--muted); }
+.st-movers { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.st-movers li { display: grid; grid-template-columns: 1fr 80px 70px; align-items: center; gap: 8px; font-size: .86rem; }
+.st-movers b { text-align: end; font-size: .8rem; }
+.modal.stocks-dialog { width: min(620px, calc(100vw - 24px)); }
+.stocks-dialog .modal-body { text-align: start; }
+.st-wallet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.st-wallet span { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 16px; background: var(--card-2); }
+.st-wallet small { color: var(--muted); font-size: .72rem; }
+.st-wallet b { font-size: 1.05rem; }
+.st-qty { margin-bottom: 10px; }
+.st-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.st-row { display: grid; grid-template-columns: minmax(0, 1fr) 80px 74px auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; }
+.st-row:nth-child(odd) { background: var(--card-2); }
+.st-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.st-emoji { font-size: 1.4rem; }
+.st-name span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.st-name b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-name small { font-size: .72rem; color: var(--muted); }
+.st-price { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; }
+.st-price small { font-size: .72rem; }
+.st-btns { display: flex; gap: 4px; }
+.board-list { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.board-list li { display: flex; align-items: center; gap: 8px; font-size: .86rem; }
+.board-list .ava { width: 28px; height: 28px; font-size: .9rem; background: var(--card-2); }
+.board-list b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bp { width: 22px; text-align: center; font-weight: 800; color: var(--muted); }
+@media (max-width: 520px) { .st-row { grid-template-columns: minmax(0, 1fr) 70px auto; } .st-row .spark { display: none; } .st-btns .btn { padding-inline: 10px; } }
+
+.bg-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
+.bg-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-2); color: var(--text); cursor: pointer; overflow: hidden; transition: transform .3s var(--spring), background-color .3s; }
+.bg-cell:hover { transform: scale(1.05); }
+.bg-cell.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.bg-cell.on:not(.free) { animation: tapIn .5s var(--spring); }
+.bg-cell.picked { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text); }
+.bg-emoji { font-size: 1.15rem; line-height: 1; }
+.bg-text { font-size: .52rem; line-height: 1.15; text-align: center; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bg-detail { margin: 6px 0; padding: 8px 12px; border-radius: 14px; background: var(--card-2); font-size: .84rem; }
+.bg-status { margin: 6px 0; font-size: .84rem; }
+.bg-claim { animation: livePulse 1.6s infinite; }
+.bg-winners { display: flex; gap: 4px; flex-wrap: wrap; }
+.bg-winners .ava { width: 30px; height: 30px; font-size: .9rem; }
+
+.gs-card { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 8px; border: 0; border-radius: 18px; background: var(--card-2); color: var(--text); text-align: start; cursor: pointer; transition: transform .35s var(--spring); }
+.gs-card:hover { transform: translateY(-2px); }
+.gs-emoji { font-size: 1.8rem; }
+.gs-card > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+.gs-card small { color: var(--muted); font-size: .78rem; }
+.guess-dialog .modal-body { text-align: start; }
+.guess-dialog h2 { text-align: center; }
+.gs-top { display: flex; justify-content: space-between; font-weight: 700; font-size: .85rem; }
+.gs-time { font-variant-numeric: tabular-nums; }
+.gs-clue { margin: 10px 0 12px; border-radius: 20px; overflow: hidden; }
+.gs-emojis { padding: 22px 12px; text-align: center; font-size: 2.4rem; letter-spacing: .1em; background: var(--card-2); animation: popIn .5s var(--spring); }
+.gs-photo { position: relative; aspect-ratio: 16 / 9; background: var(--card-3); display: grid; place-items: center; }
+.gs-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) saturate(1.2); transform: scale(1.15); transition: filter linear, transform linear; }
+.gs-photo img.clearing { filter: blur(0); transform: scale(1); }
+.gs-photo > span { display: none; color: var(--muted); font-size: .85rem; }
+.gs-photo.gone > span { display: block; }
+.gs-review { list-style: none; padding: 0; margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.gs-review li { display: flex; gap: 8px; align-items: flex-start; font-size: .84rem; }
+.gs-mini { flex: none; font-size: .8rem; max-width: 40%; }
+
+.kcard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; aspect-ratio: 5 / 7; padding: 10px 6px; border-radius: 16px; background: linear-gradient(160deg, var(--card), var(--card-2)); border: 2px solid var(--line-2); color: var(--text); text-align: center; box-shadow: var(--shadow); overflow: hidden; }
+.kc-emoji { font-size: 2.4rem; line-height: 1; }
+.kc-name { font-size: .78rem; line-height: 1.2; }
+.kc-meta { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.kc-rare { border-color: #0a84ff; }
+.kc-epic { border-color: #bf5af2; background: linear-gradient(160deg, var(--card), rgba(191, 90, 242, .14)); }
+.kc-legendary { border-color: #ff9f0a; background: linear-gradient(160deg, rgba(255, 214, 10, .22), var(--card) 50%, rgba(255, 159, 10, .22)); }
+.kc-legendary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%); background-size: 250% 100%; animation: shimmer 3s linear infinite; pointer-events: none; }
+.kc-missing { border-style: dashed; background: var(--card-2); box-shadow: none; }
+.kc-missing .kc-emoji { color: var(--faint); font-weight: 800; }
+.kc-count, .kc-new { position: absolute; top: 6px; padding: 1px 6px; border-radius: 999px; font: 800 .62rem var(--font); }
+.kc-count { inset-inline-end: 6px; background: var(--accent); color: var(--on-accent); }
+.kc-new { inset-inline-start: 6px; background: #ff3b30; color: #fff; }
+.kc-small { width: 64px; padding: 6px 4px; border-radius: 12px; }
+.kc-small .kc-emoji { font-size: 1.5rem; }
+.kc-small .kc-name { font-size: .58rem; }
+.kc-small .kc-meta { display: none; }
+.kc-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.kc-progress span { flex: 1; height: 8px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+.kc-progress i { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .6s var(--spring); }
+.kc-sets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; font-size: .78rem; }
+.kc-sets span { padding: 3px 9px; border-radius: 999px; background: var(--card-2); }
+.kc-sets span.done { background: var(--accent); color: var(--on-accent); }
+.modal.cards-dialog { width: min(560px, calc(100vw - 24px)); }
+.cards-dialog .modal-body, .pack-dialog .modal-body { text-align: start; }
+.cards-dialog h2, .pack-dialog h2 { text-align: center; }
+.kc-tabs { margin-bottom: 8px; }
+.kc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+.kc-pick { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+.kc-btn { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 16px; transition: transform .35s var(--spring); }
+.kc-btn:hover { transform: translateY(-3px) rotate(-1deg); }
+.kc-big { width: min(220px, 60%); margin: 6px auto 12px; }
+.kc-big .kc-emoji { font-size: 4rem; } .kc-big .kc-name { font-size: 1rem; }
+.kc-fact { text-align: center; font-size: .92rem; }
+.kc-actions { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+.kc-offer { margin-top: 12px; padding: 12px; border-radius: 18px; background: var(--card-2); }
+.kc-offer .people-search { margin: 8px 0; background: var(--card); }
+.kc-trades { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.kc-trade { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; }
+.kc-pack-shake { font-size: 4rem; text-align: center; animation: nope .5s ease-in-out infinite; }
+.kc-reveal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; perspective: 900px; }
+.kc-flip { position: relative; padding: 0; border: 0; background: none; aspect-ratio: 5 / 7; cursor: pointer; transform-style: preserve-3d; transition: transform .7s var(--spring); animation: popIn .5s var(--spring) backwards; animation-delay: var(--d); }
+.kc-flip.flipped { transform: rotateY(180deg); }
+.kc-back, .kc-front { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; }
+.kc-back { display: grid; place-items: center; font-size: 2.6rem; background: repeating-linear-gradient(45deg, var(--accent) 0 10px, var(--card-3) 10px 20px); box-shadow: var(--shadow); }
+.kc-front { transform: rotateY(180deg); }
+.kc-setdone { text-align: center; font-weight: 800; }
+.dm-kcards { display: flex; flex-direction: column; gap: 6px; padding: 8px; min-width: 190px; }
+.dm-kcards-row { display: flex; align-items: center; gap: 8px; }
+.dm-kswap { font-size: 1.2rem; }
+.dm-kactions { display: flex; gap: 6px; flex-wrap: wrap; }
+.dm-kstatus { font-weight: 700; }
 
 
 /* single-file: kids corner overlay */
@@ -1678,6 +1802,14 @@ html.kids-open, html.kids-open body { overflow: hidden; }
           <h3 id="duelTitle" class="widget-title">⚔️ Quiz Duels</h3>
           <div id="duelBody"></div>
         </section>
+        <section class="widget widget-cards" id="cardsWidget" aria-labelledby="cardsTitle" hidden>
+          <h3 id="cardsTitle" class="widget-title">🃏 kerNEl Cards</h3>
+          <div id="cardsBody"></div>
+        </section>
+        <section class="widget widget-guess" id="guessWidget" aria-labelledby="guessTitle" hidden>
+          <h3 id="guessTitle" class="widget-title">🔤 Guess the headline</h3>
+          <div id="guessBody"></div>
+        </section>
         <section class="widget widget-quiz" id="quizWidget" aria-labelledby="quizTitle" hidden>
           <h3 id="quizTitle" class="widget-title">🧠 Daily Kernel Quiz</h3>
           <div id="quizSide"></div>
@@ -1694,6 +1826,14 @@ html.kids-open, html.kids-open body { overflow: hidden; }
             <p><b>🏆 Weekly tournament</b><br><span id="tourneyLine">8 headlines, one go each. The top 3 win trophies!</span></p>
             <button type="button" class="btn btn-ghost btn-block" data-action="tournament">Enter the tournament</button>
           </div>
+        </section>
+        <section class="widget widget-stocks" id="stocksWidget" aria-labelledby="stocksTitle" hidden>
+          <h3 id="stocksTitle" class="widget-title">📈 Story Stocks</h3>
+          <div id="stocksBody"></div>
+        </section>
+        <section class="widget widget-bingo" id="bingoWidget" aria-labelledby="bingoTitle" hidden>
+          <h3 id="bingoTitle" class="widget-title">🎯 Tech Bingo</h3>
+          <div id="bingoBody"></div>
         </section>
         <section class="widget widget-predict" id="predictWidget" aria-labelledby="predictTitle" hidden>
           <h3 id="predictTitle" class="widget-title">🔮 Predictions</h3>
@@ -4020,10 +4160,291 @@ const MAIN_STRINGS = [
   ['🔔 a company or topic I follow is in the news (max 3 a day)', '🔔 شركة أو موضوع بتابعه بقى في الأخبار (بحد أقصى 3 في اليوم)', '🔔 eine Firma oder ein Thema, dem ich folge, in den News ist (max. 3 am Tag)', '🔔 nasa balita ang kumpanya o topic na sinusundan ko (max 3 bawat araw)'],
   ['Type a company or topic to follow', 'اكتب شركة أو موضوع تتابعه', 'Gib eine Firma oder ein Thema ein', 'Mag-type ng kumpanya o topic na susundan'],
   ['You can follow up to 20 topics — unfollow one first', 'تقدر تتابع لحد 20 موضوع — الغي متابعة واحد الأول', 'Du kannst bis zu 20 Themen folgen – entfolge zuerst einem', 'Hanggang 20 topic lang ang puwede mong sundan — mag-unfollow muna ng isa'],
+  // 📈 stocks, 🎯 bingo, 🔤🌫️ guessing games, 🃏 cards
+  ['Card trade', 'تبديل كروت', 'Kartentausch', 'Palitan ng card'],
+  ['Market mogul', 'ملك السوق', 'Börsen-Mogul', 'Hari ng market'],
+  ['Bingo pro', 'محترف البينجو', 'Bingo-Profi', 'Bingo pro'],
+  ['Card shark', 'ملك الكروت', 'Kartenhai', 'Card shark'],
+  ['Master collector', 'الجامع الأكبر', 'Meistersammler', 'Master collector'],
+  ['finish a Story Stocks week in the top 3', 'خلّص أسبوع Story Stocks في أول 3', 'beende eine Story-Stocks-Woche unter den Top 3', 'matapos ang isang linggo ng Story Stocks sa top 3'],
+  ['get Tech Bingo 3 times', 'اكسب Tech Bingo 3 مرات', 'hol dir 3-mal Tech Bingo', 'makakuha ng Tech Bingo nang 3 beses'],
+  ['complete a card set', 'كمّل مجموعة كروت', 'vervollständige ein Kartenset', 'kumpletuhin ang isang card set'],
+  ['complete all 4 card sets', 'كمّل الـ 4 مجموعات كروت', 'vervollständige alle 4 Kartensets', 'kumpletuhin ang lahat ng 4 card set'],
+  ['Story Stocks', 'Story Stocks', 'Story Stocks', 'Story Stocks'],
+  ['📈 Story Stocks', '📈 Story Stocks', '📈 Story Stocks', '📈 Story Stocks'],
+  ['🎯 Tech Bingo', '🎯 Tech Bingo', '🎯 Tech Bingo', '🎯 Tech Bingo'],
+  ['🃏 kerNEl Cards', '🃏 كروت kerNEl', '🃏 kerNEl-Karten', '🃏 kerNEl Cards'],
+  ['🔤 Guess the headline', '🔤 خمّن العنوان', '🔤 Errate die Schlagzeile', '🔤 Hulaan ang headline'],
+  ['A pretend market for the news: prices follow how much everyone’s talking about each company. You get 1,000 🪙 every week.', 'سوق تمثيلي للأخبار: الأسعار ماشية حسب كلام الناس عن كل شركة. بتاخد 1,000 🪙 كل أسبوع.', 'Eine Spielbörse für News: Die Preise folgen, wie viel über jede Firma geredet wird. Du bekommst jede Woche 1.000 🪙.', 'Isang kunwaring market para sa balita: sumusunod ang presyo sa dami ng usapan tungkol sa bawat kumpanya. May 1,000 🪙 ka bawat linggo.'],
+  ['Open the market', 'افتح السوق', 'Börse öffnen', 'Buksan ang market'],
+  ['Week ends in {time} · top 3 win XP and the 📈 hat', 'الأسبوع بيخلص بعد {time} · أول 3 بياخدوا XP وقبعة 📈', 'Die Woche endet in {time} · die Top 3 gewinnen XP und den 📈 Hut', 'Matatapos ang linggo sa {time} · panalo ng XP at 📈 hat ang top 3'],
+  ['Sell {name}', 'بيع {name}', '{name} verkaufen', 'Ibenta ang {name}'],
+  ['Sell', 'بيع', 'Verkaufen', 'Ibenta'],
+  ['Buy {name}', 'اشتري {name}', '{name} kaufen', 'Bilhin ang {name}'],
+  ['Buy', 'اشتري', 'Kaufen', 'Bilhin'],
+  ['Portfolio', 'المحفظة', 'Depot', 'Portfolio'],
+  ['Cash', 'الكاش', 'Bargeld', 'Cash'],
+  ['Rank', 'الترتيب', 'Rang', 'Rank'],
+  ['Sign up to trade', 'اعمل حساب عشان تتاجر', 'Registrieren zum Handeln', 'Mag-sign up para mag-trade'],
+  ['Shares per trade', 'عدد الأسهم في كل صفقة', 'Aktien pro Handel', 'Shares bawat trade'],
+  ['Just a game: prices follow how much kerNEl’s news mentions each company (updated every hour), not real stock prices.', 'دي لعبة بس: الأسعار ماشية حسب ذكر أخبار kerNEl لكل شركة (بتتحدّث كل ساعة)، مش أسعار البورصة الحقيقية.', 'Nur ein Spiel: Die Preise folgen, wie oft kerNEls News jede Firma erwähnen (stündlich aktualisiert), keine echten Aktienkurse.', 'Laro lang ito: sumusunod ang presyo sa dalas ng pagbanggit ng balita ng kerNEl sa bawat kumpanya (update bawat oras), hindi totoong presyo ng stock.'],
+  ['This week', 'الأسبوع ده', 'Diese Woche', 'Ngayong linggo'],
+  ['Nobody has traded yet — be the first! 🍿', 'لسه محدش اتاجر — خليك الأول! 🍿', 'Noch hat niemand gehandelt – sei der Erste! 🍿', 'Wala pang nag-trade — mauna ka! 🍿'],
+  ['Last week’s winners:', 'كسبانين الأسبوع اللي فات:', 'Gewinner der letzten Woche:', 'Mga nanalo noong nakaraang linggo:'],
+  ['Bought {n} × {name}', 'اشتريت {n} × {name}', '{n} × {name} gekauft', 'Bumili ng {n} × {name}'],
+  ['Sold {n} × {name}', 'بعت {n} × {name}', '{n} × {name} verkauft', 'Nagbenta ng {n} × {name}'],
+  ['{n} shares', '{n} سهم', '{n} Aktien', '{n} share'],
+  ['A new bingo card every week. Squares fill in by themselves when the news matches them!', 'كارت بينجو جديد كل أسبوع. المربعات بتتملى لوحدها لما الأخبار تطابقها!', 'Jede Woche eine neue Bingokarte. Felder füllen sich von selbst, wenn die News passen!', 'Bagong bingo card bawat linggo. Kusang napupuno ang mga kahon kapag tumugma ang balita!'],
+  ['Sign up to get your card', 'اعمل حساب عشان تاخد الكارت بتاعك', 'Registrieren für deine Karte', 'Mag-sign up para makuha ang card mo'],
+  ['Free', 'مجاني', 'Frei', 'Libre'],
+  ['Not in the news yet this week — keep watching!', 'لسه مش في الأخبار الأسبوع ده — خليك متابع!', 'Diese Woche noch nicht in den News – bleib dran!', 'Wala pa sa balita ngayong linggo — abangan!'],
+  ['1 line', 'صف واحد', '1 Reihe', '1 linya'],
+  ['3 lines', '3 صفوف', '3 Reihen', '3 linya'],
+  ['Full card!', 'الكارت كله!', 'Volle Karte!', 'Buong card!'],
+  ['Lines: {n}', 'الصفوف: {n}', 'Reihen: {n}', 'Linya: {n}'],
+  ['ends in {time}', 'بيخلص بعد {time}', 'endet in {time}', 'matatapos sa {time}'],
+  ['Collect: {what}', 'خد: {what}', 'Einlösen: {what}', 'Kunin: {what}'],
+  ['1 line: +{a} XP · 3 lines: +{b} XP · full card: +{c} XP, plus 🃏 card packs', 'صف: +{a} XP · 3 صفوف: +{b} XP · الكارت كله: +{c} XP، وكمان باكات 🃏 كروت', '1 Reihe: +{a} XP · 3 Reihen: +{b} XP · volle Karte: +{c} XP, dazu 🃏 Kartenpacks', '1 linya: +{a} XP · 3 linya: +{b} XP · buong card: +{c} XP, at 🃏 card packs'],
+  ['First bingos this week:', 'أول بينجو الأسبوع ده:', 'Erste Bingos diese Woche:', 'Unang bingo ngayong linggo:'],
+  ['A new line on your bingo card! 🎯', 'صف جديد في كارت البينجو بتاعك! 🎯', 'Eine neue Reihe auf deiner Bingokarte! 🎯', 'Bagong linya sa bingo card mo! 🎯'],
+  ['BINGO! +{xp} XP and {n} card packs', 'بينجو! +{xp} XP و{n} باك كروت', 'BINGO! +{xp} XP und {n} Kartenpacks', 'BINGO! +{xp} XP at {n} card pack'],
+  ['{score} points', '{score} نقطة', '{score} Punkte', '{score} puntos'],
+  ['Play today’s 5 rounds', 'العب جولات النهارده الـ 5', 'Spiel die 5 Runden von heute', 'Laruin ang 5 round ngayon'],
+  ['New rounds every day. A perfect game earns a 🃏 card pack.', 'جولات جديدة كل يوم. الجيم الكامل بيكسبك باك 🃏 كروت.', 'Jeden Tag neue Runden. Ein perfektes Spiel bringt ein 🃏 Kartenpack.', 'Bagong round araw-araw. May 🃏 card pack ang perpektong laro.'],
+  ['Today’s best', 'الأحسن النهارده', 'Die Besten heute', 'Pinakamahusay ngayon'],
+  ['Nobody yet — be the first! 🍿', 'لسه محدش — خليك الأول! 🍿', 'Noch niemand – sei der Erste! 🍿', 'Wala pa — mauna ka! 🍿'],
+  ['Today’s game is still popping — try again in a minute!', 'جيم النهارده لسه بيتحضّر — جرّب كمان دقيقة!', 'Das Spiel von heute wird noch vorbereitet – versuch es in einer Minute!', 'Inihahanda pa ang laro ngayon — subukan ulit mamaya!'],
+  ['{n} rounds · {s} seconds each', '{n} جولات · {s} ثانية لكل جولة', '{n} Runden · je {s} Sekunden', '{n} round · {s} segundo bawat isa'],
+  ['Start', 'ابدأ', 'Start', 'Simulan'],
+  ['Sign up to play', 'اعمل حساب عشان تلعب', 'Registrieren zum Spielen', 'Mag-sign up para maglaro'],
+  ['Emoji clue', 'تلميح بالإيموجي', 'Emoji-Hinweis', 'Emoji clue'],
+  ['Photo unavailable — trust your gut!', 'الصورة مش موجودة — امشي ورا إحساسك!', 'Foto nicht verfügbar – hör auf dein Bauchgefühl!', 'Walang litrato — sundin ang kutob mo!'],
+  ['Round {i} of {n}', 'الجولة {i} من {n}', 'Runde {i} von {n}', 'Round {i} sa {n}'],
+  ['Perfect game! A bonus 🃏 card pack is waiting for you.', 'جيم كامل! باك 🃏 كروت هدية مستنيك.', 'Perfektes Spiel! Ein Bonus-🃏-Kartenpack wartet auf dich.', 'Perpektong laro! May bonus 🃏 card pack na naghihintay sa iyo.'],
+  ['{r} of {n} right', '{r} صح من {n}', '{r} von {n} richtig', '{r} sa {n} tama'],
+  ['Come back tomorrow for new rounds!', 'تعالى بكرة لجولات جديدة!', 'Komm morgen für neue Runden wieder!', 'Bumalik bukas para sa bagong round!'],
+  ['Emoji Headlines', 'عناوين بالإيموجي', 'Emoji-Schlagzeilen', 'Emoji Headlines'],
+  ['Blur Reveal', 'الصورة المغبّشة', 'Unscharf-Rätsel', 'Blur Reveal'],
+  ['Each round shows a headline as emojis. Pick the real story — the faster you are, the more points you get.', 'كل جولة بتوريك عنوان بالإيموجي. اختار الخبر الصح — كل ما تبقى أسرع تاخد نقط أكتر.', 'Jede Runde zeigt eine Schlagzeile als Emojis. Wähl die echte Story – je schneller, desto mehr Punkte.', 'Bawat round ay may headline na naka-emoji. Piliin ang totoong balita — mas mabilis, mas maraming puntos.'],
+  ['A story’s photo starts blurry and slowly gets sharper. Guess the headline before it’s clear — sooner means more points.', 'صورة الخبر بتبدأ مغبّشة وبتوضح واحدة واحدة. خمّن العنوان قبل ما توضح — كل ما تبقى أبدر نقطك تزيد.', 'Das Foto einer Story ist erst unscharf und wird langsam klarer. Errate die Schlagzeile, bevor es scharf ist – je früher, desto mehr Punkte.', 'Malabo muna ang litrato ng balita at unti-unting lumilinaw. Hulaan ang headline bago ito lumiwanag — mas maaga, mas maraming puntos.'],
+  ['Card pack', 'باك كروت', 'Kartenpack', 'Card pack'],
+  ['Your collection', 'مجموعتك', 'Deine Sammlung', 'Koleksyon mo'],
+  ['Collect 36 cards of tech legends, gadgets and space gear. A free pack every day!', 'جمّع 36 كارت لأساطير التكنولوجيا والأجهزة وحاجات الفضاء. باك مجاني كل يوم!', 'Sammle 36 Karten mit Tech-Legenden, Gadgets und Weltraumtechnik. Jeden Tag ein Gratis-Pack!', 'Mangolekta ng 36 card ng tech legends, gadgets at space gear. Libreng pack araw-araw!'],
+  ['Sign up to collect', 'اعمل حساب عشان تجمّع', 'Registrieren zum Sammeln', 'Mag-sign up para mangolekta'],
+  ['Open today’s free pack', 'افتح باك النهارده المجاني', 'Heutiges Gratis-Pack öffnen', 'Buksan ang libreng pack ngayon'],
+  ['Open a bonus pack ({n} left)', 'افتح باك هدية (فاضل {n})', 'Bonus-Pack öffnen (noch {n})', 'Magbukas ng bonus pack ({n} pa)'],
+  ['Your next free pack arrives tomorrow. Win bingo lines, duels and predictions for bonus packs!', 'الباك المجاني الجاي بكرة. اكسب صفوف بينجو ومبارزات وتوقعات عشان تاخد باكات هدية!', 'Dein nächstes Gratis-Pack kommt morgen. Gewinne Bingoreihen, Duelle und Vorhersagen für Bonus-Packs!', 'Bukas ang susunod mong libreng pack. Manalo ng bingo lines, duels at hula para sa bonus packs!'],
+  ['View collection', 'شوف المجموعة', 'Sammlung ansehen', 'Tingnan ang koleksyon'],
+  ['Tap each card to flip it!', 'دوس على كل كارت عشان تقلبه!', 'Tippe auf jede Karte, um sie umzudrehen!', 'I-tap ang bawat card para baligtarin!'],
+  ['Set complete! You unlocked a new look.', 'المجموعة كملت! فتحت لوك جديد.', 'Set komplett! Du hast einen neuen Look freigeschaltet.', 'Kumpleto ang set! May bagong look ka na.'],
+  ['Flip them all', 'اقلبهم كلهم', 'Alle umdrehen', 'Baligtarin lahat'],
+  ['Open trades', 'تبديلات مفتوحة', 'Offene Tausche', 'Bukas na palitan'],
+  ['to @{name}', 'لـ @{name}', 'an @{name}', 'kay @{name}'],
+  ['from @{name}', 'من @{name}', 'von @{name}', 'mula kay @{name}'],
+  ['No thanks', 'لأ شكرًا', 'Nein danke', 'Huwag na'],
+  ['Complete a set for the 🃏 Card shark hat, and all four for the Master collector frame.', 'كمّل مجموعة عشان تاخد قبعة 🃏 ملك الكروت، والأربعة عشان إطار الجامع الأكبر.', 'Vervollständige ein Set für den 🃏 Kartenhai-Hut und alle vier für den Meistersammler-Rahmen.', 'Kumpletuhin ang isang set para sa 🃏 Card shark hat, at lahat ng apat para sa Master collector frame.'],
+  ['Who do you want to trade with?', 'عايز تبدّل مع مين؟', 'Mit wem willst du tauschen?', 'Sino ang gusto mong kapalitan?'],
+  ['Who gets this card?', 'مين ياخد الكارت ده؟', 'Wer bekommt diese Karte?', 'Kanino mapupunta ang card na ito?'],
+  ['Pick a card @{name} has that you’re missing', 'اختار كارت عند @{name} وناقصك', 'Wähle eine Karte von @{name}, die dir fehlt', 'Pumili ng card ni @{name} na wala sa iyo'],
+  ['They don’t have any cards you’re missing yet.', 'معندوش أي كارت ناقصك لسه.', 'Diese Person hat noch keine Karte, die dir fehlt.', 'Wala pa silang card na wala sa iyo.'],
+  ['Gift a double', 'اهدي كارت مكرر', 'Doppelte verschenken', 'Iregalo ang doble'],
+  ['Trade a double', 'بدّل كارت مكرر', 'Doppelte tauschen', 'Ipagpalit ang doble'],
+  ['Get a double of this card to gift or trade it.', 'لما يبقى عندك نسختين من الكارت ده تقدر تهديه أو تبدّله.', 'Hol dir eine doppelte Karte davon, um sie zu verschenken oder zu tauschen.', 'Kumuha ng doble ng card na ito para iregalo o ipagpalit.'],
+  ['Card sent to @{name}! 🎁', 'الكارت اتبعت لـ @{name}! 🎁', 'Karte an @{name} geschickt! 🎁', 'Naipadala ang card kay @{name}! 🎁'],
+  ['Trade offer sent to @{name}! 🔁', 'عرض التبديل اتبعت لـ @{name}! 🔁', 'Tauschangebot an @{name} geschickt! 🔁', 'Naipadala ang alok na palitan kay @{name}! 🔁'],
+  ['Give your double {card} to @{name}?', 'تدّي الـ {card} المكرر لـ @{name}؟', 'Deine doppelte Karte „{card}“ an @{name} geben?', 'Ibigay ang doble mong {card} kay @{name}?'],
+  ['{n} trade offers', '{n} عرض تبديل', '{n} Tauschangebote', '{n} alok na palitan'],
+  ['Not collected yet', 'لسه مجمّعتوش', 'Noch nicht gesammelt', 'Hindi pa nakokolekta'],
+  ['NEW', 'جديد', 'NEU', 'BAGO'],
+  ['You sent a card 🎁', 'بعت كارت 🎁', 'Du hast eine Karte geschickt 🎁', 'Nagpadala ka ng card 🎁'],
+  ['A gift for you! 🎁', 'هدية ليك! 🎁', 'Ein Geschenk für dich! 🎁', 'Regalo para sa iyo! 🎁'],
+  ['Your trade offer', 'عرض التبديل بتاعك', 'Dein Tauschangebot', 'Ang alok mong palitan'],
+  ['Trade offer 🔁', 'عرض تبديل 🔁', 'Tauschangebot 🔁', 'Alok na palitan 🔁'],
+  ['Traded!', 'اتبدّلوا!', 'Getauscht!', 'Napalitan na!'],
+  ['Declined', 'اترفض', 'Abgelehnt', 'Tinanggihan'],
+  ['Cancelled', 'اتلغى', 'Abgebrochen', 'Kinansela'],
+  ['This trade didn’t work out', 'التبديل ده ما نفعش', 'Dieser Tausch hat nicht geklappt', 'Hindi natuloy ang palitang ito'],
+  ['You give your {card}', 'إنت بتدّي الـ {card} بتاعك', 'Du gibst deine Karte „{card}“', 'Ibibigay mo ang iyong {card}'],
+  ['Traded! Check your collection 🃏', 'اتبدّلوا! شوف مجموعتك 🃏', 'Getauscht! Schau in deine Sammlung 🃏', 'Napalitan na! Tingnan ang koleksyon mo 🃏'],
+  ['Common', 'عادي', 'Gewöhnlich', 'Karaniwan'],
+  ['Rare', 'نادر', 'Selten', 'Bihira'],
+  ['Epic', 'ملحمي', 'Episch', 'Epic'],
+  ['Legendary', 'أسطوري', 'Legendär', 'Maalamat'],
+  ['No packs left — a free one arrives tomorrow!', 'مفيش باكات فاضلة — واحد مجاني جاي بكرة!', 'Keine Packs mehr – morgen kommt ein Gratis-Pack!', 'Wala nang pack — may libre bukas!'],
+  ['Unknown card', 'كارت مش معروف', 'Unbekannte Karte', 'Hindi kilalang card'],
+  ['You can’t trade with yourself', 'مينفعش تبدّل مع نفسك', 'Du kannst nicht mit dir selbst tauschen', 'Hindi ka puwedeng makipagpalit sa sarili mo'],
+  ['You can only offer cards you have doubles of', 'تقدر تعرض بس الكروت اللي عندك منها نسختين', 'Du kannst nur Karten anbieten, die du doppelt hast', 'Ang mga card lang na may doble ka ang puwede mong ialok'],
+  ['They don’t have that card', 'معندوش الكارت ده', 'Diese Person hat diese Karte nicht', 'Wala sa kanila ang card na iyan'],
+  ['You have lots of offers waiting — let some get answered first', 'عندك عروض كتير مستنية — استنى لما يتردّ على شوية', 'Du hast viele offene Angebote – warte, bis einige beantwortet sind', 'Marami kang naghihintay na alok — hintayin munang masagot ang ilan'],
+  ['Trade not found', 'التبديل مش موجود', 'Tausch nicht gefunden', 'Hindi nakita ang palitan'],
+  ['This trade is already done', 'التبديل ده خلص خلاص', 'Dieser Tausch ist schon erledigt', 'Tapos na ang palitang ito'],
+  ['One of the cards isn’t there anymore', 'واحد من الكروت مبقاش موجود', 'Eine der Karten ist nicht mehr da', 'Wala na ang isa sa mga card'],
+  ['Unknown game', 'لعبة مش معروفة', 'Unbekanntes Spiel', 'Hindi kilalang laro'],
+  ['Open the game first', 'افتح اللعبة الأول', 'Öffne zuerst das Spiel', 'Buksan muna ang laro'],
+  ['Start the game first', 'ابدأ اللعبة الأول', 'Starte zuerst das Spiel', 'Simulan muna ang laro'],
+  ['Unknown company', 'شركة مش معروفة', 'Unbekannte Firma', 'Hindi kilalang kumpanya'],
+  ['Pick how many shares', 'اختار عدد الأسهم', 'Wähle, wie viele Aktien', 'Piliin kung ilang share'],
+  ['That’s a lot of trading for one day — the market opens again tomorrow!', 'ده تداول كتير ليوم واحد — السوق يفتح تاني بكرة!', 'Das ist viel Handel für einen Tag – die Börse öffnet morgen wieder!', 'Ang daming trade para sa isang araw — bukas ulit ang market bukas!'],
+  ['Not enough 🪙 for that many shares', 'الـ 🪙 مش كفاية للعدد ده من الأسهم', 'Nicht genug 🪙 für so viele Aktien', 'Kulang ang 🪙 para sa ganyang dami ng share'],
+  ['You don’t have that many shares', 'معندكش العدد ده من الأسهم', 'So viele Aktien hast du nicht', 'Wala kang ganyang karaming share'],
+  ['Unknown trade', 'تبديل مش معروف', 'Unbekannter Tausch', 'Hindi kilalang palitan'],
+  // 🃏 the cards and 🎯 bingo squares
+  ['Retro Gadgets', 'أجهزة ريترو', 'Retro-Gadgets', 'Retro Gadgets'],
+  ['Space Tech', 'تكنولوجيا الفضاء', 'Weltraumtechnik', 'Space Tech'],
+  ['AI & Robots', 'ذكاء اصطناعي وروبوتات', 'KI & Roboter', 'AI at Robot'],
+  ['Code Legends', 'أساطير الكود', 'Code-Legenden', 'Code Legends'],
+  ['Floppy Disk', 'الفلوبي ديسك', 'Diskette', 'Floppy Disk'],
+  ['Game Cartridge', 'كارتريدج ألعاب', 'Spielmodul', 'Game Cartridge'],
+  ['Cassette Tape', 'شريط كاسيت', 'Kassette', 'Cassette Tape'],
+  ['Dial-up Modem', 'مودم الدايل أب', 'Einwahlmodem', 'Dial-up Modem'],
+  ['CRT Monitor', 'شاشة تلفزيون قديمة', 'Röhrenmonitor', 'CRT Monitor'],
+  ['Pager', 'البيجر', 'Pager', 'Pager'],
+  ['Calculator Watch', 'ساعة آلة حاسبة', 'Taschenrechneruhr', 'Calculator Watch'],
+  ['Joystick', 'جويستيك', 'Joystick', 'Joystick'],
+  ['CD-ROM', 'سي دي روم', 'CD-ROM', 'CD-ROM'],
+  ['Reusable Rocket', 'صاروخ بيترجّع', 'Wiederverwendbare Rakete', 'Reusable Rocket'],
+  ['Satellite', 'قمر صناعي', 'Satellit', 'Satellite'],
+  ['Moon Rover', 'عربية القمر', 'Mondauto', 'Moon Rover'],
+  ['Mars Rover', 'مركبة المريخ', 'Mars-Rover', 'Mars Rover'],
+  ['Space Telescope', 'تلسكوب فضائي', 'Weltraumteleskop', 'Space Telescope'],
+  ['Space Station', 'محطة فضاء', 'Raumstation', 'Space Station'],
+  ['Astronaut Suit', 'بدلة رائد فضاء', 'Raumanzug', 'Astronaut Suit'],
+  ['Comet Probe', 'مسبار مذنّب', 'Kometensonde', 'Comet Probe'],
+  ['Black Hole Photo', 'صورة الثقب الأسود', 'Foto eines Schwarzen Lochs', 'Larawan ng Black Hole'],
+  ['Robot Dog', 'كلب روبوت', 'Roboterhund', 'Robot Dog'],
+  ['Chatbot', 'شات بوت', 'Chatbot', 'Chatbot'],
+  ['Neural Network', 'شبكة عصبية', 'Neuronales Netz', 'Neural Network'],
+  ['Self-driving Car', 'عربية بتسوق نفسها', 'Selbstfahrendes Auto', 'Self-driving Car'],
+  ['Drone', 'درون', 'Drohne', 'Drone'],
+  ['Robot Arm', 'دراع روبوت', 'Roboterarm', 'Robot Arm'],
+  ['Smart Speaker', 'سماعة ذكية', 'Smarter Lautsprecher', 'Smart Speaker'],
+  ['AI Art', 'فن بالذكاء الاصطناعي', 'KI-Kunst', 'AI Art'],
+  ['Supercomputer', 'سوبر كمبيوتر', 'Supercomputer', 'Supercomputer'],
+  ['The First Bug', 'أول باج', 'Der erste Bug', 'Ang Unang Bug'],
+  ['Hello, World!', 'Hello, World!', 'Hallo, Welt!', 'Hello, World!'],
+  ['Open Source', 'المصدر المفتوح', 'Open Source', 'Open Source'],
+  ['The Cloud', 'الكلاود', 'Die Cloud', 'Ang Cloud'],
+  ['Emoji', 'الإيموجي', 'Emoji', 'Emoji'],
+  ['The Web', 'الويب', 'Das Web', 'Ang Web'],
+  ['Wi-Fi', 'الواي فاي', 'WLAN', 'Wi-Fi'],
+  ['Blockchain', 'البلوك تشين', 'Blockchain', 'Blockchain'],
+  ['The Mouse', 'الماوس', 'Die Maus', 'Ang Mouse'],
+  ['A 3.5-inch floppy held 1.44 MB — less than one phone photo.', 'الفلوبي 3.5 بوصة كان شايل 1.44 ميجا — أقل من صورة موبايل واحدة.', 'Eine 3,5-Zoll-Diskette fasste 1,44 MB – weniger als ein Handyfoto.', 'Ang 3.5-inch na floppy ay may 1.44 MB lang — mas kaunti pa sa isang litrato sa phone.'],
+  ['Blowing into cartridges never really fixed them. Everyone did it anyway.', 'النفخ في الكارتريدج عمره ما صلّحه بجد. بس الكل كان بيعمل كده.', 'In Spielmodule zu pusten hat nie wirklich geholfen. Alle haben es trotzdem gemacht.', 'Hindi talaga naayos ang cartridge sa pag-ihip. Pero ginawa pa rin ng lahat.'],
+  ['Tapes were rewound with a pencil to save the player’s batteries.', 'الناس كانت بترجّع الشريط بالقلم الرصاص عشان توفّر بطاريات الكاسيت.', 'Kassetten wurden mit einem Bleistift zurückgespult, um die Batterien zu schonen.', 'Nire-rewind ang tape gamit ang lapis para makatipid sa baterya.'],
+  ['Dial-up screeched because two modems were working out how to talk.', 'الدايل أب كان بيزعّق عشان مودمين بيتفقوا إزاي يكلموا بعض.', 'Einwahlmodems kreischten, weil zwei Modems aushandelten, wie sie reden.', 'Tumitili ang dial-up dahil nag-uusap ang dalawang modem kung paano magkakaintindihan.'],
+  ['Old CRT screens drew the picture with a beam of electrons, line by line.', 'الشاشات القديمة كانت بترسم الصورة بشعاع إلكترونات، سطر سطر.', 'Alte Röhrenbildschirme zeichneten das Bild mit einem Elektronenstrahl, Zeile für Zeile.', 'Gumuguhit ng larawan ang lumang CRT gamit ang sinag ng electron, linya-linya.'],
+  ['Pagers could only show numbers, so people sent codes like 143 for “I love you”.', 'البيجر كان بيعرض أرقام بس، فالناس كانت بتبعت أكواد زي 143 يعني «بحبك».', 'Pager zeigten nur Zahlen, also schickte man Codes wie 143 für „Ich liebe dich“.', 'Numero lang ang kaya ng pager, kaya nagpapadala ang tao ng code gaya ng 143 para sa “I love you”.'],
+  ['In the 1980s the coolest smartwatch was a calculator on your wrist.', 'في الثمانينات أروش ساعة ذكية كانت آلة حاسبة على إيدك.', 'In den 80ern war die coolste Smartwatch ein Taschenrechner am Handgelenk.', 'Noong 1980s, ang pinakaastig na smartwatch ay calculator sa pulso mo.'],
+  ['The word “joystick” is older than video games — pilots used it first.', 'كلمة «جويستيك» أقدم من ألعاب الفيديو — الطيارين استخدموها الأول.', 'Das Wort „Joystick“ ist älter als Videospiele – Piloten benutzten es zuerst.', 'Mas matanda ang salitang “joystick” kaysa sa video games — piloto ang unang gumamit nito.'],
+  ['One CD-ROM held as much as about 450 floppy disks.', 'سي دي واحد كان بيشيل قد حوالي 450 فلوبي.', 'Eine CD-ROM fasste so viel wie etwa 450 Disketten.', 'Ang isang CD-ROM ay kasing-laki ng mga 450 floppy disk.'],
+  ['Some rockets now land back on their feet so they can fly again.', 'في صواريخ دلوقتي بتنزل على رجليها عشان تطير تاني.', 'Manche Raketen landen heute wieder auf ihren Beinen und fliegen erneut.', 'May mga rocket na ngayon na lumalapag nang nakatayo para makalipad ulit.'],
+  ['Thousands of satellites circle Earth, helping with maps, weather and TV.', 'آلاف الأقمار الصناعية بتلف حوالين الأرض وبتساعد في الخرايط والطقس والتلفزيون.', 'Tausende Satelliten umkreisen die Erde und helfen bei Karten, Wetter und TV.', 'Libu-libong satellite ang umiikot sa Earth, tumutulong sa mapa, panahon at TV.'],
+  ['Astronauts once drove a battery-powered buggy on the Moon.', 'رواد الفضاء سافوا مرة عربية بطارية على القمر.', 'Astronauten fuhren einmal ein batteriebetriebenes Auto auf dem Mond.', 'Minsan nagmaneho ang mga astronaut ng de-bateryang sasakyan sa Buwan.'],
+  ['Messages to a Mars rover can take over 20 minutes to arrive.', 'الرسايل لمركبة المريخ ممكن تاخد أكتر من 20 دقيقة توصل.', 'Nachrichten an einen Mars-Rover brauchen bis zu über 20 Minuten.', 'Puwedeng umabot ng mahigit 20 minuto bago dumating ang mensahe sa Mars rover.'],
+  ['Space telescopes see light that left distant galaxies billions of years ago.', 'التلسكوبات الفضائية بتشوف نور خرج من مجرات بعيدة من مليارات السنين.', 'Weltraumteleskope sehen Licht, das ferne Galaxien vor Milliarden Jahren verlassen hat.', 'Nakikita ng space telescope ang liwanag na umalis sa malalayong galaxy bilyon-bilyong taon na ang nakaraan.'],
+  ['A space station circles Earth about every 90 minutes.', 'محطة الفضاء بتلف حوالين الأرض كل 90 دقيقة تقريبًا.', 'Eine Raumstation umrundet die Erde etwa alle 90 Minuten.', 'Umiikot ang space station sa Earth mga bawat 90 minuto.'],
+  ['A spacesuit is like a tiny spaceship shaped like a person.', 'بدلة الفضاء زي سفينة فضاء صغيرة على شكل إنسان.', 'Ein Raumanzug ist wie ein winziges Raumschiff in Menschenform.', 'Ang spacesuit ay parang maliit na spaceship na hugis-tao.'],
+  ['A probe once landed on a comet hurtling through space.', 'مسبار نزل مرة على مذنّب طاير في الفضاء.', 'Eine Sonde landete einmal auf einem durchs All rasenden Kometen.', 'Minsan lumapag ang isang probe sa kometang humaharurot sa kalawakan.'],
+  ['Telescopes all over Earth worked together to photograph a black hole.', 'تلسكوبات في كل حتة في الأرض اشتغلت مع بعض عشان تصوّر ثقب أسود.', 'Teleskope auf der ganzen Erde arbeiteten zusammen, um ein Schwarzes Loch zu fotografieren.', 'Nagtulungan ang mga telescope sa buong mundo para kunan ng litrato ang isang black hole.'],
+  ['Four-legged robots can climb stairs and get back up when pushed.', 'الروبوتات أم أربع رجلين بتطلع السلم وبتقوم تاني لو اتزقّت.', 'Vierbeinige Roboter können Treppen steigen und stehen nach einem Schubs wieder auf.', 'Kayang umakyat ng hagdan ng apat-na-paang robot at tumayo ulit kapag itinulak.'],
+  ['One of the first chatbots, from the 1960s, pretended to be a therapist.', 'واحد من أول الشات بوتس، من الستينات، كان بيمثّل إنه دكتور نفساني.', 'Einer der ersten Chatbots aus den 60ern tat so, als wäre er ein Therapeut.', 'Nagpanggap na therapist ang isa sa mga unang chatbot noong 1960s.'],
+  ['Neural networks learn by tweaking millions of tiny numbers.', 'الشبكات العصبية بتتعلم بإنها تظبط ملايين الأرقام الصغيرة.', 'Neuronale Netze lernen, indem sie Millionen winziger Zahlen anpassen.', 'Natututo ang neural network sa pag-adjust ng milyun-milyong maliliit na numero.'],
+  ['Self-driving cars “see” with cameras, radar and laser scanners.', 'العربيات اللي بتسوق نفسها «بتشوف» بالكاميرات والرادار والليزر.', 'Selbstfahrende Autos „sehen“ mit Kameras, Radar und Laserscannern.', 'Ang self-driving car ay “nakakakita” gamit ang camera, radar at laser scanner.'],
+  ['Drones keep steady by adjusting their propellers hundreds of times a second.', 'الدرون بيفضل ثابت لأنه بيظبط المراوح مئات المرات في الثانية.', 'Drohnen halten sich stabil, indem sie ihre Propeller hunderte Male pro Sekunde anpassen.', 'Nananatiling steady ang drone sa pag-adjust ng propeller nang daan-daang beses bawat segundo.'],
+  ['Factory robot arms can repeat the same move millions of times.', 'أدرع الروبوتات في المصانع بتكرر نفس الحركة ملايين المرات.', 'Roboterarme in Fabriken können dieselbe Bewegung millionenfach wiederholen.', 'Kayang ulitin ng robot arm sa pabrika ang parehong galaw nang milyun-milyong beses.'],
+  ['Smart speakers wait for a wake word before they really start listening.', 'السماعات الذكية بتستنى كلمة التشغيل قبل ما تبدأ تسمع بجد.', 'Smarte Lautsprecher warten auf ein Aktivierungswort, bevor sie richtig zuhören.', 'Hinihintay ng smart speaker ang wake word bago talaga makinig.'],
+  ['Image AIs learn to paint by removing noise from a picture, step by step.', 'الذكاء الاصطناعي بتاع الصور بيتعلم يرسم بإنه يشيل التشويش من الصورة خطوة خطوة.', 'Bild-KIs lernen zu malen, indem sie Schritt für Schritt Rauschen aus einem Bild entfernen.', 'Natututong gumuhit ang image AI sa pagtanggal ng ingay sa larawan, hakbang-hakbang.'],
+  ['The fastest computers fill whole rooms and need their own cooling plants.', 'أسرع الكمبيوترات بتملى أوض كاملة ومحتاجة محطات تبريد لوحدها.', 'Die schnellsten Computer füllen ganze Räume und brauchen eigene Kühlanlagen.', 'Ang pinakamabilis na computer ay sumasakop ng buong kuwarto at may sariling cooling plant.'],
+  ['In 1947 a real moth got stuck in a computer — the first actual “bug”.', 'في 1947 فراشة حقيقية اتزنقت في كمبيوتر — أول «باج» بجد.', '1947 steckte eine echte Motte in einem Computer fest – der erste echte „Bug“.', 'Noong 1947, may totoong gamu-gamo na naipit sa computer — ang unang tunay na “bug”.'],
+  ['Most programmers’ very first program just prints “Hello, World!”.', 'أول برنامج لمعظم المبرمجين بيطبع «Hello, World!» وبس.', 'Das allererste Programm der meisten Programmierer gibt nur „Hello, World!“ aus.', 'Ang pinakaunang program ng karamihan sa programmer ay nagpi-print lang ng “Hello, World!”.'],
+  ['Open-source code is free for anyone to read, change and share.', 'الكود المفتوح المصدر أي حد يقدر يقراه ويغيّره ويشاركه ببلاش.', 'Open-Source-Code darf jeder kostenlos lesen, ändern und teilen.', 'Libreng basahin, baguhin at ibahagi ng kahit sino ang open-source code.'],
+  ['“The cloud” is just other people’s computers in giant buildings.', '«الكلاود» هو كمبيوترات ناس تانية في مباني عملاقة وبس.', '„Die Cloud“ sind einfach Computer anderer Leute in riesigen Gebäuden.', 'Ang “cloud” ay computer lang ng ibang tao sa napakalaking gusali.'],
+  ['The first emoji set, made in 1999 in Japan, had 176 tiny pictures.', 'أول مجموعة إيموجي، اتعملت سنة 1999 في اليابان، كان فيها 176 صورة صغيرة.', 'Das erste Emoji-Set entstand 1999 in Japan und hatte 176 winzige Bilder.', 'Ang unang emoji set, ginawa noong 1999 sa Japan, ay may 176 maliliit na larawan.'],
+  ['The very first website went online in 1991 and is still there.', 'أول موقع في التاريخ نزل أونلاين سنة 1991 ولسه موجود.', 'Die allererste Website ging 1991 online und ist immer noch da.', 'Nag-online ang pinakaunang website noong 1991 at nandoon pa rin.'],
+  ['Wi-Fi sends data using radio waves, like a tiny radio station.', 'الواي فاي بيبعت الداتا بموجات راديو، زي محطة راديو صغيرة.', 'WLAN sendet Daten mit Funkwellen, wie ein winziger Radiosender.', 'Nagpapadala ng data ang Wi-Fi gamit ang radio waves, parang maliit na istasyon ng radyo.'],
+  ['A blockchain is a shared notebook that many computers keep copies of.', 'البلوك تشين زي كشكول مشترك كمبيوترات كتير معاها نسخ منه.', 'Eine Blockchain ist ein gemeinsames Notizbuch, von dem viele Computer Kopien haben.', 'Ang blockchain ay isang shared notebook na kinokopya ng maraming computer.'],
+  ['The computer mouse was first shown to the world in 1968, made of wood.', 'الماوس اتعرض للعالم أول مرة سنة 1968، وكان معمول من خشب.', 'Die Computermaus wurde 1968 erstmals vorgestellt – aus Holz.', 'Unang ipinakita sa mundo ang computer mouse noong 1968, gawa sa kahoy.'],
+  ['🤖 A new AI model launches', '🤖 موديل ذكاء اصطناعي جديد ينزل', '🤖 Ein neues KI-Modell startet', '🤖 Bagong AI model ang inilabas'],
+  ['🔓 A hack or data leak', '🔓 اختراق أو تسريب داتا', '🔓 Ein Hack oder Datenleck', '🔓 Hack o data leak'],
+  ['⏳ Something gets delayed', '⏳ حاجة تتأجل', '⏳ Etwas wird verschoben', '⏳ May naantala'],
+  ['📦 Layoffs at a tech company', '📦 تسريح في شركة تكنولوجيا', '📦 Entlassungen bei einer Tech-Firma', '📦 Tanggalan sa isang tech company'],
+  ['🪙 Crypto news', '🪙 أخبار كريبتو', '🪙 Krypto-News', '🪙 Balitang crypto'],
+  ['🚀 A rocket launch', '🚀 إطلاق صاروخ', '🚀 Ein Raketenstart', '🚀 Paglulunsad ng rocket'],
+  ['🍎 Apple news', '🍎 أخبار Apple', '🍎 Apple-News', '🍎 Balitang Apple'],
+  ['🔍 Google news', '🔍 أخبار Google', '🔍 Google-News', '🔍 Balitang Google'],
+  ['🪟 Microsoft news', '🪟 أخبار Microsoft', '🪟 Microsoft-News', '🪟 Balitang Microsoft'],
+  ['🔓 An open-source release', '🔓 إصدار مفتوح المصدر', '🔓 Ein Open-Source-Release', '🔓 Isang open-source release'],
+  ['⚖️ A lawsuit or a fine', '⚖️ قضية أو غرامة', '⚖️ Eine Klage oder Strafe', '⚖️ Kaso o multa'],
+  ['💰 A billion-dollar story', '💰 خبر بمليارات', '💰 Eine Milliarden-Story', '💰 Balitang bilyon-dolyar'],
+  ['💸 A startup raises money', '💸 ستارت أب يجمع فلوس', '💸 Ein Startup sammelt Geld', '💸 Startup na nakalikom ng pera'],
+  ['🎮 Big gaming news', '🎮 خبر جيمنج كبير', '🎮 Große Gaming-News', '🎮 Malaking balitang gaming'],
+  ['🚗 Electric car news', '🚗 أخبار العربيات الكهربا', '🚗 E-Auto-News', '🚗 Balitang electric car'],
+  ['📱 A new phone', '📱 موبايل جديد', '📱 Ein neues Handy', '📱 Bagong phone'],
+  ['🍟 Computer chip news', '🍟 أخبار الشيبس والمعالجات', '🍟 Chip-News', '🍟 Balitang computer chip'],
+  ['🦾 Robots!', '🦾 روبوتات!', '🦾 Roboter!', '🦾 Mga robot!'],
+  ['⚛️ Quantum computing', '⚛️ الحوسبة الكمّية', '⚛️ Quantencomputer', '⚛️ Quantum computing'],
+  ['🙈 A privacy fight', '🙈 خناقة على الخصوصية', '🙈 Ein Datenschutz-Streit', '🙈 Away tungkol sa privacy'],
+  ['💥 Something goes down', '💥 حاجة تقع', '💥 Etwas fällt aus', '💥 May bumagsak'],
+  ['🦀 Rust news', '🦀 أخبار Rust', '🦀 Rust-News', '🦀 Balitang Rust'],
+  ['🐧 Linux news', '🐧 أخبار Linux', '🐧 Linux-News', '🐧 Balitang Linux'],
+  ['🐍 Python news', '🐍 أخبار Python', '🐍 Python-News', '🐍 Balitang Python'],
+  ['🥽 VR or AR headsets', '🥽 نضارات VR أو AR', '🥽 VR- oder AR-Brillen', '🥽 VR o AR headset'],
+  ['🌡️ Climate tech', '🌡️ تكنولوجيا المناخ', '🌡️ Klimatechnik', '🌡️ Climate tech'],
+  ['🔬 A science discovery', '🔬 اكتشاف علمي', '🔬 Eine wissenschaftliche Entdeckung', '🔬 Isang tuklas sa agham'],
+  ['🩺 Health tech', '🩺 تكنولوجيا الصحة', '🩺 Gesundheitstechnik', '🩺 Health tech'],
+  ['🚫 Something gets banned', '🚫 حاجة تتمنع', '🚫 Etwas wird verboten', '🚫 May ipinagbawal'],
+  ['🏅 A new record', '🏅 رقم قياسي جديد', '🏅 Ein neuer Rekord', '🏅 Bagong record'],
+  ['🥇 A world first', '🥇 أول مرة في العالم', '🥇 Eine Weltpremiere', '🥇 Una sa mundo'],
+  ['👔 A CEO in the news', '👔 رئيس شركة في الأخبار', '👔 Ein CEO in den News', '👔 CEO sa balita'],
+  ['🤝 One company buys another', '🤝 شركة تشتري شركة', '🤝 Eine Firma kauft eine andere', '🤝 Bumili ang isang kumpanya ng iba'],
+  ['🔄 A big software update', '🔄 تحديث سوفتوير كبير', '🔄 Ein großes Software-Update', '🔄 Malaking software update'],
+  ['❓ An “Ask HN” question', '❓ سؤال «Ask HN»', '❓ Eine „Ask HN“-Frage', '❓ Tanong na “Ask HN”'],
+  ['🛠️ A “Show HN” project', '🛠️ مشروع «Show HN»', '🛠️ Ein „Show HN“-Projekt', '🛠️ Proyektong “Show HN”'],
+  ['🧭 Web browser news', '🧭 أخبار المتصفحات', '🧭 Browser-News', '🧭 Balitang web browser'],
+  ['🌙 The Moon or Mars', '🌙 القمر أو المريخ', '🌙 Mond oder Mars', '🌙 Ang Buwan o Mars'],
+  ['🗣️ Social media drama', '🗣️ دراما السوشيال ميديا', '🗣️ Social-Media-Drama', '🗣️ Drama sa social media'],
+  ['🔑 Passwords and logins', '🔑 الباسوردات وتسجيل الدخول', '🔑 Passwörter und Logins', '🔑 Password at login'],
 ];
 addStrings(MAIN_STRINGS);
 
 return { LOCAL_JOKES, MAIN_STRINGS };
+})();
+
+// ===== emoji.js =====
+__m["emoji"] = (() => {
+// The emoji dictionary behind "Emoji TL;DR" and the Emoji Headlines game (shared with the kerNEl server).
+const EMOJI_MAP = {
+  ai: '🤖', robot: '🤖', robots: '🤖', apple: '🍎', google: '🔍', search: '🔍', phone: '📱', iphone: '📱', android: '🤖📱',
+  game: '🎮', games: '🎮', gaming: '🎮', space: '🚀', rocket: '🚀', launch: '🚀', launches: '🚀', nasa: '🛰️',
+  money: '💰', billion: '💰', billions: '💰', million: '💵', funding: '💸', raises: '💸', hack: '🏴‍☠️', hacked: '🏴‍☠️',
+  hackers: '🏴‍☠️', security: '🔐', password: '🔑', passwords: '🔑', car: '🚗', cars: '🚗', tesla: '🚗', electric: '⚡',
+  battery: '🔋', chip: '🍟', chips: '🍟', fire: '🔥', new: '🆕', free: '🆓', open: '🔓', code: '💻', bug: '🐛', bugs: '🐛',
+  cloud: '☁️', data: '📊', dead: '💀', kills: '💀', love: '❤️', world: '🌍', earth: '🌍', moon: '🌙', sun: '☀️', solar: '☀️',
+  water: '💧', brain: '🧠', music: '🎵', video: '🎬', movie: '🎬', tv: '📺', camera: '📷', photo: '📸', book: '📚',
+  school: '🏫', time: '⏰', fast: '⚡', slow: '🐢', big: '🐘', small: '🐜', windows: '🪟', linux: '🐧', python: '🐍',
+  rust: '🦀', java: '☕', email: '📧', mail: '📧', chat: '💬', war: '⚔️', law: '⚖️', court: '⚖️', sues: '⚖️', lawsuit: '⚖️',
+  police: '🚓', home: '🏠', food: '🍔', health: '🩺', doctor: '🩺', cat: '🐱', dog: '🐶', key: '🔑', lock: '🔒', star: '⭐',
+  win: '🏆', wins: '🏆', bank: '🏦', crypto: '🪙', bitcoin: '🪙', energy: '⚡', nuclear: '☢️', plane: '✈️', train: '🚆',
+  microsoft: '🪟', amazon: '📦', netflix: '🍿', nvidia: '🟩', gpu: '🎮', laptop: '💻', computer: '🖥️', internet: '🌐',
+  web: '🕸️', browser: '🧭', privacy: '🙈', ban: '🚫', banned: '🚫', leak: '💧', leaks: '💧', quantum: '⚛️', science: '🔬',
+  study: '📖', research: '🔬', climate: '🌡️', job: '💼', jobs: '💼', layoffs: '📦👋', ceo: '👔', startup: '🦄', update: '🔄',
+  release: '🎁', released: '🎁', ships: '🚢', watch: '⌚', vr: '🥽', headset: '🥽', open_source: '🧑‍🤝‍🧑', app: '📲', apps: '📲',
+  social: '🗣️', satellite: '🛰️', mars: '🔴', planet: '🪐', ocean: '🌊', speed: '🏎️', record: '🏅', first: '🥇', why: '🤔', how: '🛠️',
+};
+
+function emojify(title) {
+  const words = String(title).toLowerCase().replace(/open[ -]source/g, 'open_source').match(/[a-z0-9_]+/g) || [];
+  const out = [];
+  for (const w of words) {
+    const e = EMOJI_MAP[w];
+    if (e && out[out.length - 1] !== e) out.push(e);
+  }
+  if (out.length < 2) out.push('🤷');
+  return out.slice(0, 8).join(' ');
+}
+
+return { EMOJI_MAP, emojify };
 })();
 
 // ===== content.js =====
@@ -4031,6 +4452,7 @@ __m["content"] = (() => {
 // Static fun content shared by the site and codme: jokes, facts, glossary, emoji map.
 // (Facts, loading lines and glossary entries are translated with t(); jokes are written per language in i18n-main.js.)
 const { lang } = __m["i18n"];
+const { emojify: emojifyShared } = __m["emoji"];
 const { LOCAL_JOKES } = __m["i18n-main"];
 
 const EN_JOKES = [
@@ -4153,35 +4575,7 @@ function lookupGlossary(term) {
   return null;
 }
 
-const EMOJI_MAP = {
-  ai: '🤖', robot: '🤖', robots: '🤖', apple: '🍎', google: '🔍', search: '🔍', phone: '📱', iphone: '📱', android: '🤖📱',
-  game: '🎮', games: '🎮', gaming: '🎮', space: '🚀', rocket: '🚀', launch: '🚀', launches: '🚀', nasa: '🛰️',
-  money: '💰', billion: '💰', billions: '💰', million: '💵', funding: '💸', raises: '💸', hack: '🏴‍☠️', hacked: '🏴‍☠️',
-  hackers: '🏴‍☠️', security: '🔐', password: '🔑', passwords: '🔑', car: '🚗', cars: '🚗', tesla: '🚗', electric: '⚡',
-  battery: '🔋', chip: '🍟', chips: '🍟', fire: '🔥', new: '🆕', free: '🆓', open: '🔓', code: '💻', bug: '🐛', bugs: '🐛',
-  cloud: '☁️', data: '📊', dead: '💀', kills: '💀', love: '❤️', world: '🌍', earth: '🌍', moon: '🌙', sun: '☀️', solar: '☀️',
-  water: '💧', brain: '🧠', music: '🎵', video: '🎬', movie: '🎬', tv: '📺', camera: '📷', photo: '📸', book: '📚',
-  school: '🏫', time: '⏰', fast: '⚡', slow: '🐢', big: '🐘', small: '🐜', windows: '🪟', linux: '🐧', python: '🐍',
-  rust: '🦀', java: '☕', email: '📧', mail: '📧', chat: '💬', war: '⚔️', law: '⚖️', court: '⚖️', sues: '⚖️', lawsuit: '⚖️',
-  police: '🚓', home: '🏠', food: '🍔', health: '🩺', doctor: '🩺', cat: '🐱', dog: '🐶', key: '🔑', lock: '🔒', star: '⭐',
-  win: '🏆', wins: '🏆', bank: '🏦', crypto: '🪙', bitcoin: '🪙', energy: '⚡', nuclear: '☢️', plane: '✈️', train: '🚆',
-  microsoft: '🪟', amazon: '📦', netflix: '🍿', nvidia: '🟩', gpu: '🎮', laptop: '💻', computer: '🖥️', internet: '🌐',
-  web: '🕸️', browser: '🧭', privacy: '🙈', ban: '🚫', banned: '🚫', leak: '💧', leaks: '💧', quantum: '⚛️', science: '🔬',
-  study: '📖', research: '🔬', climate: '🌡️', job: '💼', jobs: '💼', layoffs: '📦👋', ceo: '👔', startup: '🦄', update: '🔄',
-  release: '🎁', released: '🎁', ships: '🚢', watch: '⌚', vr: '🥽', headset: '🥽', open_source: '🧑‍🤝‍🧑', app: '📲', apps: '📲',
-  social: '🗣️', satellite: '🛰️', mars: '🔴', planet: '🪐', ocean: '🌊', speed: '🏎️', record: '🏅', first: '🥇', why: '🤔', how: '🛠️',
-};
-
-function emojify(title) {
-  const words = String(title).toLowerCase().replace(/open[ -]source/g, 'open_source').match(/[a-z0-9_]+/g) || [];
-  const out = [];
-  for (const w of words) {
-    const e = EMOJI_MAP[w];
-    if (e && out[out.length - 1] !== e) out.push(e);
-  }
-  if (out.length < 2) out.push('🤷');
-  return out.slice(0, 8).join(' ');
-}
+const emojify = (title) => emojifyShared(title);
 
 return { JOKES, FACTS, LOADING_LINES, GLOSSARY, GLOSSARY_ALIASES, lookupGlossary, emojify };
 })();
@@ -4983,6 +5377,9 @@ const HATS = [
   { id: 'mic', emoji: '🎤', xp: 0, stat: 'liveWins', min: 1, need: 'win a live show', name: 'Live champ mic' },
   { id: 'crystal', emoji: '🔮', xp: 0, stat: 'prophet', min: 5, need: '5 correct predictions', name: 'Crystal ball' },
   { id: 'sword', emoji: '⚔️', xp: 0, stat: 'duelsWon', min: 3, need: 'win 3 duels', name: 'Duel blade' },
+  { id: 'chart', emoji: '📈', xp: 0, stat: 'stockWins', min: 1, need: 'finish a Story Stocks week in the top 3', name: 'Market mogul' },
+  { id: 'target', emoji: '🎯', xp: 0, stat: 'bingos', min: 3, need: 'get Tech Bingo 3 times', name: 'Bingo pro' },
+  { id: 'joker', emoji: '🃏', xp: 0, stat: 'cardSets', min: 1, need: 'complete a card set', name: 'Card shark' },
 ];
 
 const FRAMES = [
@@ -4995,6 +5392,7 @@ const FRAMES = [
   { id: 'champion', xp: 0, trophy: true, name: 'Champion' },
   { id: 'ambassador', xp: 0, stat: 'invites', min: 5, need: 'invite 5 friends', name: 'Ambassador' },
   { id: 'legend', xp: 0, stat: 'seasonWins', min: 1, need: 'finish a season in the top 3', name: 'Season legend' },
+  { id: 'collector', xp: 0, stat: 'cardSets', min: 4, need: 'complete all 4 card sets', name: 'Master collector' },
 ];
 
 /** Is a hat or frame unlocked? Most need XP; some need tournament trophies or a special counter (invites, live wins…). */
@@ -6024,6 +6422,116 @@ function initGroupTools({ openProfile, findPeople } = {}) {
 return { GROUP_EMOJIS, groupAvatarHTML, systemText, initGroupTools };
 })();
 
+// ===== cards-data.js =====
+__m["cards-data"] = (() => {
+// 🃏 kerNEl Cards: the collectible card set (shared with the kerNEl server, which deals the packs).
+const RARITIES = [
+  { id: 'common', weight: 58, label: 'Common' },
+  { id: 'rare', weight: 28, label: 'Rare' },
+  { id: 'epic', weight: 11, label: 'Epic' },
+  { id: 'legendary', weight: 3, label: 'Legendary' },
+];
+
+const CARD_SETS = [
+  { id: 'retro', emoji: '🕹️', name: 'Retro Gadgets' },
+  { id: 'space', emoji: '🚀', name: 'Space Tech' },
+  { id: 'robots', emoji: '🤖', name: 'AI & Robots' },
+  { id: 'legends', emoji: '💻', name: 'Code Legends' },
+];
+
+const CARDS = [
+  { id: 'floppy', set: 'retro', emoji: '💾', rarity: 'common', name: 'Floppy Disk', fact: 'A 3.5-inch floppy held 1.44 MB — less than one phone photo.' },
+  { id: 'cartridge', set: 'retro', emoji: '🎮', rarity: 'common', name: 'Game Cartridge', fact: 'Blowing into cartridges never really fixed them. Everyone did it anyway.' },
+  { id: 'cassette', set: 'retro', emoji: '📼', rarity: 'common', name: 'Cassette Tape', fact: 'Tapes were rewound with a pencil to save the player’s batteries.' },
+  { id: 'modem', set: 'retro', emoji: '📞', rarity: 'rare', name: 'Dial-up Modem', fact: 'Dial-up screeched because two modems were working out how to talk.' },
+  { id: 'crt', set: 'retro', emoji: '🖥️', rarity: 'common', name: 'CRT Monitor', fact: 'Old CRT screens drew the picture with a beam of electrons, line by line.' },
+  { id: 'pager', set: 'retro', emoji: '📟', rarity: 'rare', name: 'Pager', fact: 'Pagers could only show numbers, so people sent codes like 143 for “I love you”.' },
+  { id: 'calcwatch', set: 'retro', emoji: '⌚', rarity: 'epic', name: 'Calculator Watch', fact: 'In the 1980s the coolest smartwatch was a calculator on your wrist.' },
+  { id: 'joystick', set: 'retro', emoji: '🕹️', rarity: 'common', name: 'Joystick', fact: 'The word “joystick” is older than video games — pilots used it first.' },
+  { id: 'cdrom', set: 'retro', emoji: '💿', rarity: 'legendary', name: 'CD-ROM', fact: 'One CD-ROM held as much as about 450 floppy disks.' },
+  { id: 'rocket', set: 'space', emoji: '🚀', rarity: 'common', name: 'Reusable Rocket', fact: 'Some rockets now land back on their feet so they can fly again.' },
+  { id: 'satellite', set: 'space', emoji: '🛰️', rarity: 'common', name: 'Satellite', fact: 'Thousands of satellites circle Earth, helping with maps, weather and TV.' },
+  { id: 'moonrover', set: 'space', emoji: '🌙', rarity: 'rare', name: 'Moon Rover', fact: 'Astronauts once drove a battery-powered buggy on the Moon.' },
+  { id: 'marsrover', set: 'space', emoji: '🔴', rarity: 'epic', name: 'Mars Rover', fact: 'Messages to a Mars rover can take over 20 minutes to arrive.' },
+  { id: 'telescope', set: 'space', emoji: '🔭', rarity: 'rare', name: 'Space Telescope', fact: 'Space telescopes see light that left distant galaxies billions of years ago.' },
+  { id: 'station', set: 'space', emoji: '🛸', rarity: 'common', name: 'Space Station', fact: 'A space station circles Earth about every 90 minutes.' },
+  { id: 'astronaut', set: 'space', emoji: '🧑‍🚀', rarity: 'common', name: 'Astronaut Suit', fact: 'A spacesuit is like a tiny spaceship shaped like a person.' },
+  { id: 'comet', set: 'space', emoji: '☄️', rarity: 'rare', name: 'Comet Probe', fact: 'A probe once landed on a comet hurtling through space.' },
+  { id: 'blackhole', set: 'space', emoji: '🕳️', rarity: 'legendary', name: 'Black Hole Photo', fact: 'Telescopes all over Earth worked together to photograph a black hole.' },
+  { id: 'robodog', set: 'robots', emoji: '🐕', rarity: 'rare', name: 'Robot Dog', fact: 'Four-legged robots can climb stairs and get back up when pushed.' },
+  { id: 'chatbot', set: 'robots', emoji: '💬', rarity: 'common', name: 'Chatbot', fact: 'One of the first chatbots, from the 1960s, pretended to be a therapist.' },
+  { id: 'neural', set: 'robots', emoji: '🧠', rarity: 'epic', name: 'Neural Network', fact: 'Neural networks learn by tweaking millions of tiny numbers.' },
+  { id: 'selfdrive', set: 'robots', emoji: '🚗', rarity: 'rare', name: 'Self-driving Car', fact: 'Self-driving cars “see” with cameras, radar and laser scanners.' },
+  { id: 'drone', set: 'robots', emoji: '🚁', rarity: 'common', name: 'Drone', fact: 'Drones keep steady by adjusting their propellers hundreds of times a second.' },
+  { id: 'robotarm', set: 'robots', emoji: '🦾', rarity: 'common', name: 'Robot Arm', fact: 'Factory robot arms can repeat the same move millions of times.' },
+  { id: 'speaker', set: 'robots', emoji: '🔊', rarity: 'common', name: 'Smart Speaker', fact: 'Smart speakers wait for a wake word before they really start listening.' },
+  { id: 'aiart', set: 'robots', emoji: '🎨', rarity: 'rare', name: 'AI Art', fact: 'Image AIs learn to paint by removing noise from a picture, step by step.' },
+  { id: 'supercomputer', set: 'robots', emoji: '🏢', rarity: 'legendary', name: 'Supercomputer', fact: 'The fastest computers fill whole rooms and need their own cooling plants.' },
+  { id: 'bug', set: 'legends', emoji: '🐛', rarity: 'epic', name: 'The First Bug', fact: 'In 1947 a real moth got stuck in a computer — the first actual “bug”.' },
+  { id: 'helloworld', set: 'legends', emoji: '👋', rarity: 'common', name: 'Hello, World!', fact: 'Most programmers’ very first program just prints “Hello, World!”.' },
+  { id: 'opensource', set: 'legends', emoji: '🔓', rarity: 'common', name: 'Open Source', fact: 'Open-source code is free for anyone to read, change and share.' },
+  { id: 'cloud', set: 'legends', emoji: '☁️', rarity: 'common', name: 'The Cloud', fact: '“The cloud” is just other people’s computers in giant buildings.' },
+  { id: 'emoji', set: 'legends', emoji: '😀', rarity: 'rare', name: 'Emoji', fact: 'The first emoji set, made in 1999 in Japan, had 176 tiny pictures.' },
+  { id: 'web', set: 'legends', emoji: '🕸️', rarity: 'rare', name: 'The Web', fact: 'The very first website went online in 1991 and is still there.' },
+  { id: 'wifi', set: 'legends', emoji: '📶', rarity: 'common', name: 'Wi-Fi', fact: 'Wi-Fi sends data using radio waves, like a tiny radio station.' },
+  { id: 'blockchain', set: 'legends', emoji: '⛓️', rarity: 'rare', name: 'Blockchain', fact: 'A blockchain is a shared notebook that many computers keep copies of.' },
+  { id: 'mouse', set: 'legends', emoji: '🖱️', rarity: 'legendary', name: 'The Mouse', fact: 'The computer mouse was first shown to the world in 1968, made of wood.' },
+];
+
+const cardById = (id) => CARDS.find((c) => c.id === id) || null;
+
+return { RARITIES, CARD_SETS, CARDS, cardById };
+})();
+
+// ===== cards-ui.js =====
+__m["cards-ui"] = (() => {
+// 🃏 How a kerNEl card looks (in packs, the collection and gift/trade messages).
+const { esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx } = __m["fun"];
+const { t } = __m["i18n"];
+const { CARD_SETS, RARITIES, cardById } = __m["cards-data"];
+
+const rarityLabel = (id) => t(RARITIES.find((r) => r.id === id)?.label || 'Common');
+
+/** One card's face. `count` shows a ×2 badge; `small` for lists and messages. */
+function cardHTML(c, { count = 0, isNew = false, small = false, hidden = false } = {}) {
+  if (!c) return '';
+  if (hidden) return `<span class="kcard kc-missing${small ? ' kc-small' : ''}" aria-label="${esc(t('Not collected yet'))}"><span class="kc-emoji">?</span></span>`;
+  const set = CARD_SETS.find((s) => s.id === c.set);
+  return `<span class="kcard kc-${c.rarity}${small ? ' kc-small' : ''}" data-card="${c.id}">
+    ${isNew ? `<span class="kc-new">${t('NEW')}</span>` : ''}${count > 1 ? `<span class="kc-count">×${count}</span>` : ''}
+    <span class="kc-emoji" aria-hidden="true">${c.emoji}</span><b class="kc-name">${esc(t(c.name))}</b>
+    <small class="kc-meta">${set?.emoji || ''} ${esc(rarityLabel(c.rarity))}</small></span>`;
+}
+
+/** A gift or trade card inside a private chat. */
+function tradeMessageHTML(m, tr) {
+  if (!tr) return '';
+  const give = cardById(tr.give);
+  const want = tr.want ? cardById(tr.want) : null;
+  const label = !want ? (m.mine ? t('You sent a card 🎁') : t('A gift for you! 🎁'))
+    : m.mine ? t('Your trade offer') : t('Trade offer 🔁');
+  const status = { done: `✅ ${t('Traded!')}`, declined: `🙅 ${t('Declined')}`, cancelled: t('Cancelled'), failed: t('This trade didn’t work out'), gift: '' }[tr.status] || '';
+  const actions = want && tr.status === 'open'
+    ? (m.mine ? `<button type="button" class="btn btn-sm btn-ghost" data-ktrade="${tr.id}:cancel">${t('Cancel')}</button>`
+      : `<button type="button" class="btn btn-sm btn-primary" data-ktrade="${tr.id}:accept">${t('Accept')}</button><button type="button" class="btn btn-sm btn-ghost" data-ktrade="${tr.id}:decline">${t('No thanks')}</button>`) : '';
+  return `<div class="dm-kcards"><b>🃏 ${esc(label)}</b>
+    <div class="dm-kcards-row">${cardHTML(give, { small: true })}${want ? `<span class="dm-kswap" aria-hidden="true">⇄</span>${cardHTML(want, { small: true })}` : ''}</div>
+    ${want && !m.mine && tr.status === 'open' ? `<small>${t('You give your {card}', { card: esc(t(want.name)) })}</small>` : ''}
+    ${status ? `<small class="dm-kstatus">${status}</small>` : ''}${actions ? `<div class="dm-kactions">${actions}</div>` : ''}</div>`;
+}
+
+async function answerTrade(id, what) {
+  const r = await auth.api('/api/cards/answer', { method: 'POST', body: { id, accept: what === 'accept' } });
+  if (r.status === 'done') { sfx.ding(); toast(t('Traded! Check your collection 🃏'), { emoji: '🃏' }); }
+  return r;
+}
+
+
+return { cardHTML, tradeMessageHTML, answerTrade };
+})();
+
 // ===== dm.js =====
 __m["dm"] = (() => {
 // ✉️ kerNEl Messages: private chats with message requests, "Seen", reactions, 🔥 streaks and shared stories,
@@ -6036,6 +6544,7 @@ const { t, tn, tServer, fmtDate } = __m["i18n"];
 const { lookHTML } = __m["look"];
 const { canRecord, recordVoice, voiceHTML, initVoicePlayer, stopVoice, clock, VOICE_MAX_MS } = __m["voice"];
 const { groupAvatarHTML, systemText, initGroupTools } = __m["groups"];
+const { tradeMessageHTML, answerTrade } = __m["cards-ui"];
 
 const REACTS = ['❤️', '😂', '🔥', '👍', '😮', '😢'];
 const INBOX_MS = 8000;    // refresh the inbox while it's open
@@ -6194,7 +6703,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const lastText = (th) => {
     if (!th.last) return '';
     const l = th.last;
-    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return l.mine ? `${t('You')}: ${body}` : body;
   };
   const groupLast = (g) => {
@@ -6303,7 +6812,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const bubbleInner = (m) => {
     if (m.deleted) return `<i>${t('Message deleted')}</i>`;
     if (m.hidden) return `<i>🚩 ${t('Hidden after reports')}</i>`;
-    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`;
+    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}`;
   };
   const reactsHTML = (m) => {
     if (isGroup()) {
@@ -6315,7 +6824,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
   const msgHTML = (m, from = '') => {
     if (m.kind === 'system') return `<div class="dm-sys" dir="auto">${esc(systemText(m.system))}</div>`;
     const gone = m.deleted || m.hidden;
-    const card = (m.story || m.duel) && !m.text && !m.voice;
+    const card = (m.story || m.duel || m.trade) && !m.text && !m.voice;
     const actions = m.mine
       ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
       : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
@@ -6444,7 +6953,7 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
       for (const m of r.messages) { if (!fresh && !msgs.has(m.id) && !m.mine && m.kind !== 'system') incoming++; msgs.set(m.id, m); }
       since = r.now;
       if (kind === 'group') cur = { ...cur, group: { ...cur.group, ...r.group }, members: r.members, authors: { ...cur.authors, ...r.authors }, typing: r.typing };
-      else { theirRead = r.theirRead; cur = { ...cur, ...r.thread, typing: !!r.typing }; }
+      else { theirRead = r.theirRead; cur = { ...cur, ...r.thread, typing: !!r.typing, trades: { ...(cur.trades || {}), ...(r.trades || {}) } }; }
       renderConvo(fresh);
       if (incoming) sfx.blip();
       if (r.messages.length && !cur.request) { // reading clears the badge
@@ -6723,6 +7232,13 @@ function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, challeng
     if (gr) return openGroup(Number(gr.dataset.group));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const kt = el.closest('[data-ktrade]');
+    if (kt) {
+      const [id, what] = kt.dataset.ktrade.split(':');
+      kt.disabled = true;
+      try { const r = await answerTrade(Number(id), what); if (cur?.trades?.[id]) cur.trades[id] = { ...cur.trades[id], status: r.status }; renderConvo(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); kt.disabled = false; }
+      return;
+    }
     const dd = el.closest('[data-dduel]');
     if (dd) return openDuel?.(Number(dd.dataset.dduel));
     const story = el.closest('[data-dstory]');
@@ -8017,7 +8533,563 @@ async function seasonBoardHTML() {
 /** Season medals on a profile card. */
 const seasonMedalsHTML = (list) => (list?.length ? `<p class="uc-seasons">${list.slice(0, 6).map((s) => `<span title="${esc(fmtDate(Date.parse(`${s.season}-01T12:00:00Z`), { month: 'long', year: 'numeric' }))}">${['🥇', '🥈', '🥉'][s.place - 1] || '🏅'} ${esc(fmtDate(Date.parse(`${s.season}-01T12:00:00Z`), { month: 'short', year: 'numeric' }))}</span>`).join('')}</p>` : '');
 
-return { initArena, seasonBoardHTML, seasonMedalsHTML };
+return { inWords, makeDialog, initArena, seasonBoardHTML, seasonMedalsHTML };
+})();
+
+// ===== stocks.js =====
+__m["stocks"] = (() => {
+// 📈 Story Stocks on the website: a weekly pretend market where prices follow the news buzz.
+const { $, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { makeDialog, inWords } = __m["arena"];
+
+const money = (n) => `${Math.round(n).toLocaleString(document.documentElement.lang || undefined)} 🪙`;
+const price = (n) => Number(n).toFixed(2);
+const pct = (n) => `${n > 0 ? '▲' : n < 0 ? '▼' : '•'} ${Math.abs(n).toFixed(1)}%`;
+
+function spark(list = []) {
+  if (list.length < 2) return '<svg class="spark" viewBox="0 0 80 24" aria-hidden="true"></svg>';
+  const lo = Math.min(...list);
+  const hi = Math.max(...list);
+  const pts = list.map((v, i) => `${((i / (list.length - 1)) * 80).toFixed(1)},${(22 - ((v - lo) / (hi - lo || 1)) * 20).toFixed(1)}`).join(' ');
+  const up = list[list.length - 1] >= list[0];
+  return `<svg class="spark ${up ? 'up' : 'down'}" viewBox="0 0 80 24" aria-hidden="true"><polyline points="${pts}" fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function initStocks({ openAuth }) {
+  if (!auth.ready) { $('#stocksWidget')?.remove(); return null; }
+  const box = $('#stocksWidget');
+  const body = $('#stocksBody');
+  const M = makeDialog('stocks-dialog', `📈 ${t('Story Stocks')}`);
+  let data = null;
+  let qty = 1;
+  let timer = 0;
+
+  function paintWidget() {
+    box.hidden = false;
+    if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">📈</span></div>'; return; }
+    const movers = [...data.tickers].sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 3);
+    body.innerHTML = `<p class="small">${t('A pretend market for the news: prices follow how much everyone’s talking about each company. You get 1,000 🪙 every week.')}</p>
+      ${data.me ? `<p class="st-me"><b>${money(data.me.value)}</b>${data.me.place ? ` · #${data.me.place}` : ''} <small>${pct(((data.me.value - data.start) / data.start) * 100)}</small></p>` : ''}
+      <ul class="st-movers">${movers.map((m) => `<li><span>${m.emoji} ${esc(m.name)}</span>${spark(m.spark)}<b class="${m.change >= 0 ? 'up' : 'down'}">${pct(m.change)}</b></li>`).join('')}</ul>
+      <button type="button" class="btn btn-primary btn-block" data-stocks-open>📈 ${t('Open the market')}</button>
+      <p class="muted small">${t('Week ends in {time} · top 3 win XP and the 📈 hat', { time: inWords(data.endsAt - Date.now()) })}</p>`;
+  }
+
+  function row(tk) {
+    const h = data.me?.holdings.find((x) => x.sym === tk.sym);
+    const canBuy = data.me && data.me.cash >= tk.price;
+    return `<div class="st-row" data-sym="${tk.sym}">
+      <span class="st-name"><span class="st-emoji" aria-hidden="true">${tk.emoji}</span><span><b>${esc(tk.name)}</b><small>${h ? tn(h.shares, '{n} share', '{n} shares') : '&nbsp;'}</small></span></span>
+      ${spark(tk.spark)}
+      <span class="st-price"><b>${price(tk.price)}</b><small class="${tk.change >= 0 ? 'up' : 'down'}">${pct(tk.change)}</small></span>
+      <span class="st-btns">${data.me ? `<button type="button" class="btn btn-sm btn-ghost" data-trade="-1" ${h ? '' : 'disabled'} aria-label="${esc(t('Sell {name}', { name: tk.name }))}">${t('Sell')}</button><button type="button" class="btn btn-sm btn-primary" data-trade="1" ${canBuy ? '' : 'disabled'} aria-label="${esc(t('Buy {name}', { name: tk.name }))}">${t('Buy')}</button>` : ''}</span>
+    </div>`;
+  }
+
+  function paintMarket() {
+    if (!data) return;
+    const me = data.me;
+    M.body.innerHTML = `
+      ${me ? `<div class="st-wallet"><span><small>${t('Portfolio')}</small><b>${money(me.value)}</b></span><span><small>${t('Cash')}</small><b>${money(me.cash)}</b></span><span><small>${t('Rank')}</small><b>${me.place ? `#${me.place}` : '—'}</b></span></div>`
+        : `<p><button type="button" class="btn btn-primary" data-action="signup">${t('Sign up to trade')}</button></p>`}
+      ${me ? `<div class="seg st-qty" role="radiogroup" aria-label="${esc(t('Shares per trade'))}">${[1, 5, 10, 25].map((n) => `<button type="button" role="radio" data-qty="${n}" aria-checked="${qty === n}">×${n}</button>`).join('')}</div>` : ''}
+      <div class="st-list">${data.tickers.map(row).join('')}</div>
+      <p class="muted small">${t('Just a game: prices follow how much kerNEl’s news mentions each company (updated every hour), not real stock prices.')}</p>
+      <h3 class="mini-title">🏆 ${t('This week')}</h3>
+      <ol class="board-list">${data.board.length ? data.board.map((b) => `<li><span class="bp">${b.place}</span>${lookHTML(b)}<b dir="auto">${esc(b.nickname)}</b><span>${money(b.value)}</span></li>`).join('') : `<li class="muted small">${t('Nobody has traded yet — be the first! 🍿')}</li>`}</ol>
+      ${data.lastWinners.length ? `<p class="muted small">${t('Last week’s winners:')} ${data.lastWinners.map((w) => `${['🥇', '🥈', '🥉'][w.place - 1]} @${esc(w.username)}`).join(' ')}</p>` : ''}`;
+  }
+
+  async function load() {
+    try { data = await auth.api('/api/stocks'); } catch { /* keep */ }
+    paintWidget();
+    if (M.dlg.open) paintMarket();
+  }
+
+  async function doTrade(sym, dir, btn) {
+    if (!auth.user) { openAuth('signin'); return; }
+    btn.disabled = true;
+    const tk = data.tickers.find((x) => x.sym === sym);
+    const have = data.me.holdings.find((x) => x.sym === sym)?.shares || 0;
+    let n = qty;
+    if (dir > 0) n = Math.min(qty, Math.floor(data.me.cash / tk.price));
+    else n = Math.min(qty, have);
+    if (n <= 0) { btn.disabled = false; return; }
+    try {
+      data = await auth.api('/api/stocks/trade', { method: 'POST', body: { sym, shares: dir * n } });
+      sfx.pop();
+      burstFrom(btn, { emojis: dir > 0 ? ['📈', '🪙', '✨'] : ['💰', '🪙'], count: 8, spread: 50 });
+      toast(dir > 0 ? t('Bought {n} × {name}', { n, name: tk.name }) : t('Sold {n} × {name}', { n, name: tk.name }), { emoji: tk.emoji });
+      paintMarket();
+      paintWidget();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); btn.disabled = false; }
+  }
+
+  async function open() {
+    if (!M.dlg.open) M.dlg.showModal();
+    if (!data) M.body.innerHTML = '<div class="chat-empty"><span class="spin">📈</span></div>';
+    await load();
+    paintMarket();
+    clearInterval(timer);
+    timer = setInterval(() => { if (M.dlg.open && !document.hidden) load(); else clearInterval(timer); }, 60_000);
+  }
+
+  box.addEventListener('click', (e) => { if (e.target.closest?.('[data-stocks-open]')) open(); });
+  M.dlg.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const q = el?.closest('[data-qty]');
+    if (q) { qty = Number(q.dataset.qty); paintMarket(); return; }
+    const b = el?.closest('[data-trade]');
+    if (b) doTrade(b.closest('[data-sym]').dataset.sym, Number(b.dataset.trade), b);
+  });
+  auth.addEventListener('signin', load);
+  auth.addEventListener('signout', load);
+  load();
+  return { open, refresh: load };
+}
+
+return { initStocks };
+})();
+
+// ===== bingo.js =====
+__m["bingo"] = (() => {
+// 🎯 Tech Bingo on the website: your weekly card fills itself from the headlines.
+const { $, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, rain } = __m["fun"];
+const { t, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { inWords } = __m["arena"];
+
+const splitLabel = (label) => { const m = String(label).match(/^(\S+)\s+(.*)$/u); return m ? [m[1], m[2]] : ['•', label]; };
+
+function initBingo({ openStory }) {
+  if (!auth.ready) { $('#bingoWidget')?.remove(); return null; }
+  const box = $('#bingoWidget');
+  const body = $('#bingoBody');
+  let data = null;
+  let lastLines = null;
+  let picked = null;
+
+  function claimable() {
+    if (!data?.card) return [];
+    return [data.lines >= 1 && 'line', data.lines >= 3 && 'triple', data.full && 'full'].filter((x) => x && !data.claimed.includes(x));
+  }
+
+  function paint() {
+    box.hidden = false;
+    if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">🎯</span></div>'; return; }
+    if (!data.card) {
+      body.innerHTML = `<p class="small">${t('A new bingo card every week. Squares fill in by themselves when the news matches them!')}</p>
+        <button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to get your card')}</button>`;
+      return;
+    }
+    const cells = data.card.map((c, n) => {
+      if (c.free) return `<button type="button" class="bg-cell free on" data-cell="${n}"><span class="bg-emoji">🍿</span><span class="bg-text">${t('Free')}</span></button>`;
+      const [emoji, text] = splitLabel(t(c.label));
+      return `<button type="button" class="bg-cell${c.hit ? ' on' : ''}${picked === n ? ' picked' : ''}" data-cell="${n}" aria-pressed="${!!c.hit}" title="${esc(t(c.label))}"><span class="bg-emoji">${emoji}</span><span class="bg-text">${esc(text)}</span></button>`;
+    }).join('');
+    const sel = picked != null ? data.card[picked] : null;
+    const detail = sel && !sel.free
+      ? `<div class="bg-detail">${sel.hit ? `✅ <button type="button" class="linkish" data-bingo-story dir="auto">${esc(sel.hit.title)}</button>` : `⏳ ${t('Not in the news yet this week — keep watching!')}`}</div>` : '';
+    const todo = claimable();
+    const prize = { line: t('1 line'), triple: t('3 lines'), full: t('Full card!') };
+    body.innerHTML = `<div class="bg-grid">${cells}</div>${detail}
+      <p class="bg-status"><b>${t('Lines: {n}', { n: data.lines })}</b> · ${t('ends in {time}', { time: inWords(data.endsAt - Date.now()) })}</p>
+      ${todo.length ? `<button type="button" class="btn btn-primary btn-block bg-claim" data-bingo-claim>🎉 BINGO! ${t('Collect: {what}', { what: todo.map((x) => prize[x]).join(' + ') })}</button>` : ''}
+      <p class="muted small">${t('1 line: +{a} XP · 3 lines: +{b} XP · full card: +{c} XP, plus 🃏 card packs', { a: data.prizes.line, b: data.prizes.triple, c: data.prizes.full })}</p>
+      ${data.winners.length ? `<p class="muted small">🏁 ${t('First bingos this week:')}</p><div class="bg-winners">${data.winners.slice(0, 8).map((w) => `<button type="button" class="friend" data-user="${esc(w.username)}" title="@${esc(w.username)}">${lookHTML(w)}</button>`).join('')}</div>` : ''}`;
+  }
+
+  async function load() {
+    try { data = await auth.api('/api/bingo'); } catch { /* keep */ }
+    if (data?.card && lastLines != null && data.lines > lastLines) { sfx.ding(); toast(t('A new line on your bingo card! 🎯'), { emoji: '🎯' }); }
+    lastLines = data?.lines ?? null;
+    paint();
+  }
+
+  async function claim(btn) {
+    btn.disabled = true;
+    try {
+      const r = await auth.api('/api/bingo/claim', { method: 'POST' });
+      data = r;
+      if (r.won.length) {
+        rain(['🎯', '🎉', '🍿', '🃏'], 60);
+        sfx.win();
+        toast(t('BINGO! +{xp} XP and {n} card packs', { xp: r.xp, n: r.packs }), { emoji: '🎯', ms: 5000 });
+        document.dispatchEvent(new CustomEvent('kernel:rewards'));
+      }
+      paint();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); btn.disabled = false; }
+  }
+
+  box.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const c = el.closest('[data-cell]');
+    if (c) { picked = picked === Number(c.dataset.cell) ? null : Number(c.dataset.cell); paint(); return; }
+    if (el.closest('[data-bingo-claim]')) { claim(el.closest('[data-bingo-claim]')); return; }
+    if (el.closest('[data-bingo-story]') && picked != null) {
+      const h = data.card[picked].hit;
+      if (h?.key && h.key !== 'x') openStory?.({ key: h.key, title: h.title });
+    }
+  });
+  auth.addEventListener('signin', load);
+  auth.addEventListener('signout', () => { data = null; lastLines = null; load(); });
+  setInterval(() => { if (!document.hidden && box.offsetParent) load(); }, 10 * 60_000);
+  load();
+  return { refresh: load };
+}
+
+return { initBingo };
+})();
+
+// ===== guess.js =====
+__m["guess"] = (() => {
+// 🔤 Emoji Headlines and 🌫️ Blur Reveal: guess today's stories from emojis or a slowly un-blurring photo.
+const { $, esc, toast, safeUrl } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tServer } = __m["i18n"];
+const { lookHTML } = __m["look"];
+const { makeDialog } = __m["arena"];
+
+const GAMES = {
+  emoji: { emoji: '🔤', title: 'Emoji Headlines', intro: 'Each round shows a headline as emojis. Pick the real story — the faster you are, the more points you get.' },
+  blur: { emoji: '🌫️', title: 'Blur Reveal', intro: 'A story’s photo starts blurry and slowly gets sharper. Guess the headline before it’s clear — sooner means more points.' },
+};
+
+function initGuess({ openAuth, openStory, onDone }) {
+  if (!auth.ready) { $('#guessWidget')?.remove(); return null; }
+  const box = $('#guessWidget');
+  const body = $('#guessBody');
+  const G = makeDialog('guess-dialog', '');
+  const title = G.dlg.querySelector('h2');
+  const state = { emoji: null, blur: null };
+  let kind = 'emoji';
+  let round = 0;
+  let answers = [];
+  let shownAt = 0;
+  let tick = 0;
+  let locked = false;
+
+  function paintWidget() {
+    box.hidden = false;
+    body.innerHTML = Object.entries(GAMES).map(([k, g]) => {
+      const s = state[k];
+      const status = !s ? '…' : s.played ? `✅ ${t('{score} points', { score: s.played.score })}` : t('Play today’s 5 rounds');
+      return `<button type="button" class="gs-card" data-guess="${k}"><span class="gs-emoji" aria-hidden="true">${g.emoji}</span><span><b>${t(g.title)}</b><small>${status}</small></span><span aria-hidden="true">›</span></button>`;
+    }).join('') + `<p class="muted small">${t('New rounds every day. A perfect game earns a 🃏 card pack.')}</p>`;
+  }
+
+  async function load(k) {
+    try { state[k] = await auth.api(`/api/guess/${k}`); } catch { /* not ready yet */ }
+  }
+  async function loadAll() { await Promise.all(Object.keys(GAMES).map(load)); paintWidget(); }
+
+  const boardHTML = (b) => `<h3 class="mini-title">🏆 ${t('Today’s best')}</h3><ol class="board-list">${b.length ? b.map((x) => `<li><span class="bp">${x.place}</span>${lookHTML(x)}<b dir="auto">${esc(x.nickname)}</b><span>${x.score}</span></li>`).join('') : `<li class="muted small">${t('Nobody yet — be the first! 🍿')}</li>`}</ol>`;
+
+  function intro() {
+    const s = state[kind];
+    const g = GAMES[kind];
+    title.textContent = `${g.emoji} ${t(g.title)}`;
+    if (!s) { G.body.innerHTML = `<p>😵 ${t('Today’s game is still popping — try again in a minute!')}</p>`; return; }
+    if (s.played) return results(s.played);
+    G.body.innerHTML = `<p>${t(g.intro)}</p>
+      <p class="muted small">${t('{n} rounds · {s} seconds each', { n: s.rounds.length, s: s.seconds })}</p>
+      ${auth.user ? `<button type="button" class="btn btn-primary btn-big" data-g="start">${t('Start')} ▶</button>` : `<button type="button" class="btn btn-primary btn-big" data-action="signup">${t('Sign up to play')}</button>`}
+      ${boardHTML(s.board)}`;
+  }
+
+  function showRound() {
+    const s = state[kind];
+    const r = s.rounds[round];
+    locked = false;
+    const clue = kind === 'emoji'
+      ? `<div class="gs-clue gs-emojis" aria-label="${esc(t('Emoji clue'))}">${esc(r.clue)}</div>`
+      : `<div class="gs-clue gs-photo"><img src="${esc(safeUrl(r.clue))}" alt="" referrerpolicy="no-referrer" draggable="false" onerror="this.parentNode.classList.add('gone')"><span>📷 ${t('Photo unavailable — trust your gut!')}</span></div>`;
+    G.body.innerHTML = `<div class="gs-top"><span>${t('Round {i} of {n}', { i: round + 1, n: s.rounds.length })}</span><span class="gs-time" id="gsTime">${s.seconds}</span></div>
+      <div class="duel-timer"><i style="animation-duration:${s.seconds}s"></i></div>
+      ${clue}
+      <div class="quiz-opts">${r.options.map((o, i) => `<button type="button" class="quiz-opt" data-pick="${i}" dir="auto">${esc(o)}</button>`).join('')}</div>`;
+    shownAt = performance.now();
+    if (kind === 'blur') requestAnimationFrame(() => requestAnimationFrame(() => {
+      const img = G.body.querySelector('.gs-photo img');
+      if (img) { img.style.transitionDuration = `${s.seconds}s`; img.classList.add('clearing'); }
+    }));
+    clearInterval(tick);
+    tick = setInterval(() => {
+      const left = Math.max(0, s.seconds - (performance.now() - shownAt) / 1000);
+      const el = $('#gsTime');
+      if (el) el.textContent = String(Math.ceil(left));
+      if (left <= 0) pick(-1);
+    }, 200);
+  }
+
+  function pick(i, btn = null) {
+    if (locked) return;
+    locked = true;
+    clearInterval(tick);
+    const ms = Math.round(performance.now() - shownAt);
+    answers.push({ pick: i, ms });
+    G.body.querySelectorAll('[data-pick]').forEach((b) => { b.disabled = true; });
+    if (btn) { btn.classList.add('picked'); sfx.pop(); }
+    const img = G.body.querySelector('.gs-photo img');
+    if (img) { img.style.transitionDuration = '.4s'; img.classList.add('clearing'); }
+    setTimeout(() => {
+      round++;
+      if (round < state[kind].rounds.length) showRound(); else finish();
+    }, 550);
+  }
+
+  async function start() {
+    try { await auth.api(`/api/guess/${kind}/start`, { method: 'POST' }); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); return; }
+    round = 0;
+    answers = [];
+    showRound();
+  }
+
+  async function finish() {
+    G.body.innerHTML = '<div class="chat-empty"><span class="spin">🧮</span></div>';
+    try {
+      const r = await auth.api(`/api/guess/${kind}/answer`, { method: 'POST', body: { answers } });
+      if (r.already) { state[kind] = r; return intro(); }
+      state[kind] = { ...state[kind], played: { score: r.score, right: r.right, answers: r.answers, correct: r.correct, stories: r.stories, perRound: r.perRound }, board: r.board };
+      if (r.right >= 4) { rain([GAMES[kind].emoji, '🍿', '✨'], 40); sfx.win(); } else sfx.ding();
+      if (r.pack) toast(t('Perfect game! A bonus 🃏 card pack is waiting for you.'), { emoji: '🃏', ms: 5000 });
+      onDone?.(kind, r.right);
+      results(state[kind].played);
+      paintWidget();
+    } catch (err) { G.body.innerHTML = `<p>😵 ${esc(tServer(err.message))}</p>`; }
+  }
+
+  function results(p) {
+    const s = state[kind];
+    G.body.innerHTML = `<div class="game-end"><span class="game-big">${p.right >= 5 ? '🏆' : p.right >= 3 ? '🎉' : '🍿'}</span>
+      <h3>${t('{score} points', { score: p.score })} · ${t('{r} of {n} right', { r: p.right ?? 0, n: s.rounds.length })}</h3></div>
+      <ol class="gs-review">${s.rounds.map((r, i) => {
+        const ok = p.answers?.[i] === p.correct?.[i];
+        const st = p.stories?.[i];
+        return `<li class="${ok ? 'ok' : 'no'}"><span class="gs-mini">${kind === 'emoji' ? esc(r.clue) : '🌫️'}</span><button type="button" class="linkish" data-gstory="${i}" dir="auto">${ok ? '✅' : '❌'} ${esc(st?.title || r.options[p.correct?.[i]] || '')}</button></li>`;
+      }).join('')}</ol>
+      ${boardHTML(s.board || [])}
+      <p class="muted small">${t('Come back tomorrow for new rounds!')}</p>`;
+  }
+
+  box.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-guess]');
+    if (!b) return;
+    kind = b.dataset.guess;
+    if (!G.dlg.open) G.dlg.showModal();
+    intro();
+  });
+  G.dlg.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (el.closest('[data-g="start"]')) { if (!auth.user) openAuth('signin'); else start(); return; }
+    const p = el.closest('[data-pick]');
+    if (p) { pick(Number(p.dataset.pick), p); burstFrom(p, { emojis: ['✨'], count: 4, spread: 30 }); return; }
+    const st = el.closest('[data-gstory]');
+    if (st) { const story = state[kind].played?.stories?.[Number(st.dataset.gstory)]; if (story) { G.dlg.close(); openStory?.(story); } }
+  });
+  G.dlg.addEventListener('close', () => { clearInterval(tick); if (answers.length && round < (state[kind]?.rounds.length || 0) && !state[kind]?.played) { answers = []; round = 0; } });
+  auth.addEventListener('signin', loadAll);
+  auth.addEventListener('signout', loadAll);
+  paintWidget();
+  loadAll();
+  return { open: (k) => { kind = k; if (!G.dlg.open) G.dlg.showModal(); intro(); }, refresh: loadAll };
+}
+
+return { initGuess };
+})();
+
+// ===== cards.js =====
+__m["cards"] = (() => {
+// 🃏 kerNEl Cards on the website: open packs, browse your collection, gift or trade doubles with friends.
+const { $, $$, esc, toast } = __m["utils"];
+const { auth } = __m["auth"];
+const { sfx, burstFrom, rain } = __m["fun"];
+const { t, tn, tServer } = __m["i18n"];
+const { CARDS, CARD_SETS, cardById } = __m["cards-data"];
+const { cardHTML, answerTrade } = __m["cards-ui"];
+const { makeDialog } = __m["arena"];
+const { findPeople, personHTML } = __m["dm"];
+
+function initCards({ openAuth }) {
+  if (!auth.ready) { $('#cardsWidget')?.remove(); return null; }
+  const box = $('#cardsWidget');
+  const body = $('#cardsBody');
+  const P = makeDialog('pack-dialog', `🃏 ${t('Card pack')}`);
+  const C = makeDialog('cards-dialog', `🃏 ${t('Your collection')}`);
+  let data = null;
+  let setTab = CARD_SETS[0].id;
+  let detail = null;     // card id being looked at
+  let offer = null;      // { card, step: 'who'|'what', to, theirs }
+
+  const count = () => Object.keys(data?.cards || {}).length;
+
+  function paintWidget() {
+    box.hidden = false;
+    if (!auth.user) {
+      body.innerHTML = `<p class="small">${t('Collect 36 cards of tech legends, gadgets and space gear. A free pack every day!')}</p><button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Sign up to collect')}</button>`;
+      return;
+    }
+    if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">🃏</span></div>'; return; }
+    const p = data.packs;
+    const packBtn = p.free ? `✨ ${t('Open today’s free pack')}` : p.bonus ? `🎁 ${t('Open a bonus pack ({n} left)', { n: p.bonus })}` : '';
+    const incoming = data.trades.filter((x) => !x.mine).length;
+    body.innerHTML = `<div class="kc-progress"><b>${count()} / ${data.total}</b><span><i style="width:${(count() / data.total) * 100}%"></i></span></div>
+      <div class="kc-sets">${data.sets.map((s) => `<span class="${s.complete ? 'done' : ''}">${CARD_SETS.find((x) => x.id === s.id).emoji} ${s.have}/${s.total}</span>`).join('')}</div>
+      ${packBtn ? `<button type="button" class="btn btn-primary btn-block" data-cards="open">${packBtn}</button>` : `<p class="muted small">⏳ ${t('Your next free pack arrives tomorrow. Win bingo lines, duels and predictions for bonus packs!')}</p>`}
+      <button type="button" class="btn btn-ghost btn-block" data-cards="collection">📚 ${t('View collection')}${incoming ? ` · ${tn(incoming, '{n} trade offer', '{n} trade offers')}` : ''}</button>`;
+  }
+
+  async function load() {
+    if (!auth.user) { data = null; paintWidget(); return; }
+    try { data = await auth.api('/api/cards'); } catch { /* keep */ }
+    paintWidget();
+    if (C.dlg.open) paintCollection();
+  }
+
+  // ---------- opening a pack ----------
+  async function openPack() {
+    if (!P.dlg.open) P.dlg.showModal();
+    P.body.innerHTML = '<div class="kc-pack-shake">🎁</div>';
+    try {
+      const r = await auth.api('/api/cards/open', { method: 'POST' });
+      data = r;
+      sfx.pop();
+      P.body.innerHTML = `<p class="muted small">${t('Tap each card to flip it!')}</p>
+        <div class="kc-reveal">${r.pulled.map((x, i) => `<button type="button" class="kc-flip" data-flip="${i}" style="--d:${i * 0.12}s"><span class="kc-back">🍿</span><span class="kc-front">${cardHTML(cardById(x.id), { isNew: x.isNew })}</span></button>`).join('')}</div>
+        ${r.newSet ? `<p class="kc-setdone">🏆 ${t('Set complete! You unlocked a new look.')}</p>` : ''}
+        <button type="button" class="btn btn-ghost btn-block" data-cards="flip-all">${t('Flip them all')}</button>`;
+      if (r.newSet) setTimeout(() => { rain(['🃏', '🏆', '✨'], 60); sfx.win(); }, 900);
+      paintWidget();
+    } catch (err) { P.body.innerHTML = `<p>😵 ${esc(tServer(err.message))}</p>`; }
+  }
+  function flip(btn) {
+    if (btn.classList.contains('flipped')) return;
+    btn.classList.add('flipped');
+    const c = btn.querySelector('.kcard');
+    const rare = c && /kc-(epic|legendary)/.test(c.className);
+    if (rare) { burstFrom(btn, { emojis: ['✨', '⭐', '💎'], count: 14 }); sfx.win(); } else sfx.blip();
+  }
+
+  // ---------- the collection ----------
+  function paintCollection() {
+    if (!data) return;
+    if (detail) return paintDetail();
+    const set = CARDS.filter((c) => c.set === setTab);
+    C.body.innerHTML = `<div class="seg kc-tabs" role="tablist">${CARD_SETS.map((s) => {
+      const st = data.sets.find((x) => x.id === s.id);
+      return `<button type="button" role="tab" data-ctab="${s.id}" aria-selected="${s.id === setTab}">${s.emoji} <span>${st.have}/${st.total}</span></button>`;
+    }).join('')}</div>
+      <h3 class="mini-title">${CARD_SETS.find((s) => s.id === setTab).emoji} ${esc(t(CARD_SETS.find((s) => s.id === setTab).name))}</h3>
+      <div class="kc-grid">${set.map((c) => (data.cards[c.id] ? `<button type="button" class="kc-btn" data-cdetail="${c.id}">${cardHTML(c, { count: data.cards[c.id] })}</button>` : cardHTML(c, { hidden: true }))).join('')}</div>
+      ${data.trades.length ? `<h3 class="mini-title">🔁 ${t('Open trades')}</h3><div class="kc-trades">${data.trades.map((x) => `<div class="kc-trade">${cardHTML(cardById(x.give), { small: true })}<span>⇄</span>${cardHTML(cardById(x.want), { small: true })}<small>${x.mine ? t('to @{name}', { name: esc(x.to) }) : t('from @{name}', { name: esc(x.from) })}</small>
+        ${x.mine ? `<button type="button" class="btn btn-sm btn-ghost" data-ktrade="${x.id}:cancel">${t('Cancel')}</button>` : `<button type="button" class="btn btn-sm btn-primary" data-ktrade="${x.id}:accept">${t('Accept')}</button><button type="button" class="btn btn-sm btn-ghost" data-ktrade="${x.id}:decline">${t('No thanks')}</button>`}</div>`).join('')}</div>` : ''}
+      <p class="muted small">${t('Complete a set for the 🃏 Card shark hat, and all four for the Master collector frame.')}</p>`;
+  }
+
+  function paintDetail() {
+    const c = cardById(detail);
+    const n = data.cards[c.id] || 0;
+    let extra = '';
+    if (offer?.step === 'who') {
+      extra = `<div class="kc-offer"><b>${offer.trade ? t('Who do you want to trade with?') : t('Who gets this card?')}</b>
+        <label class="people-search"><span class="search-icon" aria-hidden="true">🔍</span><input data-kc-search placeholder="${esc(t('Search people…'))}" autocomplete="off"></label>
+        <div class="kc-people" id="kcPeople"></div></div>`;
+    } else if (offer?.step === 'what') {
+      const theirs = CARDS.filter((x) => offer.theirs[x.id] && !data.cards[x.id]);
+      extra = `<div class="kc-offer"><b>${t('Pick a card @{name} has that you’re missing', { name: esc(offer.to) })}</b>
+        <div class="kc-grid kc-pick">${theirs.length ? theirs.map((x) => `<button type="button" class="kc-btn" data-kwant="${x.id}">${cardHTML(x, { small: true })}</button>`).join('') : `<p class="muted small">${t('They don’t have any cards you’re missing yet.')}</p>`}</div></div>`;
+    }
+    C.body.innerHTML = `<button type="button" class="linkish" data-cards="back">‹ ${t('Back')}</button>
+      <div class="kc-big">${cardHTML(c, { count: n })}</div>
+      <p class="kc-fact" dir="auto">💡 ${esc(t(c.fact))}</p>
+      ${n >= 2 && !offer ? `<div class="kc-actions"><button type="button" class="btn btn-ghost" data-cards="gift">🎁 ${t('Gift a double')}</button><button type="button" class="btn btn-primary" data-cards="trade">🔁 ${t('Trade a double')}</button></div>`
+        : n < 2 ? `<p class="muted small">${t('Get a double of this card to gift or trade it.')}</p>` : ''}
+      ${extra}`;
+    if (offer?.step === 'who') { searchPeople(''); setTimeout(() => C.body.querySelector('[data-kc-search]')?.focus(), 60); }
+  }
+
+  let seq = 0;
+  async function searchPeople(q) {
+    const my = ++seq;
+    const list = $('#kcPeople');
+    try {
+      const found = (await findPeople(q)).filter((p) => !p.me && !p.blocked).slice(0, 8);
+      if (my !== seq || !list) return;
+      list.innerHTML = found.length ? found.map((p) => personHTML(p, { pick: 'data-kto' })).join('') : `<p class="muted small">${t('No kernels found for “{q}”', { q: esc(q) })}</p>`;
+    } catch { /* offline */ }
+  }
+
+  async function send(to, want = null) {
+    try {
+      const r = await auth.api('/api/cards/offer', { method: 'POST', body: { to, give: detail, want } });
+      sfx.ding();
+      toast(r.gift ? t('Card sent to @{name}! 🎁', { name: to }) : t('Trade offer sent to @{name}! 🔁', { name: to }), { emoji: '🃏' });
+      offer = null;
+      await load();
+      paintCollection();
+    } catch (err) { toast(tServer(err.message), { emoji: '😵', ms: 5000 }); }
+  }
+
+  box.addEventListener('click', (e) => {
+    const b = e.target instanceof Element && e.target.closest('[data-cards]');
+    if (!b) return;
+    if (!auth.user) { openAuth('signin'); return; }
+    if (b.dataset.cards === 'open') openPack();
+    if (b.dataset.cards === 'collection') { detail = null; offer = null; if (!C.dlg.open) C.dlg.showModal(); paintCollection(); load(); }
+  });
+  P.dlg.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    const f = el?.closest('[data-flip]');
+    if (f) return flip(f);
+    if (el?.closest('[data-cards="flip-all"]')) $$('.kc-flip', P.body).forEach((x, i) => setTimeout(() => flip(x), i * 220));
+  });
+  C.dlg.addEventListener('input', (e) => {
+    if (e.target.matches?.('[data-kc-search]')) { clearTimeout(C.timer); const q = e.target.value.trim(); C.timer = setTimeout(() => searchPeople(q), 220); }
+  });
+  C.dlg.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    const tab = el.closest('[data-ctab]');
+    if (tab) { setTab = tab.dataset.ctab; return paintCollection(); }
+    const d = el.closest('[data-cdetail]');
+    if (d) { detail = d.dataset.cdetail; offer = null; sfx.blip(); return paintCollection(); }
+    const who = el.closest('[data-kto]');
+    if (who) {
+      const to = who.dataset.kto;
+      if (!offer.trade) { if (confirm(t('Give your double {card} to @{name}?', { card: t(cardById(detail).name), name: to }))) send(to); return; }
+      try { const r = await auth.api(`/api/cards?user=${encodeURIComponent(to)}`); offer = { ...offer, step: 'what', to, theirs: r.cards }; paintDetail(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const want = el.closest('[data-kwant]');
+    if (want) return send(offer.to, want.dataset.kwant);
+    const kt = el.closest('[data-ktrade]');
+    if (kt) {
+      const [id, what] = kt.dataset.ktrade.split(':');
+      try { await answerTrade(Number(id), what); await load(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+      return;
+    }
+    const b = el.closest('[data-cards]');
+    if (!b) return;
+    if (b.dataset.cards === 'back') { if (offer) offer = null; else detail = null; return paintCollection(); }
+    if (b.dataset.cards === 'gift' || b.dataset.cards === 'trade') { offer = { step: 'who', trade: b.dataset.cards === 'trade' }; paintDetail(); }
+  });
+  auth.addEventListener('signin', load);
+  auth.addEventListener('signout', load);
+  document.addEventListener('kernel:rewards', load);
+  load();
+  return { refresh: load, openPack };
+}
+
+return { initCards };
 })();
 
 // ===== discover.js =====
@@ -10312,6 +11384,10 @@ const { pickPhoto } = __m["photo"];
 const { initMod } = __m["mod"];
 const { initArena, seasonBoardHTML } = __m["arena"];
 const { initDiscover } = __m["discover"];
+const { initStocks } = __m["stocks"];
+const { initBingo } = __m["bingo"];
+const { initGuess } = __m["guess"];
+const { initCards } = __m["cards"];
 const { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } = __m["invite"];
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -10352,6 +11428,8 @@ let tabs = null;
 let mod = null;
 let arena = null;
 let discover = null;
+let stocks = null;
+let cards = null;
 let invites = null;
 
 // ====================================================================================
@@ -11456,6 +12534,8 @@ function openDeepLink() {
   else if (h.startsWith('group=')) community?.openGroup(Number(h.slice(6)));
   else if (h === 'pops') community?.openMessages();
   else if (h === 'drop') discover?.openDrop();
+  else if (h === 'stocks') { tabs?.show('play'); stocks?.open(); }
+  else if (h === 'cards') { tabs?.show('play'); setTimeout(() => $('#cardsWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
@@ -11550,6 +12630,11 @@ function boot() {
   invites = initInvites();
   catchInvite(openAuth);
   discover = initDiscover({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onTopicsChange: () => { if (state.cat === 'foryou') renderFeed(); } });
+  const storyOpener = (s) => reader?.open(findItem(s.key) || s);
+  stocks = initStocks({ openAuth });
+  initBingo({ openStory: storyOpener });
+  initGuess({ openAuth, openStory: storyOpener, onDone: (kind, right) => { addXp(right * 2); bump('guessGames'); } });
+  cards = initCards({ openAuth });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
@@ -11829,6 +12914,7 @@ function boot() {
     sfx.ding();
   });
 
+  document.addEventListener('kernel:rewards', () => setTimeout(checkRewards, 800)); // a game handed out XP
   document.addEventListener('click', (e) => {
     const b = e.target instanceof Element && e.target.closest('[data-board]');
     if (!b) return;

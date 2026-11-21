@@ -8,6 +8,7 @@ import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML } from './look.js';
 import { canRecord, recordVoice, voiceHTML, initVoicePlayer, stopVoice, clock, VOICE_MAX_MS } from './voice.js';
 import { groupAvatarHTML, systemText, initGroupTools } from './groups.js';
+import { tradeMessageHTML, answerTrade } from './cards-ui.js';
 
 const REACTS = ['❤️', '😂', '🔥', '👍', '😮', '😢'];
 const INBOX_MS = 8000;    // refresh the inbox while it's open
@@ -166,7 +167,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   const lastText = (th) => {
     if (!th.last) return '';
     const l = th.last;
-    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
+    const body = l.deleted ? t('Message deleted') : l.duel ? `⚔️ ${t('Quiz Duel challenge')}` : l.trade ? `🃏 ${t('Card trade')}` : l.voice ? `🎙️ ${t('Voice note')}` : l.story && !l.text ? `📰 ${t('Shared a story')}` : l.text;
     return l.mine ? `${t('You')}: ${body}` : body;
   };
   const groupLast = (g) => {
@@ -275,7 +276,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   const bubbleInner = (m) => {
     if (m.deleted) return `<i>${t('Message deleted')}</i>`;
     if (m.hidden) return `<i>🚩 ${t('Hidden after reports')}</i>`;
-    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}`;
+    return `${m.pop ? popReplyHTML(m.pop, m.mine) : ''}${m.text ? `<span>${esc(m.text).replace(/\n/g, '<br>')}</span>` : ''}${m.voice ? voiceHTML(m.voice) : ''}${m.story ? storyHTML(m.story, m.id) : ''}${m.duel ? duelCardHTML(m) : ''}${m.trade ? tradeMessageHTML(m, cur.trades?.[m.trade]) : ''}`;
   };
   const reactsHTML = (m) => {
     if (isGroup()) {
@@ -287,7 +288,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
   const msgHTML = (m, from = '') => {
     if (m.kind === 'system') return `<div class="dm-sys" dir="auto">${esc(systemText(m.system))}</div>`;
     const gone = m.deleted || m.hidden;
-    const card = (m.story || m.duel) && !m.text && !m.voice;
+    const card = (m.story || m.duel || m.trade) && !m.text && !m.voice;
     const actions = m.mine
       ? `<button type="button" data-dm="del-msg" aria-label="${esc(t('Delete message'))}">🗑️</button>`
       : isGroup() ? `<button type="button" data-dm="report-msg" aria-label="${esc(t('Report message'))}">🚩</button>` : '';
@@ -416,7 +417,7 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
       for (const m of r.messages) { if (!fresh && !msgs.has(m.id) && !m.mine && m.kind !== 'system') incoming++; msgs.set(m.id, m); }
       since = r.now;
       if (kind === 'group') cur = { ...cur, group: { ...cur.group, ...r.group }, members: r.members, authors: { ...cur.authors, ...r.authors }, typing: r.typing };
-      else { theirRead = r.theirRead; cur = { ...cur, ...r.thread, typing: !!r.typing }; }
+      else { theirRead = r.theirRead; cur = { ...cur, ...r.thread, typing: !!r.typing, trades: { ...(cur.trades || {}), ...(r.trades || {}) } }; }
       renderConvo(fresh);
       if (incoming) sfx.blip();
       if (r.messages.length && !cur.request) { // reading clears the badge
@@ -695,6 +696,13 @@ export function initDM({ pane, onBadge, openAuth, openStory, onSent, openDuel, c
     if (gr) return openGroup(Number(gr.dataset.group));
     const to = el.closest('[data-dmto]');
     if (to) return openWith(to.dataset.dmto, (results || suggestions || []).find((p) => p.username === to.dataset.dmto));
+    const kt = el.closest('[data-ktrade]');
+    if (kt) {
+      const [id, what] = kt.dataset.ktrade.split(':');
+      kt.disabled = true;
+      try { const r = await answerTrade(Number(id), what); if (cur?.trades?.[id]) cur.trades[id] = { ...cur.trades[id], status: r.status }; renderConvo(); } catch (err) { toast(tServer(err.message), { emoji: '😵' }); kt.disabled = false; }
+      return;
+    }
     const dd = el.closest('[data-dduel]');
     if (dd) return openDuel?.(Number(dd.dataset.dduel));
     const story = el.closest('[data-dstory]');

@@ -114,6 +114,42 @@ const T = {
     de: '👥 @{who} in „{name}“',
     tl: '👥 @{who} sa “{name}”',
   },
+  stocksWin: {
+    en: '📈 You finished #{place} on Story Stocks!',
+    ar: '📈 خلّصت رقم #{place} في Story Stocks!',
+    de: '📈 Du bist bei Story Stocks auf Platz #{place}!',
+    tl: '📈 Pang-#{place} ka sa Story Stocks!',
+  },
+  stocksWinBody: {
+    en: '+{xp} XP is waiting for you. A new market week has started.',
+    ar: '+{xp} XP مستنيينك. أسبوع سوق جديد بدأ.',
+    de: '+{xp} XP warten auf dich. Eine neue Börsenwoche hat begonnen.',
+    tl: 'Naghihintay sa iyo ang +{xp} XP. Nagsimula na ang bagong linggo ng market.',
+  },
+  cardGift: {
+    en: '🃏 @{who} sent you a card!',
+    ar: '🃏 @{who} بعتلك كارت!',
+    de: '🃏 @{who} hat dir eine Karte geschenkt!',
+    tl: '🃏 Pinadalhan ka ni @{who} ng card!',
+  },
+  cardGiftBody: {
+    en: 'It’s already in your collection.',
+    ar: 'خلاص بقى في مجموعتك.',
+    de: 'Sie ist schon in deiner Sammlung.',
+    tl: 'Nasa koleksyon mo na ito.',
+  },
+  cardTrade: {
+    en: '🃏 @{who} wants to trade cards',
+    ar: '🃏 @{who} عايز يبدّل كروت',
+    de: '🃏 @{who} möchte Karten tauschen',
+    tl: '🃏 Gustong makipagpalit ng card ni @{who}',
+  },
+  cardTradeBody: {
+    en: 'Open your messages to accept or say no.',
+    ar: 'افتح رسايلك عشان توافق أو ترفض.',
+    de: 'Öffne deine Nachrichten, um anzunehmen oder abzulehnen.',
+    tl: 'Buksan ang messages mo para tanggapin o tanggihan.',
+  },
   topicAlert: {
     en: '🔔 {topic} is in the news',
     ar: '🔔 {topic} في الأخبار',

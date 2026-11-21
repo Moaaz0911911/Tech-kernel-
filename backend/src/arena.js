@@ -5,6 +5,7 @@ import { recentStories, makeQuestions, publicQuestion, kvGet, kvOnce, people } f
 import { sendDM } from './people.js';
 import { notify } from './push.js';
 import { reward } from './rewards.js';
+import { givePacks } from './cards.js';
 import { tr, langOfProfile } from './i18n.js';
 
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
@@ -131,7 +132,7 @@ export async function answerDuel(env, user, id, body) {
     row = await env.DB.prepare("UPDATE duels SET status = 'done', winner = ? WHERE id = ? AND status = 'open' RETURNING *").bind(winner, row.id).first() || row;
     if (row.status === 'done') {
       if (winner === 'draw') { await reward(env, row.a, DUEL.draw); await reward(env, row.b, DUEL.draw); }
-      else { await reward(env, winner, DUEL.win, 'duelsWon'); await reward(env, winner === row.a ? row.b : row.a, DUEL.lose); }
+      else { await reward(env, winner, DUEL.win, 'duelsWon'); await givePacks(env, winner, 1); await reward(env, winner === row.a ? row.b : row.a, DUEL.lose); }
       await pingUser(env, opponentId, 'duelResult', { who: user.username }, `./#duel=${row.id}`, '⚔️');
     }
   } else {
@@ -341,7 +342,7 @@ async function payPrediction(env, p, answer) {
   const row = await env.DB.prepare('UPDATE predictions SET answer = ?, resolved = ? WHERE id = ? AND answer IS NULL RETURNING id').bind(answer, Date.now(), p.id).first();
   if (!row) return 0;
   const { results } = await env.DB.prepare('SELECT user_id FROM prediction_votes WHERE pred_id = ? AND choice = ?').bind(p.id, answer).all();
-  for (const v of results) await reward(env, v.user_id, PREDICT.xp, 'prophet');
+  for (const v of results) { await reward(env, v.user_id, PREDICT.xp, 'prophet'); await givePacks(env, v.user_id, 1); }
   return results.length;
 }
 

@@ -294,6 +294,7 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   duel        INTEGER,                       -- a ⚔️ Quiz Duel challenge card
   voice       TEXT,                          -- JSON { key, ms, peaks } of a 🎙️ voice note
   pop         TEXT,                          -- JSON snapshot of the 🫧 pop this message replies to
+  trade       INTEGER,                       -- a 🃏 card gift or trade offer
   deleted     INTEGER NOT NULL DEFAULT 0,
   created     INTEGER NOT NULL,
   updated     INTEGER NOT NULL
@@ -524,4 +525,77 @@ CREATE TABLE IF NOT EXISTS topic_alerts (
   story_key   TEXT NOT NULL,
   at          INTEGER NOT NULL,
   PRIMARY KEY (user_id, story_key)
+);
+
+-- 📈 Story Stocks (prices every hour, wallets and holdings per week)
+CREATE TABLE IF NOT EXISTS stock_prices (
+  sym         TEXT NOT NULL,
+  hour        INTEGER NOT NULL,
+  price       REAL NOT NULL,
+  buzz        REAL NOT NULL DEFAULT 0,
+  PRIMARY KEY (sym, hour)
+);
+CREATE TABLE IF NOT EXISTS stock_wallets (
+  week        TEXT NOT NULL,
+  user_id     TEXT NOT NULL,
+  cash        REAL NOT NULL,
+  trades      INTEGER NOT NULL DEFAULT 0,
+  day         TEXT,
+  day_trades  INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, user_id)
+);
+CREATE TABLE IF NOT EXISTS stock_holdings (
+  week        TEXT NOT NULL,
+  user_id     TEXT NOT NULL,
+  sym         TEXT NOT NULL,
+  shares      INTEGER NOT NULL DEFAULT 0,
+  cost        REAL NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, user_id, sym)
+);
+
+-- 🎯 Tech Bingo prizes collected
+CREATE TABLE IF NOT EXISTS bingo_claims (
+  week        TEXT NOT NULL,
+  user_id     TEXT NOT NULL,
+  tier        TEXT NOT NULL,                 -- line | triple | full
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (week, user_id, tier)
+);
+
+-- 🔤 Emoji Headlines + 🌫️ Blur Reveal
+CREATE TABLE IF NOT EXISTS guess_scores (
+  kind        TEXT NOT NULL,
+  day         TEXT NOT NULL,
+  user_id     TEXT NOT NULL,
+  started     INTEGER NOT NULL,
+  score       INTEGER,
+  correct     INTEGER,
+  answers     TEXT,
+  at          INTEGER,
+  PRIMARY KEY (kind, day, user_id)
+);
+
+-- 🃏 kerNEl Cards
+CREATE TABLE IF NOT EXISTS user_cards (
+  user_id     TEXT NOT NULL,
+  card_id     TEXT NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 0,
+  first       INTEGER NOT NULL,
+  PRIMARY KEY (user_id, card_id)
+);
+CREATE TABLE IF NOT EXISTS card_packs (
+  user_id     TEXT PRIMARY KEY,
+  bonus       INTEGER NOT NULL DEFAULT 0,    -- packs earned from wins
+  free_day    TEXT,                          -- the day the free pack was opened
+  opened      INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS card_trades (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id     TEXT NOT NULL,
+  to_id       TEXT NOT NULL,
+  give        TEXT NOT NULL,
+  want        TEXT,                          -- NULL for a gift
+  status      TEXT NOT NULL DEFAULT 'open',  -- open | done | declined | cancelled | failed | gift
+  created     INTEGER NOT NULL,
+  done        INTEGER
 );

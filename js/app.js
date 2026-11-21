@@ -22,6 +22,10 @@ import { pickPhoto } from './photo.js';
 import { initMod } from './mod.js';
 import { initArena, seasonBoardHTML } from './arena.js';
 import { initDiscover } from './discover.js';
+import { initStocks } from './stocks.js';
+import { initBingo } from './bingo.js';
+import { initGuess } from './guess.js';
+import { initCards } from './cards.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -62,6 +66,8 @@ let tabs = null;
 let mod = null;
 let arena = null;
 let discover = null;
+let stocks = null;
+let cards = null;
 let invites = null;
 
 // ====================================================================================
@@ -1166,6 +1172,8 @@ function openDeepLink() {
   else if (h.startsWith('group=')) community?.openGroup(Number(h.slice(6)));
   else if (h === 'pops') community?.openMessages();
   else if (h === 'drop') discover?.openDrop();
+  else if (h === 'stocks') { tabs?.show('play'); stocks?.open(); }
+  else if (h === 'cards') { tabs?.show('play'); setTimeout(() => $('#cardsWidget')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
@@ -1260,6 +1268,11 @@ function boot() {
   invites = initInvites();
   catchInvite(openAuth);
   discover = initDiscover({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onTopicsChange: () => { if (state.cat === 'foryou') renderFeed(); } });
+  const storyOpener = (s) => reader?.open(findItem(s.key) || s);
+  stocks = initStocks({ openAuth });
+  initBingo({ openStory: storyOpener });
+  initGuess({ openAuth, openStory: storyOpener, onDone: (kind, right) => { addXp(right * 2); bump('guessGames'); } });
+  cards = initCards({ openAuth });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),
@@ -1539,6 +1552,7 @@ function boot() {
     sfx.ding();
   });
 
+  document.addEventListener('kernel:rewards', () => setTimeout(checkRewards, 800)); // a game handed out XP
   document.addEventListener('click', (e) => {
     const b = e.target instanceof Element && e.target.closest('[data-board]');
     if (!b) return;
