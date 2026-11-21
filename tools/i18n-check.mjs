@@ -63,6 +63,7 @@ if (which === 'main') {
   for (const f of readdirSync(join(root, 'backend/src'))) {
     const src = read(`backend/src/${f}`);
     for (const m of src.matchAll(/HttpError\(\d+, '((?:[^'\\]|\\.)*)'\)/g)) add(m[1]);
+    for (const m of src.matchAll(/reason: '((?:[^'\\]|\\.)*)'/g)) add(m[1]); // reasons shown next to forms
   }
   const comm = read('backend/src/community.js');
   const polls = comm.slice(comm.indexOf('export const POLLS'), comm.indexOf('];', comm.indexOf('export const POLLS')));

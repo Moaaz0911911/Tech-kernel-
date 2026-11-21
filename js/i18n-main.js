@@ -2093,5 +2093,6 @@ export const MAIN_STRINGS = [
   ['Mexico City', 'مكسيكو سيتي', 'Mexiko-Stadt', 'Mexico City'],
   ['Buenos Aires', 'بوينس آيرس', 'Buenos Aires', 'Buenos Aires'],
   ['Aa', 'Aa', 'Aa', 'Aa'],
+  ['Already taken', 'الاسم ده متاخد', 'Schon vergeben', 'Kinuha na'],
 ];
 addStrings(MAIN_STRINGS);
