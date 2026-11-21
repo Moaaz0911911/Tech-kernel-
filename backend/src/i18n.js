@@ -114,6 +114,18 @@ const T = {
     de: '👥 @{who} in „{name}“',
     tl: '👥 @{who} sa “{name}”',
   },
+  topicAlert: {
+    en: '🔔 {topic} is in the news',
+    ar: '🔔 {topic} في الأخبار',
+    de: '🔔 {topic} ist in den News',
+    tl: '🔔 Nasa balita ang {topic}',
+  },
+  dropTitle: {
+    en: '☀️ Your Morning Drop is here',
+    ar: '☀️ الـ Morning Drop بتاعك وصل',
+    de: '☀️ Dein Morning Drop ist da',
+    tl: '☀️ Nandito na ang Morning Drop mo',
+  },
   popReact: {
     en: '{emoji} @{who} reacted to your pop',
     ar: '{emoji} @{who} اتفاعل مع البوب بتاعك',

@@ -106,6 +106,7 @@
                 <button type="button" data-sort="chaos" aria-pressed="false">Chaos</button>
               </div>
               <div class="feed-tools">
+                <button type="button" class="pill-btn" data-action="drop" title="The 5 stories to know today"><span>☀️ Morning Drop</span></button>
                 <button type="button" class="pill-btn" data-action="briefing" title="Listen to today’s top stories" data-icon="headphones"><span>Briefing</span></button>
                 <button type="button" class="pill-btn" data-action="swipe" title="One story at a time, swipe like a pro" data-icon="swipe"><span>Swipe mode</span></button>
               </div>
@@ -220,6 +221,14 @@
         <section class="widget widget-invite" id="inviteWidget" aria-labelledby="inviteTitle" hidden>
           <h3 id="inviteTitle" class="widget-title">🎟️ Invite friends</h3>
           <div id="inviteBody"></div>
+        </section>
+        <section class="widget widget-topics" id="topicsWidget" aria-labelledby="topicsTitle" hidden>
+          <h3 id="topicsTitle" class="widget-title">🔔 Topics you follow</h3>
+          <div id="topicsBody"></div>
+        </section>
+        <section class="widget widget-drop" id="dropWidget" aria-labelledby="dropTitle" hidden>
+          <h3 id="dropTitle" class="widget-title">☀️ Morning Drop</h3>
+          <div id="dropBody"></div>
         </section>
         <section class="widget widget-people" id="peopleWidget" aria-labelledby="peopleTitle" hidden>
           <h3 id="peopleTitle" class="widget-title">🔍 Find people</h3>
@@ -470,6 +479,7 @@
         <label class="check"><input type="checkbox" name="dms" checked> ✉️ someone sends me a message</label>
         <label class="check"><input type="checkbox" name="games" checked> 🎮 kerNEl Live is about to start, or someone challenges me to a duel</label>
         <label class="check"><input type="checkbox" name="news" checked> 🔥 big news breaks in my favourite topics (max 3 a day)</label>
+        <label class="check"><input type="checkbox" name="topics" checked> 🔔 a company or topic I follow is in the news (max 3 a day)</label>
         <label class="check"><input type="checkbox" name="streak" checked> 📅 my streak is about to break (7 pm my time)</label>
         <label class="check"><input type="checkbox" name="friends" checked> 👯 someone follows me, or a friend ranks up or wins a trophy</label>
       </fieldset>
@@ -542,6 +552,11 @@
           <a class="btn btn-primary btn-big" id="readerOpen" target="_blank" rel="noopener noreferrer"></a>
           <a class="pill-btn" id="readerTranslate" target="_blank" rel="noopener noreferrer" data-icon="translate" hidden><span>Read the article in my language</span></a>
         </div>
+        <div class="reader-follow" id="readerFollow" hidden></div>
+        <section class="reader-timeline" id="readerTimeline" aria-labelledby="readerTlTitle" hidden>
+          <h2 id="readerTlTitle">🕰️ How we got here</h2>
+          <ol class="tl-list" id="readerTlList"></ol>
+        </section>
         <section class="reader-react" aria-labelledby="readerReactTitle">
           <h2 id="readerReactTitle">Your reaction</h2>
           <div class="reader-reacts" id="readerReacts"></div>

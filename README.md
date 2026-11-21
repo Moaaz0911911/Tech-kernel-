@@ -41,6 +41,9 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 📺 **kerNEl Live**: a trivia show every day at 12:00 and 18:00 UTC (shown in your own time). The lobby opens 10 minutes before. Then 10 questions, 12 seconds each, everyone at the same time; one wrong answer and you're out. After each question you see how many picked each answer. The last kernels standing win +60 XP and the 🎤 mic hat, and everyone who joined gets +15. With notifications on, kerNEl reminds you before the show.
 - 🔮 **Predictions**: every day kerNEl asks "Will this story reach N upvotes by tomorrow?" about two rising Hacker News stories, and checks the answer itself. Moderators can post their own questions (2 to 4 answers) and settle them. Right calls earn +15 XP; five unlock the 🔮 crystal ball hat.
 - 🏅 **Seasons**: every month is a season with its own leaderboard (the 🏆 board has an "All time / This season" switch). When the month ends, the top 3 get +200, +100 and +50 XP, a season medal on their profile card and the Season legend frame.
+- 🔔 **Follow companies and topics** (Apple, SpaceX, Rust… or anything you type) on the Me tab, from "Trending now" and "Popular" suggestions, or with one tap in the reader. Followed topics fill your ⭐ For You feed, get spots in your Morning Drop, and send up to 3 alerts a day when they show up in fresh stories.
+- ☀️ **Morning Drop**: the 5 stories to know today, picked for you (your topics first, then the day's biggest stories, never more than 2 from one section). Open it from the News tab any time, or pick an hour on the Me tab to get it every day as a notification, in your own time.
+- 🕰️ **"How we got here"** in the reader: earlier Hacker News stories about the same thing, newest first, so you can see how a story developed.
 - 🍿 **Popcorn Battle**: two of today's hottest stories go head to head. Yesterday's winner becomes the 🏆 **Story of the Day**.
 - 🕵️ **Real or Fake?** plus a **weekly tournament**: the same 8 headlines for everyone, one go, and the top 3 win 🏆 trophies on Monday (shown on their profile card).
 - 🗨️ **Story comments** in the reader, with reactions, @mentions, a swear filter, reporting (3 reports hide a comment) and mutes.
@@ -192,6 +195,7 @@ js/dm.js          ✉️ Messages (requests, Seen, reactions, streaks, shared st
 js/groups.js      👥 new-group and group-settings dialogs
 js/pops.js        🫧 the pops row, full-screen viewer and composer
 js/voice.js       🎙️ voice note recorder and player
+js/discover.js    🔔 followed topics, ☀️ Morning Drop, 🕰️ reader timelines
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped
 js/look.js        avatars with hats, frames and streak flames

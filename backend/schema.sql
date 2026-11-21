@@ -157,6 +157,9 @@ CREATE TABLE IF NOT EXISTS notify_prefs (
   friends         INTEGER NOT NULL DEFAULT 1, -- follows, friends' rank-ups, trophies
   dms             INTEGER NOT NULL DEFAULT 1, -- direct messages
   games           INTEGER NOT NULL DEFAULT 1, -- kerNEl Live reminders, duel challenges
+  topics          INTEGER NOT NULL DEFAULT 1, -- a followed topic or company is in the news
+  drop_hour       INTEGER,                    -- ☀️ Morning Drop: the local hour to send it (NULL = off)
+  last_drop_day   TEXT,
   tz              INTEGER NOT NULL DEFAULT 0, -- minutes east of UTC
   news_day        TEXT,
   news_today      INTEGER NOT NULL DEFAULT 0,
@@ -505,4 +508,20 @@ CREATE TABLE IF NOT EXISTS voice_notes (
   data        TEXT NOT NULL,                 -- base64
   type        TEXT NOT NULL,
   created     INTEGER NOT NULL
+);
+
+-- 🔔 followed topics and companies
+CREATE TABLE IF NOT EXISTS topic_follows (
+  user_id     TEXT NOT NULL,
+  topic       TEXT NOT NULL,                 -- as they typed it ("OpenAI")
+  topic_lc    TEXT NOT NULL,
+  created     INTEGER NOT NULL,
+  PRIMARY KEY (user_id, topic_lc)
+);
+CREATE INDEX IF NOT EXISTS topic_follows_lc ON topic_follows (topic_lc);
+CREATE TABLE IF NOT EXISTS topic_alerts (
+  user_id     TEXT NOT NULL,
+  story_key   TEXT NOT NULL,
+  at          INTEGER NOT NULL,
+  PRIMARY KEY (user_id, story_key)
 );

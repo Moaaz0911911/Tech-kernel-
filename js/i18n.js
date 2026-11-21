@@ -127,6 +127,7 @@ export function timeAgoI18n(ts) {
 
 /** A date in the current language, e.g. "20 Nov". */
 export const fmtDate = (ts, opts = { day: 'numeric', month: 'short' }) => new Date(ts).toLocaleDateString(lang === 'ar' ? 'ar-EG-u-nu-latn' : langInfo.html, opts);
+export const fmtTime = (ts) => new Date(ts).toLocaleTimeString(lang === 'ar' ? 'ar-EG-u-nu-latn' : langInfo.html, { hour: '2-digit', minute: '2-digit' });
 
 /** Arabic needs fonts with Arabic letters: load them only for Arabic readers. */
 export function loadLangFonts(families = 'IBM+Plex+Sans+Arabic:wght@400;500;600;700') {

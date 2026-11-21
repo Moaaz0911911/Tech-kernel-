@@ -14,6 +14,7 @@ import { awardTrophies } from './play.js';
 import { isAdmin } from './admin.js';
 import { statsOf, claimXp, myInvites } from './rewards.js';
 import { forgetGroupsOf } from './groups.js';
+import { sendMorningDrops, notifyTopics } from './discover.js';
 import { dropPopStatements } from './pops.js';
 import { seasonBoard, seasonUpdate, remindLive, makeAutoPredictions, resolveAutoPredictions, awardSeason, seasonMedals } from './arena.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
@@ -133,6 +134,8 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM pop_views WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM pop_reports WHERE reporter_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM typing WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM topic_follows WHERE user_id = ?').bind(user.id),
+      env.DB.prepare('DELETE FROM topic_alerts WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM voice_notes WHERE user_id = ? OR scope IN (SELECT \'d:\' || thread_id FROM dm_members WHERE user_id = ?)').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM reactions WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM chat_messages WHERE user_id = ?').bind(user.id),
@@ -306,6 +309,8 @@ export default {
         const news = await notifyBigNews(env, budget);
         const streaks = await notifyStreaks(env, budget);
         await remindLive(env, budget).catch((e) => console.error('live reminder', e));
+        await sendMorningDrops(env, budget).catch((e) => console.error('morning drop', e));
+        await notifyTopics(env, budget).catch((e) => console.error('topic alerts', e));
         await awardTrophies(env).catch((e) => console.error('trophies', e));
         await env.DB.prepare('DELETE FROM notifications WHERE created < ?').bind(Date.now() - 30 * 864e5).run();
         console.log(`notifications: ${news} news pushes, ${streaks} streak pushes`);
@@ -346,6 +351,8 @@ export default {
         env.DB.prepare('DELETE FROM battle_votes WHERE day < ?').bind(new Date(Date.now() - 40 * 864e5).toISOString().slice(0, 10)),
         ...dropPopStatements(env, 'expires < ?', Date.now()), // 🫧 pops last a day
         env.DB.prepare('DELETE FROM typing WHERE at < ?').bind(Date.now() - 60_000),
+        env.DB.prepare('DELETE FROM topic_alerts WHERE at < ?').bind(Date.now() - 3 * 864e5),
+        env.DB.prepare("DELETE FROM kv WHERE k LIKE 'tl:%' AND substr(k, 4) NOT IN (SELECT key FROM stories)"), // timelines go with their story
         env.DB.prepare("DELETE FROM group_messages WHERE created < ? AND kind = 'msg'").bind(Date.now() - 365 * 864e5), // group messages keep a year
         env.DB.prepare('DELETE FROM group_reports WHERE msg_id NOT IN (SELECT id FROM group_messages)'),
         env.DB.prepare('DELETE FROM voice_notes WHERE created < ?').bind(Date.now() - 366 * 864e5),

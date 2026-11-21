@@ -43,6 +43,16 @@ async function outbound(request) {
     return new Response('', { status: url.pathname.endsWith('/gone') ? 410 : 201 });
   }
   const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } });
+  if (url.hostname === 'hn.algolia.com' && /points>=15/.test(url.searchParams.get('numericFilters') || '') && url.searchParams.get('query')) { // 🕰️ a story's timeline
+    calls.timeline = url.searchParams.get('query');
+    const ago = (d) => now() - d * 86400;
+    return J({ hits: [
+      { objectID: '7001', title: 'Rust 1.80 brings faster builds', url: 'https://example-news.com/r180', points: 300, created_at_i: ago(40) },
+      { objectID: '7002', title: 'Rust 1.79 is out', url: 'https://example-news.com/r179', points: 200, created_at_i: ago(75) },
+      { objectID: '7004', title: 'The Rust Foundation turns 5', url: null, points: 90, created_at_i: ago(400) },
+      { objectID: '7005', title: 'Rust 2.0 released #1', url: 'https://example-news.com/story-1', points: 90, created_at_i: ago(1) },
+    ] });
+  }
   if (url.hostname === 'hn.algolia.com') return J(hnHits(url.pathname.includes('by_date') ? 6 : 8));
   if (url.hostname === 'dev.to') return J([{ id: 1, title: 'CSS tricks that feel illegal', url: 'https://dev.to/a/css', published_at: new Date().toISOString(), public_reactions_count: 50, comments_count: 4, cover_image: 'https://dev.to/cover.png', description: 'container queries', tag_list: ['css'] }]);
   if (url.hostname === 'www.theverge.com' && url.pathname.includes('rss')) return new Response(RSS, { headers: { 'content-type': 'application/rss+xml' } });
@@ -937,6 +947,51 @@ try {
   ok('deleting accounts removes their pops, group messages and voice notes', (await db.prepare(`SELECT (SELECT COUNT(*) FROM pops) + (SELECT COUNT(*) FROM pop_views) + (SELECT COUNT(*) FROM voice_notes)
     + (SELECT COUNT(*) FROM group_messages WHERE kind = 'msg' AND user_id NOT IN (SELECT id FROM users)) + (SELECT COUNT(*) FROM group_members WHERE user_id NOT IN (SELECT id FROM users)) AS n`).first()).n === 0);
   ok('…and the group lives on with who’s left', (await api(`/api/groups/${gid}`, { token })).data.group.owner === true);
+
+  console.log('🔔 topics, ☀️ Morning Drop, 🕰️ timelines');
+  const taraToken = (await api('/api/auth/register', { method: 'POST', body: { username: 'Taraaa', password: 'Morning-Coffee-42' }, ip: '5.5.5.1' })).data.token;
+  r = await api('/api/topics', { token: taraToken });
+  ok('topic suggestions (popular + trending)', r.status === 200 && r.data.suggested.includes('Nintendo') && r.data.trending.includes('OpenAI') && r.data.topics.length === 0, `trending: ${r.data.trending.join(', ')}`);
+  r = await api('/api/topics', { method: 'POST', token: taraToken, body: { topic: 'Rust' } });
+  ok('follow a topic', r.data.topics.some((x) => x.topic === 'Rust'));
+  ok('…with how many of today’s stories mention it', r.data.topics.find((x) => x.topic === 'Rust').today >= 1);
+  ok('one-letter topics are refused', (await api('/api/topics', { method: 'POST', token: taraToken, body: { topic: 'x' } })).status === 400);
+  r = await api('/api/topics', { method: 'POST', token: taraToken, body: { topic: 'Pine' } });
+  ok('follow another, then unfollow it', (await api('/api/topics', { method: 'POST', token: taraToken, body: { topic: 'pine', follow: false } })).data.topics.length === 1);
+  await db.prepare("UPDATE stories SET first_seen = ?, time = ? WHERE title LIKE 'Rust 2.0%'").bind(Date.now(), Date.now()).run();
+  await worker.scheduled({ cron: '2-59/5 * * * *' });
+  r = await api('/api/notifications', { token: taraToken });
+  ok('a followed topic in a fresh story sends an alert', r.data.items.some((n) => n.title === '🔔 Rust is in the news' && n.url.startsWith('./#story=')));
+  await worker.scheduled({ cron: '2-59/5 * * * *' });
+  ok('…only once per story', (await api('/api/notifications', { token: taraToken })).data.items.filter((n) => n.title.includes('Rust is in the news')).length
+    === (await db.prepare("SELECT COUNT(*) AS n FROM topic_alerts WHERE user_id = (SELECT id FROM users WHERE username_lc = 'taraaa')").first()).n);
+  ok('…and at most 3 a day', (await db.prepare("SELECT COUNT(*) AS n FROM topic_alerts WHERE user_id = (SELECT id FROM users WHERE username_lc = 'taraaa')").first()).n <= 3);
+  r = await api('/api/drop', { token: taraToken });
+  ok('☀️ Morning Drop: the day’s top 5', r.status === 200 && r.data.stories.length === 5 && r.data.hour === null);
+  ok('…stories about your topics come first', r.data.stories[0].topic === 'Rust' && r.data.stories.filter((x) => x.topic).length <= 2);
+  ok('…then the day’s biggest stories', r.data.stories.some((x) => x.points >= 900));
+  ok('…at most 2 from one section', Object.values(r.data.stories.reduce((a, s) => ({ ...a, [s.cat]: (a[s.cat] || 0) + 1 }), {})).every((n) => n <= 2));
+  ok('guests get a Morning Drop too', (await api('/api/drop')).data.stories.length === 5);
+  const mins = new Date().getUTCMinutes();
+  const dropHour = new Date(Date.now() - mins * 60_000).getUTCHours();
+  r = await api('/api/notify/prefs', { method: 'PUT', token: taraToken, body: { dropHour, tz: -mins } });
+  ok('pick the hour for your Morning Drop', r.data.dropHour === dropHour);
+  await worker.scheduled({ cron: '2-59/5 * * * *' });
+  ok('…it arrives at that hour, in your time', (await api('/api/notifications', { token: taraToken })).data.items.some((n) => n.title === '☀️ Your Morning Drop is here' && n.url === './#drop'));
+  await worker.scheduled({ cron: '2-59/5 * * * *' });
+  ok('…once a day', (await api('/api/notifications', { token: taraToken })).data.items.filter((n) => n.title.includes('Morning Drop')).length === 1);
+  ok('…and can be turned off', (await api('/api/notify/prefs', { method: 'PUT', token: taraToken, body: { dropHour: null } })).data.dropHour === null);
+  const rustKey = (await db.prepare("SELECT key FROM stories WHERE title LIKE 'Rust 2.0%' LIMIT 1").first()).key;
+  r = await api(`/api/timeline?key=${encodeURIComponent(rustKey)}`);
+  ok('🕰️ a story’s timeline searches for what it’s about', r.status === 200 && /Rust/.test(calls.timeline) && r.data.query.includes('Rust'));
+  ok('…older stories, newest first, without the story itself', r.data.items.length === 3 && r.data.items[0].title.startsWith('Rust 1.80') && r.data.items.every((x, i, a) => !i || a[i - 1].time >= x.time) && !r.data.items.some((x) => x.url === 'https://example-news.com/story-1'));
+  ok('…with a Hacker News link when there’s no article link', r.data.items.some((x) => x.url.startsWith('https://news.ycombinator.com/item?id=7004')));
+  calls.timeline = null;
+  await api(`/api/timeline?key=${encodeURIComponent(rustKey)}`);
+  ok('…and it’s cached', calls.timeline === null);
+  ok('unknown stories have no timeline', (await api('/api/timeline?key=nope')).status === 404);
+  await api('/api/me', { method: 'DELETE', token: taraToken });
+  ok('deleting an account removes its topics', (await db.prepare('SELECT (SELECT COUNT(*) FROM topic_follows) + (SELECT COUNT(*) FROM topic_alerts) AS n').first()).n === 0);
 
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });

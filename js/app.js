@@ -21,6 +21,7 @@ import { initReader } from './reader.js';
 import { pickPhoto } from './photo.js';
 import { initMod } from './mod.js';
 import { initArena, seasonBoardHTML } from './arena.js';
+import { initDiscover } from './discover.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -60,6 +61,7 @@ let reader = null;
 let tabs = null;
 let mod = null;
 let arena = null;
+let discover = null;
 let invites = null;
 
 // ====================================================================================
@@ -421,7 +423,7 @@ function getVisible() {
     list = feed.all();
     if (state.cat === 'foryou') {
       const topics = auth.getProfile().topics || [];
-      list = list.filter((i) => topics.includes(i.cat));
+      list = list.filter((i) => topics.includes(i.cat) || !!discover?.matchTopic(i.title));
     } else if (state.cat !== 'all') {
       list = list.filter((i) => i.cat === state.cat);
     }
@@ -442,7 +444,7 @@ function emptyMessage() {
   if (state.query) return `<div class="empty-emoji">🕵️</div><p>${t('No stories in the live feed match “{q}”.', { q: esc(state.query) })}</p><button class="btn btn-primary" data-action="ask-codme">${t('🤖 Ask codme to dig the archives')}</button>`;
   if (state.cat === 'saved') return `<div class="empty-emoji">🪣</div><p>${t('Your popcorn bucket is empty. Tap 📑 on any story to save it for later.')}</p>`;
   if (state.cat === 'foryou') {
-    return auth.getProfile().topics?.length
+    return auth.getProfile().topics?.length || discover?.hasTopics()
       ? `<div class="empty-emoji">⭐</div><p>${t('Nothing in your favourite topics yet — they’re still in the bag. Check back in a minute!')}</p>`
       : `<div class="empty-emoji">⭐</div><p>${t('Pick your favourite topics to build your For You feed.')}</p><button class="btn btn-primary" data-action="edit-profile">${t('✏️ Choose topics')}</button>`;
   }
@@ -1031,6 +1033,7 @@ function handleAction(action, el) {
     case 'quiz': play?.openQuiz(); break;
     case 'tournament': play?.openTourney(); break;
     case 'briefing': extras?.briefing(); break;
+    case 'drop': closeMenus(); discover?.openDrop(); break;
     case 'swipe': extras?.openSwipe(); break;
     case 'wrapped': closeMenus(); extras?.openWrapped(); break;
     case 'show-friends': closeMenus(); tabs?.show('me'); $('#friendsWidget').hidden = false; setTimeout(() => $('#friendsWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); social?.loadFriends(); break;
@@ -1162,6 +1165,7 @@ function openDeepLink() {
   else if (h.startsWith('duel=')) arena?.openDuel(Number(h.slice(5)));
   else if (h.startsWith('group=')) community?.openGroup(Number(h.slice(6)));
   else if (h === 'pops') community?.openMessages();
+  else if (h === 'drop') discover?.openDrop();
   else if (h === 'live') { tabs?.show('play'); arena?.openLive(); }
   else if (h === 'season') { store.set('board', 'season'); tabs?.show('me'); loadLeaderboard(); setTimeout(() => $('#boardWidget').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); }
 }
@@ -1248,13 +1252,14 @@ function boot() {
     summarize: (it, mode) => extras.summarize(it, mode),
     speakText: (text) => extras.speakText(text),
     showComments: (it, opts) => (social ? social.openComments(it, opts) : ($('.reader-comments').hidden = true)),
-    onOpen: (it) => markRead(it.key),
+    onOpen: (it) => { markRead(it.key); discover?.readerOpened(it); },
     chatEnabled: !!community,
   });
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
   invites = initInvites();
   catchInvite(openAuth);
+  discover = initDiscover({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onTopicsChange: () => { if (state.cat === 'foryou') renderFeed(); } });
   arena = initArena({ openAuth, openStory: (s) => reader?.open(findItem(s.key) || s), onWin: () => setTimeout(checkRewards, 1500) });
   game = initGame({
     getItems: () => feed.all(),

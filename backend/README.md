@@ -29,6 +29,9 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 🎙️ **Voice notes** | Up to 30 seconds and 240 KB, in private and group chats. Only real audio (WebM, Ogg, MP4, MP3, AAC) is accepted, checked by its first bytes, and each clip is fetched by an unguessable key. |
 | ✍️ **Typing** | "typing…" lasts 6 seconds after the last keystroke ping, and clears when the message is sent. |
 | 🫧 **Pops** | 24-hour posts (text on a background, a photo up to 450 KB, or a kerNEl story) for your followers, with views, emoji reactions, replies into Messages and reports (3 hide a pop). Expired pops and their photos are deleted by the cleanup cron. |
+| 🔔 **Followed topics** | Up to 20 companies or topics per person, matched as whole words in headlines. The notification cron sends at most 3 alerts a day, never twice for one story. "Trending now" suggestions come from names that keep appearing in the last day and a half of headlines. |
+| ☀️ **Morning Drop** | Five stories a day: up to two about your topics, then the biggest stories (at most two per section). Sent at the hour each person picks, in their time zone, once a day. |
+| 🕰️ **Timelines** | For a story, the server picks the words that name what it's about and asks Hacker News search for older stories, newest first, one per month further back. Cached until the story leaves kerNEl. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
 | 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
@@ -129,6 +132,10 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `GET /api/pops?user=` · `POST /api/pops` | Bearer | Rings of pops from you and the people you follow (or one person) · `{ kind: text\|photo\|story, text, bg, photo?, storyKey? }` |
 | `POST /api/pops/view` · `/report` · `GET /api/pops/:id/viewers` · `DELETE /api/pops/:id` | Bearer | `{ id, react? }` · `{ id }` · who saw your pop · delete it |
 | `GET /api/pops/photo/:key` | – | A pop's photo (only while the pop is live) |
+| `GET /api/topics` · `POST /api/topics` | Bearer | Your topics (with today's story count), trending and popular suggestions · `{ topic, follow: true\|false }` |
+| `GET /api/drop` | optional | Today's Morning Drop (personal when signed in) and your drop hour |
+| `PUT /api/notify/prefs` (also) | Bearer | `topics: true\|false` in `prefs` for topic alerts · `dropHour: 0–23 \| null` for the Morning Drop |
+| `GET /api/timeline?key=` | – | Earlier stories about the same thing |
 | `GET /api/me/friends` | Bearer | People you follow (with live streaks) + their activity |
 | `GET /api/kids/news` | – | This week's three kid-friendly stories |
 | `GET /api/timemachine?date=MM-DD` | – | Top story on that date, every year since 2007 |
@@ -167,6 +174,7 @@ src/people.js  messages, people search, profile photos, blocking
 src/groups.js  group chats
 src/pops.js    24-hour pops
 src/media.js   voice notes and typing
+src/discover.js  followed topics, Morning Drop, timelines
 src/rewards.js server-given XP, special counters, invites
 src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine

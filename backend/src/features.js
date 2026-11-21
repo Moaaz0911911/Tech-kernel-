@@ -15,6 +15,7 @@ import {
 } from './groups.js';
 import { createPop, listPops, viewPop, popViewers, deletePop, reportPop, popPhotoResponse } from './pops.js';
 import { voiceResponse } from './media.js';
+import { listTopics, followTopic, getDrop, storyTimeline } from './discover.js';
 import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
@@ -242,6 +243,22 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
   const pop = path.match(/^\/api\/pops\/(\d+)(\/viewers)?$/);
   if (pop && pop[2] && m === 'GET') return json(await popViewers(env, await requireUser(request, env), pop[1]));
   if (pop && !pop[2] && m === 'DELETE') return json(await deletePop(env, await requireUser(request, env), pop[1]));
+
+  // ---- 🔔 followed topics · ☀️ Morning Drop · 🕰️ timelines ----
+  if (path === '/api/topics' && m === 'GET') return json(await listTopics(env, await requireUser(request, env)));
+  if (path === '/api/topics' && m === 'POST') {
+    const user = await requireUser(request, env);
+    await rateLimit(env, `topics:${user.id}`, 120, 3600_000);
+    return json(await followTopic(env, user, await readJson(request, 1_000)));
+  }
+  if (path === '/api/drop' && m === 'GET') {
+    await rateLimit(env, `drop:${ip}`, 300, 3600_000);
+    return json(await getDrop(env, await currentUser(request, env)));
+  }
+  if (path === '/api/timeline' && m === 'GET') {
+    await rateLimit(env, `timeline:${ip}`, 240, 3600_000);
+    return json(await storyTimeline(env, url.searchParams.get('key')));
+  }
 
   // ---- 📷 profile photos ----
   if (path === '/api/me/photo' && m === 'PUT') {
