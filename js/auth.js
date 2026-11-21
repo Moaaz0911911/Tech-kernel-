@@ -43,8 +43,8 @@ class Auth extends EventTarget {
     return this.api(`/api/auth/available?username=${encodeURIComponent(username)}`, { auth: false });
   }
 
-  async register(username, password, { leaderboard = true } = {}) {
-    const r = await this.api('/api/auth/register', { method: 'POST', auth: false, body: { username, password, leaderboard } });
+  async register(username, password, { leaderboard = true, invite = null } = {}) {
+    const r = await this.api('/api/auth/register', { method: 'POST', auth: false, body: { username, password, leaderboard, ...(invite ? { invite } : {}) } });
     return this.start(r);
   }
 

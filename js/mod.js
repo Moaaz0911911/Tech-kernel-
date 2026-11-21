@@ -1,0 +1,180 @@
+// 🛡️ Moderator tools (only for usernames in the server's ADMINS setting): reports, people, and a log.
+import { $, esc, timeAgo, toast } from './utils.js';
+import { auth } from './auth.js';
+import { t, tServer, fmtDate } from './i18n.js';
+import { lookHTML, photoUrl } from './look.js';
+
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['log', '📜', 'Log']];
+
+export function initMod() {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'modal mod-dialog';
+  dlg.innerHTML = `<form method="dialog" class="modal-x-form"><button class="modal-x" aria-label="${esc(t('Close'))}">✕</button></form>
+    <div class="modal-body mod-body">
+      <h2>🛡️ ${t('Moderator tools')}</h2>
+      <div class="seg mod-tabs" role="tablist">${TABS.map(([id, e, label]) => `<button type="button" role="tab" data-modtab="${id}" aria-selected="${id === 'overview'}">${e} ${t(label)}</button>`).join('')}</div>
+      <div class="mod-pane" id="modPane"></div>
+    </div>`;
+  document.body.append(dlg);
+  const pane = dlg.querySelector('#modPane');
+  let tab = 'overview';
+  let lookedUp = '';
+
+  const api = (path, body) => auth.api(path, body ? { method: 'POST', body } : {});
+  const when = (ts) => `${fmtDate(ts, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+  const person = (u) => `<button type="button" class="mod-who" data-lookup="${esc(u.username)}">${lookHTML(u)}<span><b dir="auto">${esc(u.nickname || u.username)}</b><small>@${esc(u.username)}</small></span></button>`;
+  const loading = () => { pane.innerHTML = '<div class="chat-empty"><span class="spin">🛡️</span></div>'; };
+  const fail = (e) => { pane.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; };
+
+  async function overview() {
+    loading();
+    try {
+      const o = await api('/api/mod/overview');
+      const tile = (n, label, hot = false) => `<div class="mod-tile${hot && n ? ' hot' : ''}"><b>${n}</b><small>${t(label)}</small></div>`;
+      pane.innerHTML = `<div class="mod-tiles">
+          ${tile(o.users, 'kernels')}${tile(o.newUsers, 'new today')}${tile(o.activeNow, 'active now')}
+          ${tile(o.chat, 'chat messages today')}${tile(o.comments, 'comments today')}${tile(o.dms, 'private messages today')}
+          ${tile(o.chatReports, 'reported chat messages', true)}${tile(o.commentReports, 'reported comments', true)}${tile(o.dmReports, 'reported people', true)}
+          ${tile(o.photoReports, 'reported photos', true)}${tile(o.muted, 'muted')}${tile(o.banned, 'banned')}
+        </div>
+        <p class="muted small">${t('Updated {when}', { when: timeAgo(o.at) })} · <button type="button" class="linkish" data-modtab="reports">${t('Go to reports →')}</button></p>`;
+    } catch (e) { fail(e); }
+  }
+
+  async function reports() {
+    loading();
+    try {
+      const r = await api('/api/mod/reports');
+      const contentRow = (kind, x) => `<div class="mod-item${x.hidden ? ' is-hidden' : ''}">
+          <div class="mod-item-head">${person(x.user)}<span class="muted small">${kind === 'chat' ? `#${esc(x.room)}` : `🗨️ ${esc(String(x.story || '').slice(0, 60))}`} · ${when(x.created)}</span></div>
+          <p class="mod-text" dir="auto">${esc(x.text) || `<i>${t('(deleted by its author)')}</i>`}</p>
+          <div class="mod-actions"><span class="chip">🚩 ${x.reports}</span>${x.hidden ? `<span class="chip">${t('hidden')}</span>` : ''}
+            ${x.hidden ? `<button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:restore">${t('Bring back')}</button>` : `<button type="button" class="btn btn-sm btn-primary" data-content="${kind}:${x.id}:hide">${t('Hide')}</button>`}
+            <button type="button" class="btn btn-sm btn-ghost" data-content="${kind}:${x.id}:dismiss">${t('Looks fine')}</button></div>
+        </div>`;
+      const dmRow = (d) => `<div class="mod-item">
+          <div class="mod-item-head">${person(d.user)}<span class="muted small">${t('reported by @{name}', { name: esc(d.reporter) })} · ${when(d.at)}</span></div>
+          <ul class="mod-evidence">${(d.evidence || []).map((e) => `<li dir="auto">${e.story ? `📰 ${esc(e.story)} ` : ''}${esc(e.text)}<time>${timeAgo(e.at)}</time></li>`).join('') || `<li class="muted">${t('No messages left')}</li>`}</ul>
+          <div class="mod-actions"><button type="button" class="btn btn-sm btn-ghost" data-lookup="${esc(d.user.username)}">${t('Look up')}</button>
+            <button type="button" class="btn btn-sm btn-ghost" data-dmdismiss="${esc(d.reporterId)}|${esc(d.userId)}">${t('Dismiss')}</button></div>
+        </div>`;
+      const photoRow = (p) => `<div class="mod-item mod-photo">
+          ${photoUrl(p.user) ? `<img src="${esc(photoUrl(p.user))}" alt="" referrerpolicy="no-referrer">` : `<span class="mod-nophoto">${t('Photo already gone')}</span>`}
+          <div>${person(p.user)}<p class="muted small">🚩 ${p.count} · ${when(p.at)}</p>
+            <div class="mod-actions"><button type="button" class="btn btn-sm btn-primary" data-photo="${esc(p.user.username)}:remove">${t('Remove photo')}</button>
+              <button type="button" class="btn btn-sm btn-ghost" data-photo="${esc(p.user.username)}:dismiss">${t('Looks fine')}</button></div></div>
+        </div>`;
+      const section = (title, items, row) => `<h3 class="mini-title">${title} <small>${items.length}</small></h3>${items.length ? items.map(row).join('') : `<p class="muted small">${t('Nothing here 🎉')}</p>`}`;
+      pane.innerHTML = section(`💬 ${t('Chat messages')}`, r.chat, (x) => contentRow('chat', x))
+        + section(`🗨️ ${t('Comments')}`, r.comments, (x) => contentRow('comment', x))
+        + section(`✉️ ${t('Reported in private messages')}`, r.dms, dmRow)
+        + section(`📷 ${t('Profile photos')}`, r.photos, photoRow);
+    } catch (e) { fail(e); }
+  }
+
+  async function people(name = lookedUp) {
+    lookedUp = name;
+    pane.innerHTML = `<form class="mod-search" data-modsearch><input name="u" placeholder="${esc(t('Username, e.g. azzy'))}" value="${esc(name)}" autocomplete="off" autocapitalize="off"><button class="btn btn-primary btn-sm">${t('Look up')}</button></form><div id="modUser"></div>`;
+    if (name) await showUser(name);
+  }
+
+  async function showUser(name) {
+    const box = pane.querySelector('#modUser');
+    box.innerHTML = '<div class="chat-empty"><span class="spin">👤</span></div>';
+    try { paintUser(await api(`/api/mod/user?username=${encodeURIComponent(name)}`)); } catch (e) { box.innerHTML = `<p>😵 ${esc(tServer(e.message))}</p>`; }
+  }
+
+  function paintUser(r) {
+    const box = pane.querySelector('#modUser');
+    if (!box) return;
+    const u = r.user;
+    const c = r.counts;
+    const status = [u.bannedUntil ? `⛔ ${t('banned until {when}', { when: when(u.bannedUntil) })}` : '', u.mutedUntil ? `🔇 ${t('muted until {when}', { when: when(u.mutedUntil) })}` : ''].filter(Boolean).join(' · ');
+    const list = (items, kind) => items.map((m) => `<li class="${m.hidden ? 'is-hidden' : ''}"><span dir="auto">${esc(m.text) || '…'}</span><small>${kind === 'chat' ? `#${esc(m.room)} · ` : ''}${timeAgo(m.created)}${m.reports ? ` · 🚩${m.reports}` : ''}</small>
+        ${m.hidden ? `<button type="button" class="linkish" data-content="${kind}:${m.id}:restore">${t('Bring back')}</button>` : `<button type="button" class="linkish" data-content="${kind}:${m.id}:hide">${t('Hide')}</button>`}</li>`).join('');
+    box.innerHTML = `<div class="mod-user">
+        <div class="mod-user-head">${lookHTML(u, { cls: 'avatar-lg' })}<div><b dir="auto">${esc(u.nickname)}</b> <span class="muted">@${esc(u.username)}</span>
+          <p class="muted small">${t('joined {when}', { when: fmtDate(u.created, { month: 'short', year: 'numeric' }) })} · ${u.xp} XP${u.bio ? ` · <span dir="auto">${esc(u.bio)}</span>` : ''}</p>
+          ${status ? `<p class="mod-status">${status}</p>` : ''}</div></div>
+        <div class="mod-tiles small">
+          <div class="mod-tile"><b>${c.chat}</b><small>${t('chat messages')}</small></div><div class="mod-tile"><b>${c.comments}</b><small>${t('comments')}</small></div><div class="mod-tile"><b>${c.dms}</b><small>${t('private messages')}</small></div>
+          <div class="mod-tile${c.chatReports + c.commentReports ? ' hot' : ''}"><b>${c.chatReports + c.commentReports}</b><small>${t('reports on posts')}</small></div><div class="mod-tile${c.dmReports ? ' hot' : ''}"><b>${c.dmReports}</b><small>${t('reports from chats')}</small></div><div class="mod-tile${c.photoReports ? ' hot' : ''}"><b>${c.photoReports}</b><small>${t('photo reports')}</small></div>
+        </div>
+        <div class="mod-actions wrap">
+          ${u.mutedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unmute">🔈 ${t('Unmute')}</button>` : `<button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:24">🔇 ${t('Mute 1 day')}</button><button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:168">🔇 ${t('Mute 1 week')}</button>`}
+          ${u.bannedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unban">✅ ${t('Unban')}</button>` : `<button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:168">⛔ ${t('Ban 1 week')}</button><button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:8760">⛔ ${t('Ban 1 year')}</button>`}
+          ${u.photo ? `<button type="button" class="btn btn-sm btn-ghost" data-photo="${esc(u.username)}:remove">📷 ${t('Remove photo')}</button>` : ''}
+          <button type="button" class="btn btn-sm btn-ghost" data-user="${esc(u.username)}">👤 ${t('Profile card')}</button>
+        </div>
+        <h3 class="mini-title">💬 ${t('Recent chat messages')}</h3><ul class="mod-recent">${list(r.recentChat, 'chat') || `<li class="muted">—</li>`}</ul>
+        <h3 class="mini-title">🗨️ ${t('Recent comments')}</h3><ul class="mod-recent">${list(r.recentComments, 'comment') || `<li class="muted">—</li>`}</ul>
+      </div>`;
+    box.dataset.username = u.username;
+  }
+
+  async function log() {
+    loading();
+    try {
+      const r = await api('/api/mod/log');
+      pane.innerHTML = r.items.length
+        ? `<ul class="mod-log">${r.items.map((x) => `<li><b>@${esc(x.admin)}</b> <code>${esc(x.action)}</code> ${esc(x.target || '')} ${x.note ? `<small>(${esc(x.note)})</small>` : ''}<time>${timeAgo(x.at)}</time></li>`).join('')}</ul>`
+        : `<p class="muted small">${t('Nothing here 🎉')}</p>`;
+    } catch (e) { fail(e); }
+  }
+
+  const show = (name) => {
+    tab = name;
+    dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
+    ({ overview, reports, people, log })[name]();
+  };
+
+  dlg.addEventListener('submit', (e) => {
+    const f = e.target.closest('[data-modsearch]');
+    if (!f) return;
+    e.preventDefault();
+    const name = f.elements.u.value.trim().replace(/^@/, '');
+    if (name) { lookedUp = name; showUser(name); }
+  });
+  dlg.addEventListener('click', async (e) => {
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    if (e.target === dlg) { dlg.close(); return; }
+    const tb = el.closest('[data-modtab]');
+    if (tb) return show(tb.dataset.modtab);
+    const lk = el.closest('[data-lookup]');
+    if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
+    const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    try {
+      const c = el.closest('[data-content]');
+      if (c) {
+        const [kind, id, action] = c.dataset.content.split(':');
+        await api('/api/mod/content', { kind, id: Number(id), action });
+        toast(action === 'hide' ? t('Hidden.') : action === 'restore' ? t('Brought back.') : t('Reports cleared.'), { emoji: '🛡️' });
+        return refresh();
+      }
+      const d = el.closest('[data-dmdismiss]');
+      if (d) { const [reporterId, userId] = d.dataset.dmdismiss.split('|'); await api('/api/mod/dm', { reporterId, userId }); toast(t('Reports cleared.'), { emoji: '🛡️' }); return refresh(); }
+      const p = el.closest('[data-photo]');
+      if (p) {
+        const [username, action] = p.dataset.photo.split(':');
+        if (action === 'remove' && !confirm(t('Remove @{name}’s profile photo?', { name: username }))) return;
+        await api('/api/mod/photo', { username, action });
+        toast(action === 'remove' ? t('Photo removed.') : t('Reports cleared.'), { emoji: '🛡️' });
+        return refresh();
+      }
+      const ua = el.closest('[data-user-act]');
+      if (ua) {
+        const [action, hours] = ua.dataset.userAct.split(':');
+        const name = pane.querySelector('#modUser')?.dataset.username;
+        if (!name) return;
+        if (action === 'ban' && !confirm(t('Ban @{name}? They’re signed out everywhere and can’t sign in until it ends.', { name }))) return;
+        paintUser(await api('/api/mod/user', { username: name, action, hours: Number(hours) || undefined }));
+        toast(t('Done.'), { emoji: '🛡️' });
+      }
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  });
+
+  return {
+    open(name = 'overview') { if (!dlg.open) dlg.showModal(); show(name); },
+  };
+}

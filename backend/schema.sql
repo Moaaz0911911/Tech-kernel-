@@ -46,7 +46,11 @@ CREATE TABLE IF NOT EXISTS users (
   best_streak   INTEGER NOT NULL DEFAULT 0,
   last_day      TEXT,                         -- last check-in day (UTC, YYYY-MM-DD)
   created       INTEGER NOT NULL,
-  updated       INTEGER NOT NULL
+  updated       INTEGER NOT NULL,
+  pending_xp    INTEGER NOT NULL DEFAULT 0,   -- XP the server gave (invites, duels, live shows…) waiting for the browser to collect
+  stats         TEXT NOT NULL DEFAULT '{}',   -- JSON counters that unlock hats/frames: invites, liveWins, prophet, duelsWon, seasonWins
+  banned_until  INTEGER,                      -- set by a moderator
+  invited_by    TEXT
 );
 CREATE INDEX IF NOT EXISTS users_board ON users (on_board, xp DESC);
 
@@ -292,6 +296,7 @@ CREATE TABLE IF NOT EXISTS dm_reports (
   user_id     TEXT NOT NULL,                 -- who was reported
   msg_id      INTEGER,
   at          INTEGER NOT NULL,
+  evidence    TEXT,                          -- the reported person's last few messages, for moderators
   PRIMARY KEY (reporter_id, user_id)
 );
 CREATE TABLE IF NOT EXISTS blocks (
@@ -314,4 +319,22 @@ CREATE TABLE IF NOT EXISTS photo_reports (
   reporter_id TEXT NOT NULL,
   at          INTEGER NOT NULL,
   PRIMARY KEY (owner_id, reporter_id)
+);
+
+-- 🎟️ invites: who brought whom
+CREATE TABLE IF NOT EXISTS invites (
+  invitee_id  TEXT PRIMARY KEY,
+  inviter_id  TEXT NOT NULL,
+  at          INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS invites_inviter ON invites (inviter_id, at);
+
+-- 🛡️ what moderators did, and when
+CREATE TABLE IF NOT EXISTS mod_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin       TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  target      TEXT,
+  note        TEXT,
+  at          INTEGER NOT NULL
 );

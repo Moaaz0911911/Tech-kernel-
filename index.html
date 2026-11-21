@@ -205,6 +205,10 @@
           <h3 id="pwTitle" class="widget-title">🏷️ Your name tag</h3>
           <div id="profileWidget"></div>
         </section>
+        <section class="widget widget-invite" id="inviteWidget" aria-labelledby="inviteTitle" hidden>
+          <h3 id="inviteTitle" class="widget-title">🎟️ Invite friends</h3>
+          <div id="inviteBody"></div>
+        </section>
         <section class="widget widget-people" id="peopleWidget" aria-labelledby="peopleTitle" hidden>
           <h3 id="peopleTitle" class="widget-title">🔍 Find people</h3>
           <label class="people-search"><span class="sr-only">Search people</span><span class="search-icon" data-icon="search"></span><input id="peopleSearch" type="search" placeholder="Search by name or @username" autocomplete="off" enterkeyhint="search"></label>
@@ -231,6 +235,8 @@
             <button type="button" class="set-row" data-action="chaos" data-icon="sparkle"><span>Chaos mode</span><small id="setChaos"></small></button>
             <button type="button" class="set-row" data-action="notify" data-icon="bell"><span>Notifications</span></button>
             <button type="button" class="set-row" data-action="account" data-icon="me"><span>Account &amp; security</span></button>
+            <a class="set-row" href="privacy.html" data-icon="globe"><span>Privacy &amp; your data</span></a>
+            <button type="button" class="set-row" data-action="mod" data-icon="gear" id="modRow" hidden><span>🛡️ Moderator tools</span></button>
           </div>
           <p class="settings-langs" id="meLangs"></p>
         </section>
@@ -246,6 +252,7 @@
       </div>
       <div class="footer-links">
         <a href="kids.html">🧸 Kids corner</a>
+        <a href="privacy.html">🔒 Privacy</a>
         <button type="button" class="linkish" data-action="codme">🤖 Ask codme</button>
         <a href="https://hn.algolia.com/api" target="_blank" rel="noopener noreferrer">News: Hacker News (Algolia)</a>
         <a href="https://developers.forem.com/api" target="_blank" rel="noopener noreferrer">DEV Community API</a>
@@ -317,8 +324,10 @@
         <small class="pw-label" aria-live="polite">🌽 Type a password</small>
         <label class="field"><span>Type it again</span><input name="confirm" type="password" autocomplete="new-password" maxlength="128" required></label>
         <label class="check"><input type="checkbox" name="leaderboard" checked> Show me on the 🏆 leaderboard</label>
+        <p class="invite-note" id="inviteNote" hidden></p>
         <p class="auth-error" role="alert"></p>
         <button class="btn btn-primary btn-block btn-big" type="submit">Create my account 🎉</button>
+        <p class="muted tiny privacy-note"><a href="privacy.html" target="_blank" rel="noopener">How kerNEl handles your data 🔒</a></p>
       </form>
 
       <!-- forgot password -->

@@ -49,6 +49,13 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
   - New messages can send a push notification, with their own on/off switch.
 - 🔍 **Find people**: search by name or @username on the Me tab or in Messages, with suggestions (people who follow you, the most active kernels). Follow or message right from the results.
 - 📷 **Profile photos**: pick a photo from your gallery or camera, then drag and zoom to crop it to a circle. It's shrunk to a small JPEG in the browser before upload and shows everywhere your avatar does: chat, comments, leaderboard, profile cards. Photos are public, and 3 reports from different people take one down.
+- 🎟️ **Invite links**: on the Me tab, copy or share your link (`…/#join=yourname`). When a friend signs up with it, you both get +50 XP. One invite unlocks the 🎟️ VIP ticket hat, five unlock the Ambassador frame, and new kernels get the 🥳 Party hat.
+- 🛡️ **Moderator tools** (only for the usernames in `ADMINS`, see below), under Me → Settings:
+  - Today's numbers.
+  - Every report: chat messages, comments, conversations (with the reported person's last few messages) and photos.
+  - Hide or bring back posts, remove photos, mute (1 day or 1 week) or ban (1 week or 1 year) someone, look anyone up.
+  - A log of every action.
+- 🔒 **Privacy page** ([`privacy.html`](privacy.html)) in all four languages, linked from the footer, Settings and sign-up.
 - 🪪 **Profile cards** now show a short **bio**, 🟢 **Active now** (or when someone was last around) and "Follows you". They have Message, **Share profile** (a link like `#@username`), Block and Report photo buttons.
 - 🎩 **Hats and frames** for your avatar, unlocked with XP (and a Champion look for trophy winners). They show in chat, comments, the leaderboard and on profile cards, next to a 🔥 streak flame.
 - 🎁 **kerNEl Wrapped**: a shareable picture of your stats, your "news vibe" and favourite section.
@@ -112,6 +119,10 @@ That's `js/config.js` for the multi-file site, or the `CONFIG` block in the sing
 - Wrong usernames and wrong passwords get the same message, so nobody can probe which usernames exist.
 - The site must be served over **https** (GitHub Pages is) so passwords are encrypted on the way.
 
+**Moderators**
+- Put your kerNEl username(s) in `ADMINS` in [`backend/wrangler.toml`](backend/wrangler.toml), for example `ADMINS = "yourname"` (comma-separated for more than one), then deploy the server again.
+- After that, **🛡️ Moderator tools** shows up under Me → Settings and in your avatar menu.
+
 ## 3. How the news works
 
 | Source | How | How often |
@@ -151,6 +162,7 @@ Accounts are tied to the server, not the address, so everyone keeps their progre
 
 ```
 index.html        main news site
+privacy.html      what kerNEl stores and how to delete it (4 languages)
 kids.html         kerNEl Kids
 404.html          "this kernel never popped"
 css/main.css      main styles (black/white Liquid Glass, dark/light, chaos mode, phones, right-to-left)
@@ -165,6 +177,8 @@ js/i18n-main.js   ← translations for the news site [English, Arabic, German, T
 js/i18n-kids.js   ← translations for kerNEl Kids
 js/play.js        Daily Quiz, Popcorn Battle, weekly tournament
 js/social.js      story comments (+ reactions on comments), friends + activity feed
+js/mod.js         🛡️ moderator tools
+js/invite.js      🎟️ invite links and the invite widget
 js/dm.js          ✉️ Messages (requests, Seen, reactions, streaks, shared stories) + 🔍 people search
 js/photo.js       📷 profile photo picker and circle cropper
 js/extras.js      Explain/TL;DR, audio briefing, Time Machine, swipe mode, Wrapped

@@ -2,6 +2,7 @@
 // Passwords are hashed with PBKDF2-SHA256 (random salt per user, many iterations); only the hash is stored.
 // Session tokens and recovery codes are stored as SHA-256 hashes, never as-is.
 import { HttpError, sha256Hex, randomToken } from './util.js';
+import { applyInvite } from './rewards.js';
 
 const SESSION_DAYS = 30;
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
@@ -90,8 +91,9 @@ const bearer = (request) => (request.headers.get('Authorization') || '').match(/
 export async function currentUser(request, env) {
   const token = bearer(request);
   if (!token) return null;
-  return env.DB.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires > ?')
-    .bind(await sha256Hex(token), Date.now()).first();
+  const now = Date.now();
+  return env.DB.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires > ? AND (u.banned_until IS NULL OR u.banned_until < ?)')
+    .bind(await sha256Hex(token), now, now).first();
 }
 
 export async function requireUser(request, env) {
@@ -138,8 +140,9 @@ export async function register(env, body) {
     if (/UNIQUE/i.test(String(e?.message))) throw new HttpError(409, 'That username is already taken');
     throw e;
   }
+  const invitedBy = body.invite ? await applyInvite(env, id, body.invite).catch((e) => { console.error('invite', e); return null; }) : null;
   const token = await createSession(env, id);
-  return { token, isNew: true, recoveryCode, user: publicUser(await byId(env, id)) };
+  return { token, isNew: true, recoveryCode, invitedBy, user: publicUser(await byId(env, id)) };
 }
 
 export async function login(env, body) {
@@ -147,6 +150,7 @@ export async function login(env, body) {
   const password = String(body.password ?? '');
   if (!row) { await burnTime(env); throw new HttpError(401, 'Wrong username or password'); }
   if (!(await verifyPassword(password, row.pass_hash))) throw new HttpError(401, 'Wrong username or password');
+  if (row.banned_until && row.banned_until > Date.now()) throw new HttpError(403, 'This account has been suspended by a moderator.');
   if (Number(row.pass_hash.split('$')[1]) < targetIterations(env)) { // strength setting was raised: upgrade this hash
     await env.DB.prepare('UPDATE users SET pass_hash = ? WHERE id = ?').bind(await hashPassword(password, env), row.id).run();
   }

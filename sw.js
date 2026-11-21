@@ -1,9 +1,9 @@
 // kerNEl service worker: shows push notifications and keeps the app working offline.
-const CACHE = 'kernel-v5';
-const SHELL = ['./', 'index.html', 'kids.html', 'css/main.css', 'css/kids.css', 'assets/favicon.svg', 'assets/icon-192.png',
+const CACHE = 'kernel-v6';
+const SHELL = ['./', 'index.html', 'kids.html', 'privacy.html', 'css/main.css', 'css/kids.css', 'assets/favicon.svg', 'assets/icon-192.png',
   'js/app.js', 'js/config.js', 'js/utils.js', 'js/content.js', 'js/fun.js', 'js/news.js', 'js/auth.js', 'js/codme.js',
   'js/community.js', 'js/notify.js', 'js/game.js', 'js/kids.js', 'js/i18n.js', 'js/i18n-main.js', 'js/i18n-kids.js',
-  'js/fakes.js', 'js/cosmetics.js', 'js/look.js', 'js/play.js', 'js/social.js', 'js/extras.js', 'js/icons.js', 'js/tabs.js', 'js/reader.js', 'js/dm.js', 'js/photo.js'];
+  'js/fakes.js', 'js/cosmetics.js', 'js/look.js', 'js/play.js', 'js/social.js', 'js/extras.js', 'js/icons.js', 'js/tabs.js', 'js/reader.js', 'js/dm.js', 'js/photo.js', 'js/mod.js', 'js/invite.js'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));

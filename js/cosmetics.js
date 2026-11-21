@@ -9,6 +9,11 @@ export const HATS = [
   { id: 'crown', emoji: '👑', xp: 1000, name: 'Overlord crown' },
   { id: 'ufo', emoji: '🛸', xp: 2000, name: 'Galactic UFO' },
   { id: 'trophy', emoji: '🏆', xp: 0, trophy: true, name: 'Champion cup' },
+  { id: 'ticket', emoji: '🎟️', xp: 0, stat: 'invites', min: 1, need: 'invite a friend', name: 'VIP ticket' },
+  { id: 'party', emoji: '🥳', xp: 0, stat: 'invited', min: 1, need: 'join with an invite', name: 'Party hat' },
+  { id: 'mic', emoji: '🎤', xp: 0, stat: 'liveWins', min: 1, need: 'win a live show', name: 'Live champ mic' },
+  { id: 'crystal', emoji: '🔮', xp: 0, stat: 'prophet', min: 5, need: '5 correct predictions', name: 'Crystal ball' },
+  { id: 'sword', emoji: '⚔️', xp: 0, stat: 'duelsWon', min: 3, need: 'win 3 duels', name: 'Duel blade' },
 ];
 
 export const FRAMES = [
@@ -19,9 +24,11 @@ export const FRAMES = [
   { id: 'rainbow', xp: 1000, name: 'Rainbow' },
   { id: 'galaxy', xp: 2000, name: 'Galaxy' },
   { id: 'champion', xp: 0, trophy: true, name: 'Champion' },
+  { id: 'ambassador', xp: 0, stat: 'invites', min: 5, need: 'invite 5 friends', name: 'Ambassador' },
+  { id: 'legend', xp: 0, stat: 'seasonWins', min: 1, need: 'finish a season in the top 3', name: 'Season legend' },
 ];
 
-/** Is a hat or frame unlocked for someone with this much XP and this many tournament trophies? */
-export const unlocked = (item, { xp = 0, trophies = 0 } = {}) => !!item && (item.trophy ? trophies > 0 : xp >= item.xp);
+/** Is a hat or frame unlocked? Most need XP; some need tournament trophies or a special counter (invites, live wins…). */
+export const unlocked = (item, stats = {}) => !!item && (item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
 export const hatById = (id) => HATS.find((h) => h.id === id) || HATS[0];
 export const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];

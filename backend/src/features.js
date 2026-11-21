@@ -9,6 +9,7 @@ import {
   searchPeople, setBlock, listBlocked, listThreads, dmCounts, getThread, sendDM, acceptThread, hideThread, reactDM, deleteDM, reportDM,
   setPhoto, removePhoto, photoResponse, reportPhoto,
 } from './people.js';
+import { requireAdmin, overview, reports, moderateContent, moderateDmReport, moderatePhoto, moderateUser, lookupUser, modLog } from './admin.js';
 
 /** Returns a Response, or null when the path isn't one of these. */
 export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
@@ -44,6 +45,21 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     return json(await follow(env, user, await readJson(request, 1_000)));
   }
   if (path === '/api/me/friends' && m === 'GET') return json(await friends(env, await requireUser(request, env)));
+
+  // ---- 🛡️ moderators ----
+  if (path.startsWith('/api/mod/')) {
+    const admin = await requireAdmin(request, env);
+    if (path === '/api/mod/overview' && m === 'GET') return json(await overview(env));
+    if (path === '/api/mod/reports' && m === 'GET') return json(await reports(env));
+    if (path === '/api/mod/log' && m === 'GET') return json(await modLog(env));
+    if (path === '/api/mod/user' && m === 'GET') return json(await lookupUser(env, url.searchParams.get('username')));
+    const body = m === 'POST' ? await readJson(request, 2_000) : {};
+    if (path === '/api/mod/content' && m === 'POST') return json(await moderateContent(env, admin, body));
+    if (path === '/api/mod/dm' && m === 'POST') return json(await moderateDmReport(env, admin, body));
+    if (path === '/api/mod/photo' && m === 'POST') return json(await moderatePhoto(env, admin, body));
+    if (path === '/api/mod/user' && m === 'POST') return json(await moderateUser(env, admin, body));
+    throw new HttpError(404, 'Not found');
+  }
 
   // ---- 🔍 people ----
   if (path === '/api/users/search' && m === 'GET') {

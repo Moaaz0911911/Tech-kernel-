@@ -19,6 +19,8 @@ import { icon, setIcon } from './icons.js';
 import { initTabs, initGlass } from './tabs.js';
 import { initReader } from './reader.js';
 import { pickPhoto } from './photo.js';
+import { initMod } from './mod.js';
+import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
 const PAGE = 24;
@@ -55,6 +57,8 @@ let social = null;
 let extras = null;
 let reader = null;
 let tabs = null;
+let mod = null;
+let invites = null;
 
 // ====================================================================================
 // Per-profile data (guest or account). Accounts also save it on the kerNEl server.
@@ -240,6 +244,28 @@ function rankFor(xp) {
   let i = 0;
   while (i + 1 < RANKS.length && xp >= RANKS[i + 1][0]) i++;
   return { i, min: RANKS[i][0], title: RANKS[i][1], emoji: RANKS[i][2], next: RANKS[i + 1]?.[0] ?? null };
+}
+
+/** 🎁 XP the server gave (invites, duels, live shows…) + counters that unlock hats + the moderator flag. */
+let isModerator = false;
+function collectRewards(u) {
+  if (!u || !auth.user) return;
+  store.set(`stats:${auth.profileKey()}`, u.stats || {});
+  store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
+  if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); }
+  if (u.pendingXp > 0) {
+    auth.api('/api/me/claim', { method: 'POST' }).then((r) => {
+      if (!r.claimed) return;
+      addXp(r.claimed);
+      toast(t('+{n} XP from your rewards!', { n: r.claimed }), { emoji: '🎁', ms: 5000 });
+      rain(['🎁', '✨', '🍿'], 24);
+      renderProfileWidget();
+    }).catch(() => {});
+  }
+}
+async function checkRewards() {
+  if (!auth.user?.apiToken || document.hidden) return;
+  try { collectRewards((await auth.api('/api/me')).user); } catch { /* try later */ }
 }
 
 function addXp(n) {
@@ -596,6 +622,7 @@ function renderAuthSlot() {
       <button type="button" role="menuitem" data-action="show-board">${t('🏆 Leaderboard')}</button>
       <button type="button" role="menuitem" data-action="notify">${t('🔔 Notifications')}</button>
       <button type="button" role="menuitem" data-action="account">${t('🔑 Account & security')}</button>
+      ${isModerator ? `<button type="button" role="menuitem" data-action="mod">🛡️ ${t('Moderator tools')}</button>` : ''}
       <button type="button" role="menuitem" data-action="signout">${t('🚪 Sign out')}</button>
     </div></div>`;
 }
@@ -779,6 +806,7 @@ function openAuth(mode = 'signin') {
 
 function setAuthMode(mode) {
   authMode = mode;
+  if (mode === 'signup') paintInviteNote();
   $$('.auth-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
   $('.auth-tabs').hidden = mode === 'code';
   $('#authTitle').textContent = t(AUTH_TEXT[mode][0]);
@@ -898,11 +926,11 @@ function openProfile(isNew = false) {
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
   $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(t(c.label))}</span></label>`).join('');
   // hats and frames: unlocked with XP (and tournament trophies)
-  const stats = { xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0) };
+  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0) };
   const styleOpt = (kind, item, look) => {
     const open = unlocked(item, stats);
     const checked = (p[kind] || 'none') === item.id;
-    const need = item.trophy ? t('win a trophy') : t('{n} XP', { n: item.xp });
+    const need = item.trophy ? t('win a trophy') : item.stat ? t(item.need) : t('{n} XP', { n: item.xp });
     return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
       <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
   };
@@ -967,6 +995,7 @@ function handleAction(action, el) {
     case 'remove-photo':
       auth.removePhoto().then(() => { paintPhotoRow(); toast(t('Photo removed — back to your emoji.'), { emoji: '🙂' }); }).catch((err) => toast(tServer(err.message), { emoji: '😵' }));
       break;
+    case 'mod': closeMenus(); if (isModerator) (mod ||= initMod()).open(); break;
     case 'messages': closeMenus(); if (community) community.openMessages(); else toast(t('Chat needs the kerNEl server.'), { emoji: '💬' }); break;
     case 'show-saved': closeMenus(); tabs?.show('news'); setCat('saved'); break;
     case 'show-foryou': closeMenus(); tabs?.show('news'); if (!auth.getProfile().topics?.length) openProfile(false); setCat('foryou'); break;
@@ -1199,6 +1228,8 @@ function boot() {
   });
 
   notifier = initNotify({ openAuth, openRoom: (room) => community?.openRoom(room) });
+  invites = initInvites();
+  catchInvite(openAuth);
   game = initGame({
     getItems: () => feed.all(),
     onDone: (score, total) => {
@@ -1333,7 +1364,7 @@ function boot() {
       if (!USERNAME_RE.test(name)) throw new Error('Usernames are 3–20 letters, numbers or underscores');
       if (f.password.value.length < 8) throw new Error('Passwords need at least 8 characters');
       if (f.password.value !== f.confirm.value) throw new Error('The two passwords don’t match');
-      return auth.register(name, f.password.value, { leaderboard: f.leaderboard.checked });
+      return auth.register(name, f.password.value, { leaderboard: f.leaderboard.checked, invite: pendingInvite() });
     });
   });
   $('#recoverForm').addEventListener('submit', (e) => {
@@ -1421,6 +1452,8 @@ function boot() {
       }
       dailyCheckin();
     };
+    clearInvite();
+    setTimeout(checkRewards, 1500);
     if (recoveryCode) showRecoveryCode(recoveryCode, welcome);
     else { $('#authDialog').close(); welcome(); }
   });
@@ -1431,6 +1464,8 @@ function boot() {
     loadLeaderboard();
     if (!e.detail?.quiet) toast(t('Signed out. The kernel misses you already 🥲'), { emoji: '👋' });
   });
+  auth.addEventListener('signout', () => { isModerator = false; $('#modRow').hidden = true; });
+  setInterval(checkRewards, 5 * 60_000);
   auth.addEventListener('expired', () => toast(t('Your session expired — please sign in again.'), { emoji: '⏰', ms: 6000 }));
   // A saved session: check it's still valid, pull progress from other devices, count today's visit.
   if (auth.user?.apiToken) {
@@ -1438,8 +1473,8 @@ function boot() {
       .then((u) => {
         if (!u) return;
         if (adoptLang(u.profile)) return;
-        store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
         setData(mergeData(getData(), u.data));
+        collectRewards(u);
         applyServerExtras(u);
         renderProfileWidget(); renderAchievements(); renderFeed();
         dailyCheckin();

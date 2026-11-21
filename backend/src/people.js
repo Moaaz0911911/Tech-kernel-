@@ -325,7 +325,10 @@ export async function deleteDM(env, user, id) {
 export async function reportDM(env, user, body) {
   const m = await memberOf(env, user, body.thread);
   const now = Date.now();
-  await env.DB.prepare('INSERT OR REPLACE INTO dm_reports (reporter_id, user_id, msg_id, at) VALUES (?, ?, ?, ?)').bind(user.id, m.other_id, Number(body.id) || null, now).run();
+  // moderators see what was reported: the reported person's last few messages in this chat
+  const { results: last } = await env.DB.prepare('SELECT text, story, created FROM dm_messages WHERE thread_id = ? AND user_id = ? AND deleted = 0 ORDER BY id DESC LIMIT 5').bind(m.thread_id, m.other_id).all();
+  const evidence = last.reverse().map((x) => ({ text: x.text.slice(0, 300), story: x.story ? parse(x.story, {})?.title || null : null, at: x.created }));
+  await env.DB.prepare('INSERT OR REPLACE INTO dm_reports (reporter_id, user_id, msg_id, at, evidence) VALUES (?, ?, ?, ?, ?)').bind(user.id, m.other_id, Number(body.id) || null, now, JSON.stringify(evidence)).run();
   const other = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(m.other_id).first();
   if (other) await setBlock(env, user, { username: other.username, block: true });
   const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM dm_reports WHERE user_id = ? AND at > ?').bind(m.other_id, now - 864e5).first();

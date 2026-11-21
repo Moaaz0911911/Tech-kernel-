@@ -87,7 +87,7 @@ const kidsLoader = `
   syncKids();
 })();`;
 
-const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'dm', 'community', 'notify', 'game', 'play', 'social', 'extras', 'photo', 'tabs', 'reader', 'app'])
+const mainJs = bundle(['config', 'i18n', 'utils', 'i18n-main', 'content', 'fun', 'news', 'auth', 'fakes', 'cosmetics', 'icons', 'look', 'codme', 'dm', 'community', 'notify', 'game', 'play', 'social', 'extras', 'photo', 'mod', 'invite', 'tabs', 'reader', 'app'])
   .replace(/href="kids\.html"/g, 'href="#kids"')
   .replace(/js\/config\.js/g, 'the CONFIG section of index.html');
 if (/kids\.html/.test(mainJs)) throw new Error('main bundle still links kids.html');
@@ -102,6 +102,7 @@ let html = read('index.html')
   .replace(/\s*<link rel="(?:manifest|apple-touch-icon)"[^>]*>/g, '') // the one-file version can't ship the app manifest / service worker
   .replace('<link rel="stylesheet" href="css/main.css">', `<style>\n${read('css/main.css')}\n${kidsCss}\n</style>`)
   .replace(/href="kids\.html"/g, 'href="#kids"')
+  .replace(/href="privacy\.html"/g, 'href="https://moaaz0911911.github.io/Tech-kernel-/privacy.html"')
   .replace(/<code>js\/config\.js<\/code>/g, 'the <code>CONFIG</code> section near the top of the script in <code>index.html</code>')
   .replace('<script type="module" src="js/app.js"></script>', () => `<script type="module">\n/* kerNEl — single-file build. To switch on Google/Apple sign-in, edit CONFIG just below. */\n${safeScript(mainJs + kidsLoader)}\n</script>`);
 if (/src="js\/|href="css\/|href="assets\//.test(html)) throw new Error('index.html still references external files');

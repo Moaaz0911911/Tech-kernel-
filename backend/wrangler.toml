@@ -28,6 +28,8 @@ ALLOWED_ORIGINS = "https://moaaz0911911.github.io"
 # on the Workers Paid plan use "100000" (the maximum) — existing passwords upgrade at next sign-in.
 PBKDF2_ITERATIONS = "20000"
 SIGNUPS_PER_IP_HOUR = "5"
+# Moderators: kerNEl usernames (comma-separated) who get the 🛡️ moderator tools.
+ADMINS = ""
 # codme AI limits (protects your Anthropic bill)
 CODME_PER_IP_HOUR = "20"
 CODME_PER_USER_DAY = "100"

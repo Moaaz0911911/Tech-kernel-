@@ -11,6 +11,8 @@ import { getDB, KernelDB } from './db.js';
 import { featureRoute } from './features.js';
 import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordActivity, STREAK_MILESTONES } from './social.js';
 import { awardTrophies } from './play.js';
+import { isAdmin } from './admin.js';
+import { statsOf, claimXp, myInvites } from './rewards.js';
 import { vapidPublicKey, subscribe, unsubscribe, getPrefs, savePrefs, listNotifications, markRead, testPush, notifyMentions, notifyBigNews, notifyStreaks, MAX_PUSHES_PER_RUN } from './push.js';
 
 export { KernelDB };
@@ -73,7 +75,14 @@ async function route(request, env, ctx) {
 
   if (path === '/api/me' && m === 'GET') {
     const user = await requireUser(request, env);
-    return json({ user: { ...publicUser(user), trophies: await trophyCount(env, user.id) } });
+    return json({ user: { ...publicUser(user), trophies: await trophyCount(env, user.id), stats: statsOf(user), pendingXp: user.pending_xp || 0, admin: isAdmin(env, user) } });
+  }
+  if (path === '/api/me/claim' && m === 'POST') {
+    const user = await requireUser(request, env);
+    return json(await claimXp(env, user));
+  }
+  if (path === '/api/me/invites' && m === 'GET') {
+    return json(await myInvites(env, await requireUser(request, env)));
   }
   if (path === '/api/me/password' && m === 'POST') {
     const user = await requireUser(request, env);
@@ -89,7 +98,7 @@ async function route(request, env, ctx) {
     const user = await requireUser(request, env);
     const body = await readJson(request, 10_000);
     const prev = parse(user.profile, {});
-    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { xp: user.xp || 0, trophies: await trophyCount(env, user.id) }) };
+    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { ...statsOf(user), xp: user.xp || 0, trophies: await trophyCount(env, user.id) }) };
     if (typeof body.bio === 'string') profile.bio = cleanText(body.bio.replace(/\s+/g, ' ')).slice(0, 80);
     if (['everyone', 'following', 'nobody'].includes(body.dms)) profile.dms = body.dms;
     await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();
@@ -139,6 +148,7 @@ async function route(request, env, ctx) {
       env.DB.prepare('DELETE FROM blocks WHERE blocker_id = ? OR blocked_id = ?').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM photos WHERE user_id = ?').bind(user.id),
       env.DB.prepare('DELETE FROM photo_reports WHERE owner_id = ? OR reporter_id = ?').bind(user.id, user.id),
+      env.DB.prepare('DELETE FROM invites WHERE invitee_id = ? OR inviter_id = ?').bind(user.id, user.id),
       env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
     ]);
     return json({ ok: true });

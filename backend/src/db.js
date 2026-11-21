@@ -13,6 +13,11 @@ const statements = (sql) => sql
 const MIGRATIONS = [
   'ALTER TABLE notify_prefs ADD COLUMN friends INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE notify_prefs ADD COLUMN dms INTEGER NOT NULL DEFAULT 1',
+  'ALTER TABLE users ADD COLUMN pending_xp INTEGER NOT NULL DEFAULT 0',
+  "ALTER TABLE users ADD COLUMN stats TEXT NOT NULL DEFAULT '{}'",
+  'ALTER TABLE users ADD COLUMN banned_until INTEGER',
+  'ALTER TABLE users ADD COLUMN invited_by TEXT',
+  'ALTER TABLE dm_reports ADD COLUMN evidence TEXT',
 ];
 
 export class KernelDB extends DurableObject {

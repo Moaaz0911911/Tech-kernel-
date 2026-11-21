@@ -18,6 +18,18 @@ const T = {
     de: '🗨️ @{who} hat dich in einem Kommentar erwähnt',
     tl: '🗨️ Binanggit ka ni @{who} sa isang comment',
   },
+  inviteJoined: {
+    en: '🎟️ @{who} joined kerNEl with your invite!',
+    ar: '🎟️ @{who} دخل kerNEl بالدعوة بتاعتك!',
+    de: '🎟️ @{who} ist mit deiner Einladung bei kerNEl!',
+    tl: '🎟️ Sumali si @{who} sa kerNEl gamit ang invite mo!',
+  },
+  inviteJoinedBody: {
+    en: 'You both got +{xp} XP. Open kerNEl to collect it.',
+    ar: 'إنتوا الاتنين خدتوا +{xp} XP. افتح kerNEl عشان تاخدها.',
+    de: 'Ihr bekommt beide +{xp} XP. Öffne kerNEl, um sie abzuholen.',
+    tl: 'Pareho kayong may +{xp} XP. Buksan ang kerNEl para kunin ito.',
+  },
   dmTitle: {
     en: '✉️ @{who} sent you a message',
     ar: '✉️ @{who} بعتلك رسالة',

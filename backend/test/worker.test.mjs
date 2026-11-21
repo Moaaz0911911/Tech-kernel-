@@ -76,7 +76,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({
     ...(process.env.STORAGE === 'do'
       ? { durableObjects: { KERNEL_DB: { className: 'KernelDB', useSQLite: true } } }
       : { d1Databases: { DB: 'test-db' } }),
-    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3' },
+    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy' },
     outboundService: outbound,
   }],
 }));
@@ -628,6 +628,63 @@ try {
   await api('/api/me', { method: 'DELETE', token: nourToken });
   await api('/api/me', { method: 'DELETE', token: zedToken });
   ok('deleting an account removes its conversations', (await db.prepare('SELECT (SELECT COUNT(*) FROM dm_members WHERE thread_id = ?) + (SELECT COUNT(*) FROM dm_messages WHERE thread_id = ?) AS n').bind(th, th).first()).n === 0);
+
+  console.log('invites, rewards, moderators');
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Rania', password: 'Joins-Kernel-2026!', invite: 'Azzy' }, ip: '9.9.9.9' });
+  ok('sign up with an invite link', r.status === 200 && r.data.invitedBy === 'Azzy');
+  const raniaToken = r.data.token;
+  r = await api('/api/me', { token: raniaToken });
+  ok('…the new kernel gets bonus XP to collect', r.data.user.pendingXp === 50 && r.data.user.stats.invited === 1);
+  r = await api('/api/me', { token });
+  ok('…and so does the friend who invited them', r.data.user.pendingXp >= 50 && r.data.user.stats.invites === 1);
+  ok('…who gets a notification', (await api('/api/notifications', { token })).data.items.some((n) => n.title.includes('@Rania joined kerNEl with your invite')));
+  const pendingBefore = r.data.user.pendingXp;
+  ok('collecting the XP hands it over once…', (await api('/api/me/claim', { method: 'POST', token })).data.claimed === pendingBefore);
+  ok('…and never twice', (await api('/api/me/claim', { method: 'POST', token })).data.claimed === 0 && (await api('/api/me', { token })).data.user.pendingXp === 0);
+  ok('your invites list', (await api('/api/me/invites', { token })).data.people.some((p) => p.username === 'Rania'));
+  ok('the 🎟️ VIP hat unlocks with an invite', (await api('/api/me/profile', { method: 'PUT', token, body: { hat: 'ticket' } })).data.profile.hat === 'ticket');
+  ok('…but not without one', (await api('/api/me/profile', { method: 'PUT', token: keiToken, body: { hat: 'ticket' } })).data.profile.hat !== 'ticket');
+  r = await api('/api/auth/register', { method: 'POST', body: { username: 'Lonely', password: 'Nobody-Asked-77!', invite: 'nobody_real' }, ip: '9.9.9.8' });
+  ok('unknown inviters are ignored', r.status === 200 && r.data.invitedBy === null);
+  const lonelyToken = r.data.token;
+
+  ok('moderators are told so', (await api('/api/me', { token })).data.user.admin === true && (await api('/api/me', { token: keiToken })).data.user.admin === false);
+  ok('the moderator tools are for moderators only', (await api('/api/mod/overview', { token: keiToken })).status === 403 && (await api('/api/mod/overview')).status === 401);
+  r = await api('/api/mod/overview', { token });
+  ok('overview numbers', r.status === 200 && r.data.users >= 4, `users ${r.data.users}, chat today ${r.data.chat}`);
+  r = await api('/api/chat', { method: 'POST', token: lonelyToken, body: { room: 'lobby', text: 'this is a rude test message' } });
+  const rudeId = r.data.message.id;
+  await api('/api/chat/report', { method: 'POST', token: raniaToken, body: { id: rudeId } });
+  r = await api('/api/mod/reports', { token });
+  ok('reported chat messages show up for moderators', r.data.chat.some((m) => m.id === rudeId && m.reports === 1 && m.user.username === 'Lonely'));
+  await api('/api/mod/content', { method: 'POST', token, body: { kind: 'chat', id: rudeId, action: 'hide' } });
+  ok('a moderator can hide a message', !(await api('/api/chat?room=lobby')).data.messages.some((m) => m.id === rudeId));
+  await api('/api/mod/content', { method: 'POST', token, body: { kind: 'chat', id: rudeId, action: 'restore' } });
+  ok('…or bring it back (and clear its reports)', (await api('/api/chat?room=lobby')).data.messages.some((m) => m.id === rudeId) && !(await api('/api/mod/reports', { token })).data.chat.some((m) => m.id === rudeId));
+  r = await api('/api/dm', { method: 'POST', token: lonelyToken, body: { to: 'Rania', text: 'spammy spam spam' } });
+  await api('/api/dm/report', { method: 'POST', token: raniaToken, body: { thread: r.data.thread } });
+  r = await api('/api/mod/reports', { token });
+  const dmRep = r.data.dms.find((d) => d.user.username === 'Lonely');
+  ok('reported conversations include what was said', dmRep && dmRep.reporter === 'Rania' && dmRep.evidence.some((e) => e.text === 'spammy spam spam'));
+  await api('/api/mod/dm', { method: 'POST', token, body: { reporterId: dmRep.reporterId, userId: dmRep.userId } });
+  ok('…and can be dismissed', !(await api('/api/mod/reports', { token })).data.dms.some((d) => d.user.username === 'Lonely'));
+  await api('/api/mod/user', { method: 'POST', token, body: { username: 'Lonely', action: 'mute', hours: 2 } });
+  ok('mute someone', (await api('/api/chat', { method: 'POST', token: lonelyToken, body: { room: 'lobby', text: 'hello?' } })).status === 403);
+  r = await api('/api/mod/user', { method: 'POST', token, body: { username: 'Lonely', action: 'unmute' } });
+  ok('…and unmute', !r.data.user.mutedUntil && (await api('/api/chat', { method: 'POST', token: lonelyToken, body: { room: 'lobby', text: 'I’m back' } })).status === 200);
+  r = await api('/api/mod/user', { method: 'POST', token, body: { username: 'Lonely', action: 'ban', hours: 48 } });
+  ok('ban someone: they’re signed out…', !!r.data.user.bannedUntil && (await api('/api/me', { token: lonelyToken })).status === 401);
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'Lonely', password: 'Nobody-Asked-77!' }, ip: '9.9.9.7' });
+  ok('…and can’t sign back in', r.status === 403, r.data.error);
+  await api('/api/mod/user', { method: 'POST', token, body: { username: 'Lonely', action: 'unban' } });
+  r = await api('/api/auth/login', { method: 'POST', body: { username: 'Lonely', password: 'Nobody-Asked-77!' }, ip: '9.9.9.6' });
+  ok('unban', r.status === 200);
+  ok('moderators can’t ban themselves', (await api('/api/mod/user', { method: 'POST', token, body: { username: 'Azzy', action: 'ban' } })).status === 400);
+  r = await api('/api/mod/user?username=Lonely', { token });
+  ok('look someone up', r.data.user.username === 'Lonely' && r.data.counts.chat >= 2 && r.data.counts.dmReports === 0 && r.data.recentChat.length >= 2);
+  ok('every action is logged', (await api('/api/mod/log', { token })).data.items.map((x) => x.action).includes('user:ban'));
+  await api('/api/me', { method: 'DELETE', token: raniaToken });
+  await api('/api/me', { method: 'DELETE', token: r.status === 200 ? (await api('/api/auth/login', { method: 'POST', body: { username: 'Lonely', password: 'Nobody-Asked-77!' }, ip: '9.9.9.5' })).data.token : lonelyToken });
 
   console.log('sign-out & delete');
   await api('/api/auth/logout', { method: 'POST', token });

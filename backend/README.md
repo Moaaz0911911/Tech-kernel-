@@ -22,6 +22,8 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 👯 **Friends** | Follow people; their rank-ups, achievements, quiz/tournament scores, trophies and streak milestones go to a friends feed, and the big ones to followers' phones. |
 | ✉️ **Messages** | Private chats between two people, with message requests for people you don't follow (3 messages until accepted), read receipts, reactions, day streaks, shared stories, blocking and reports (3 reports in a day mute someone for 24 hours). Messages are kept for a year. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
+| 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
+| 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
 | 📷 **Profile photos** | Small JPEG/PNG/WebP photos (checked by their first bytes, max 300 KB, never SVG), served with long caching. Three reports from different people remove a photo. |
 | 🎩 **Looks** | Hats and frames unlocked by XP (and trophies), checked on the server so nobody can fake a crown. |
 | 🌐 **Languages** | Notifications and codme's chat replies in English, Egyptian Arabic, German or Tagalog, following each person's chosen language. |
@@ -94,6 +96,9 @@ npm run deploy          # prints your URL: https://kernel-api.<you>.workers.dev
 | `POST /api/comments/react` | Bearer | `{ id, emoji }` (❤️ 😂 🔥 👍 🤯 😮, or `null` to take it back) → `{ reactions, myReaction }`. Comments come back with `reactions` and your `myReaction`. |
 | `POST /api/follow` | Bearer | `{ username, follow: true\|false }` |
 | `GET /api/users/search?q=` | optional | People matching a name (empty = suggestions), with follow/active/blocked info |
+| `POST /api/me/claim` · `GET /api/me/invites` | Bearer | Collect waiting XP once → `{ claimed }` · people you invited |
+| `GET /api/mod/overview` · `/reports` · `/log` · `/user?username=` | moderator | Numbers, reports, action log, one person |
+| `POST /api/mod/content` · `/dm` · `/photo` · `/user` | moderator | `{ kind: chat\|comment, id, action: hide\|restore\|dismiss }` · `{ reporterId, userId }` · `{ username, action: remove\|dismiss }` · `{ username, action: mute\|unmute\|ban\|unban, hours }` |
 | `POST /api/block` · `GET /api/me/blocked` | Bearer | `{ username, block: true\|false }` · people you blocked |
 | `GET /api/dm` · `GET /api/dm?count=1` | Bearer | Your conversations (with unread counts and requests) · just the counts |
 | `POST /api/dm` | Bearer | `{ to: username \| thread: id, text?, storyKey? }` → message, `pending`, `streak` |
@@ -132,6 +137,8 @@ src/features.js  routes for the games and social features
 src/play.js    Daily Quiz, Popcorn Battles, weekly tournament + trophies
 src/social.js  comments, follows, friends' activity, avatar looks
 src/people.js  messages, people search, profile photos, blocking
+src/rewards.js server-given XP, special counters, invites
+src/admin.js   moderator tools
 src/extras.js  Explain/TL;DR (Claude), kid news, Time Machine
 src/i18n.js    notification + chat-reply texts in English, Egyptian Arabic, German, Tagalog
 schema.sql     database tables
