@@ -30,7 +30,7 @@ import {
   createDuel, getDuel, listDuels, startDuel, answerDuel, getLive, joinLive, answerLive, listPredictions, votePrediction,
   modCreatePrediction, modResolvePrediction,
 } from './arena.js';
-import { requireAdmin, overview, reports, moderateContent, moderateDmReport, moderatePhoto, moderateUser, lookupUser, modLog } from './admin.js';
+import { requireAdmin, overview, reports, moderateContent, moderateDmReport, moderatePhoto, moderateUser, lookupUser, modLog, team, setModerator } from './admin.js';
 
 /** Returns a Response, or null when the path isn't one of these. */
 export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
@@ -73,12 +73,14 @@ export async function featureRoute(request, env, ctx, { path, m, url, ip }) {
     if (path === '/api/mod/overview' && m === 'GET') return json(await overview(env));
     if (path === '/api/mod/reports' && m === 'GET') return json(await reports(env));
     if (path === '/api/mod/log' && m === 'GET') return json(await modLog(env));
-    if (path === '/api/mod/user' && m === 'GET') return json(await lookupUser(env, url.searchParams.get('username')));
+    if (path === '/api/mod/user' && m === 'GET') return json(await lookupUser(env, url.searchParams.get('username'), admin));
+    if (path === '/api/mod/team' && m === 'GET') return json(await team(env, admin));
     const body = m === 'POST' ? await readJson(request, 2_000) : {};
     if (path === '/api/mod/content' && m === 'POST') return json(await moderateContent(env, admin, body));
     if (path === '/api/mod/dm' && m === 'POST') return json(await moderateDmReport(env, admin, body));
     if (path === '/api/mod/photo' && m === 'POST') return json(await moderatePhoto(env, admin, body));
     if (path === '/api/mod/user' && m === 'POST') return json(await moderateUser(env, admin, body));
+    if (path === '/api/mod/team' && m === 'POST') return json(await setModerator(env, admin, body)); // 👑 owner only
     if (path === '/api/mod/predictions' && m === 'POST') return json(await modCreatePrediction(env, admin, body));
     if (path === '/api/mod/parties' && m === 'POST') return json(await createParty(env, admin, body));
     if (path === '/api/mod/parties/delete' && m === 'POST') return json(await deleteParty(env, admin, body.id));

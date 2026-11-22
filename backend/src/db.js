@@ -36,6 +36,7 @@ const MIGRATIONS = [
   'ALTER TABLE users ADD COLUMN butter_mark INTEGER',
   'ALTER TABLE users ADD COLUMN shop TEXT',
   'ALTER TABLE users ADD COLUMN pet TEXT',
+  'ALTER TABLE users ADD COLUMN mod_since INTEGER',
 ];
 
 export class KernelDB extends DurableObject {

@@ -1,5 +1,5 @@
 // kerNEl API — Cloudflare Worker entry point.
-import { HttpError, json, readJson, corsHeaders, allowedOrigin, clientIp, rateLimit, isAdmin } from './util.js';
+import { HttpError, json, readJson, corsHeaders, allowedOrigin, clientIp, rateLimit, isAdmin, isOwner } from './util.js';
 import { collectNews, findThumbnails, latestStories, sourceStatus, reactionCounts } from './news.js';
 import {
   register, login, recover, changePassword, newCodeFor, usernameAvailable, checkin,
@@ -98,7 +98,7 @@ async function route(request, env, ctx) {
     const trophies = await trophyCount(env, user.id);
     // 🛡️ someone who stopped being a moderator takes off the looks only moderators have (once)
     if (!admin && parse(user.profile, {}).modPerks) user = { ...user, profile: await dropModLooks(env, user, trophies) };
-    return json({ user: { ...publicUser(user), trophies, stats: statsOf(user), pendingXp: user.pending_xp || 0, admin } });
+    return json({ user: { ...publicUser(user), trophies, stats: statsOf(user), pendingXp: user.pending_xp || 0, admin, owner: isOwner(env, user) } });
   }
   if (path === '/api/me/claim' && m === 'POST') {
     const user = await requireUser(request, env);
@@ -150,6 +150,8 @@ async function route(request, env, ctx) {
   }
   if (path === '/api/me' && m === 'DELETE') { // delete the account and everything in it
     const user = await requireUser(request, env);
+    // 👑 whoever signed up with this name next would become the owner, so the owner account stays
+    if (isOwner(env, user)) throw new HttpError(400, 'The owner account can’t be deleted. Change OWNER in wrangler.toml first.');
     await forgetSquadOf(env, user);
     await forgetGroupsOf(env, user); // leave every group first (hands over the ones they started)
     await env.DB.batch([

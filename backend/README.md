@@ -45,7 +45,7 @@ A small **Cloudflare Worker** with a free SQLite-backed **Durable Object** for s
 | 📊 **Chat polls** | A poll is stored as JSON on the message itself (`dm_messages.poll`, `group_messages.poll`), with votes in `chat_poll_votes`. Only people in that chat can vote. |
 | 🔍 **People search** | Find kernels by username or nickname, with suggestions. People who blocked you don't see you. |
 | 🎟️ **Invites & rewards** | Sign-ups with an invite give both people +50 XP (at most 20 rewarded invites per person per day). Server-given XP waits in `pending_xp` until the browser collects it once with `POST /api/me/claim`, and counters in `users.stats` unlock special hats and frames. |
-| 🛡️ **Moderators** | Usernames in the `ADMINS` setting get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
+| 🛡️ **Moderators** | The `OWNER` username and the moderators the owner picks (`users.mod_since`, managed with `/api/mod/team`, owner only) get `/api/mod/*`: an overview, every report, hide/restore/dismiss, photo removal, mute and ban, user lookup and an action log. Banned accounts are signed out and can't sign in. |
 | 📷 **Profile photos** | Small JPEG/PNG/WebP photos (checked by their first bytes, max 300 KB, never SVG), served with long caching. Three reports from different people remove a photo. |
 | 🎩 **Looks** | Hats and frames unlocked by XP (and trophies), checked on the server so nobody can fake a crown. |
 | 🌐 **Languages** | Notifications and codme's chat replies in English, Egyptian Arabic, German or Tagalog, following each person's chosen language. |

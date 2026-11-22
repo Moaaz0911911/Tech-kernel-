@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS users (
   pending_xp    INTEGER NOT NULL DEFAULT 0,   -- XP the server gave (invites, duels, live shows…) waiting for the browser to collect
   stats         TEXT NOT NULL DEFAULT '{}',   -- JSON counters that unlock hats/frames: invites, liveWins, prophet, duelsWon, seasonWins
   banned_until  INTEGER,                      -- set by a moderator
+  mod_since     INTEGER,                      -- 🛡️ when the owner made them a moderator (empty = not one)
   invited_by    TEXT,
   season        TEXT,                         -- the month their season_xp belongs to (YYYY-MM)
   season_xp     INTEGER NOT NULL DEFAULT 0,

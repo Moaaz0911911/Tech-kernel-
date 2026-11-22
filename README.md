@@ -75,11 +75,13 @@ kerNEl is black and white, with Liquid Glass inspired by iOS and macOS. Glass ba
 - 🔍 **Find people**: search by name or @username on the Me tab or in Messages, with suggestions (people who follow you, the most active kernels). Follow or message right from the results.
 - 📷 **Profile photos**: pick a photo from your gallery or camera, then drag and zoom to crop it to a circle. It's shrunk to a small JPEG in the browser before upload and shows everywhere your avatar does: chat, comments, leaderboard, profile cards. Photos are public, and 3 reports from different people take one down.
 - 🎟️ **Invite links**: on the Me tab, copy or share your link (`…/#join=yourname`). When a friend signs up with it, you both get +50 XP. One invite unlocks the 🎟️ VIP ticket hat, five unlock the Ambassador frame, and new kernels get the 🥳 Party hat.
-- 🛡️ **Moderator tools** (only for the usernames in `ADMINS`, see below), under Me → Settings:
+- 🛡️ **Moderator tools** (for the owner and the moderators they pick, see below), under Me → Settings:
   - Today's numbers.
   - Every report: chat messages, comments, conversations (with the reported person's last few messages) and photos.
   - Hide or bring back posts, remove photos, mute (1 day or 1 week) or ban (1 week or 1 year) someone, look anyone up.
+  - 👑 **Moderators**: the owner adds or removes moderators by username (or from someone's card in People). Moderators can't mute or ban the owner or each other.
   - A log of every action.
+  - Moderators get a glowing 🛡️ Moderator frame and shield hat, every hat, frame and shop look unlocked, and ∞ XP on their own profile (the leaderboard still uses their real XP).
 - 🔒 **Privacy page** ([`privacy.html`](privacy.html)) in all four languages, linked from the footer, Settings and sign-up.
 - 🪪 **Profile cards** now show a short **bio**, 🟢 **Active now** (or when someone was last around) and "Follows you". They have Message, **Share profile** (a link like `#@username`), Block and Report photo buttons.
 - 🎩 **Hats and frames** for your avatar, unlocked with XP (and a Champion look for trophy winners). They show in chat, comments, the leaderboard and on profile cards, next to a 🔥 streak flame.
@@ -145,8 +147,9 @@ That's `js/config.js` for the multi-file site, or the `CONFIG` block in the sing
 - The site must be served over **https** (GitHub Pages is) so passwords are encrypted on the way.
 
 **Moderators**
-- Put your kerNEl username(s) in `ADMINS` in [`backend/wrangler.toml`](backend/wrangler.toml), for example `ADMINS = "yourname"` (comma-separated for more than one), then deploy the server again.
-- After that, **🛡️ Moderator tools** shows up under Me → Settings and in your avatar menu.
+- Put your kerNEl username in `OWNER` in [`backend/wrangler.toml`](backend/wrangler.toml), for example `OWNER = "yourname"`, then deploy the server again. The owner is always a moderator.
+- After that, **🛡️ Moderator tools** shows up under Me → Settings and in your avatar menu. To add or remove other moderators, open **👑 Moderators** there. Only the owner can do this.
+- The owner account can't be deleted while it's the owner, because whoever signed up with that name next would become the owner. Change `OWNER` first.
 
 ## 3. How the news works
 

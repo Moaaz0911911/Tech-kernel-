@@ -86,7 +86,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({
     ...(process.env.STORAGE === 'do'
       ? { durableObjects: { KERNEL_DB: { className: 'KernelDB', useSQLite: true } } }
       : { d1Databases: { DB: 'test-db' } }),
-    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', ADMINS: 'Azzy', LIVE_TEST_PERIOD_MS: '60000', LIVE_TEST_STEP_MS: '2000', DURABLE_LIMITS: '1' },
+    bindings: { ALLOWED_ORIGINS: 'https://moaaz0911911.github.io', ANTHROPIC_API_KEY: 'sk-ant-test', CODME_PER_IP_HOUR: '3', SIGNUPS_PER_IP_HOUR: '3', OWNER: 'azzy', LIVE_TEST_PERIOD_MS: '60000', LIVE_TEST_STEP_MS: '2000', DURABLE_LIMITS: '1' },
     outboundService: outbound,
   }],
 }));
@@ -430,7 +430,7 @@ try {
   ok('🛡️ everyone sees the moderator look', (await api('/api/chat?room=lobby')).data.messages.at(-1).user.frame === 'mod' && (await api('/api/chat?room=lobby')).data.messages.at(-1).user.hat === '🛡️');
   r = await api('/api/me', { token: keiToken });
   ok('🛡️ nobody else is cleaned up for no reason', r.data.user.profile.modPerks === undefined);
-  // someone who was a moderator and isn't any more (as if their name left ADMINS)
+  // someone who was a moderator and isn't any more (as if the owner removed them)
   const keiProfile = (await db.prepare('SELECT profile FROM users WHERE username_lc = ?').bind('keiiii').first()).profile;
   await db.prepare('UPDATE users SET profile = ? WHERE username_lc = ?').bind(JSON.stringify({ ...JSON.parse(keiProfile), hat: 'shield', frame: 'mod', fx: 'glitch', modPerks: true }), 'keiiii').run();
   r = await api('/api/me', { token: keiToken });
@@ -679,6 +679,37 @@ try {
 
   ok('moderators are told so', (await api('/api/me', { token })).data.user.admin === true && (await api('/api/me', { token: keiToken })).data.user.admin === false);
   ok('the moderator tools are for moderators only', (await api('/api/mod/overview', { token: keiToken })).status === 403 && (await api('/api/mod/overview')).status === 401);
+
+  // 👑 the owner (OWNER) picks the moderators
+  const team = (body, tk = token) => api('/api/mod/team', body ? { method: 'POST', token: tk, body } : { token: tk });
+  ok('👑 the owner is told so', (await api('/api/me', { token })).data.user.owner === true && (await api('/api/me', { token: keiToken })).data.user.owner === false);
+  r = await team();
+  ok('👑 the team starts with just the owner', r.status === 200 && r.data.canManage === true && r.data.owner.username === 'Azzy' && r.data.mods.length === 0);
+  ok('👑 non-moderators can’t add moderators', (await team({ username: 'Rania', action: 'add' }, keiToken)).status === 403);
+  r = await team({ username: 'rania', action: 'add' });
+  ok('👑 the owner makes someone a moderator', r.status === 200 && r.data.mods.length === 1 && r.data.mods[0].username === 'Rania' && r.data.mods[0].since > 0);
+  ok('👑 …who gets the moderator tools', (await api('/api/me', { token: raniaToken })).data.user.admin === true && (await api('/api/mod/overview', { token: raniaToken })).status === 200);
+  ok('👑 …and every look', (await api('/api/me/profile', { method: 'PUT', token: raniaToken, body: { frame: 'mod', hat: 'shield' } })).data.profile.frame === 'mod');
+  ok('👑 …but isn’t the owner', (await api('/api/me', { token: raniaToken })).data.user.owner === false);
+  ok('👑 twice is refused', (await team({ username: 'Rania', action: 'add' })).status === 409);
+  r = await team(null, raniaToken);
+  ok('👑 moderators see the team but can’t change it', r.status === 200 && r.data.canManage === false && r.data.mods.length === 1);
+  r = await team({ username: 'Keiiii', action: 'add' }, raniaToken);
+  ok('👑 only the owner adds moderators', r.status === 403 && r.data.error === 'Only the owner can add or remove moderators');
+  ok('👑 …or removes them', (await team({ username: 'Rania', action: 'remove' }, raniaToken)).status === 403);
+  ok('👑 the owner stays a moderator', (await team({ username: 'Azzy', action: 'remove' })).status === 400);
+  r = await api('/api/mod/user', { method: 'POST', token: raniaToken, body: { username: 'Azzy', action: 'ban' } });
+  ok('👑 moderators can’t mute or ban the owner', r.status === 403 && (await api('/api/me', { token })).status === 200);
+  await team({ username: 'Keiiii', action: 'add' });
+  ok('👑 …or another moderator', (await api('/api/mod/user', { method: 'POST', token: raniaToken, body: { username: 'Keiiii', action: 'mute' } })).status === 403);
+  ok('👑 the people card shows who is a moderator', (r = await api('/api/mod/user?username=Keiiii', { token })).data.user.mod === true && r.data.canManage === true && (await api('/api/mod/user?username=Keiiii', { token: raniaToken })).data.canManage === false);
+  r = await team({ username: 'Keiiii', action: 'remove' });
+  ok('👑 the owner removes a moderator', r.status === 200 && !r.data.mods.some((u) => u.username === 'Keiiii') && (await api('/api/me', { token: keiToken })).data.user.admin === false);
+  ok('👑 …and it’s in the log', (await api('/api/mod/log', { token })).data.items.some((x) => x.action === 'team:remove' && x.target === 'Keiiii'));
+  await team({ username: 'Rania', action: 'remove' });
+  r = await api('/api/me', { token: raniaToken });
+  ok('👑 an ex-moderator loses the tools and the moderator look', r.data.user.admin === false && r.data.user.profile.frame === 'none' && r.data.user.profile.hat === 'none' && (await api('/api/mod/overview', { token: raniaToken })).status === 403);
+  ok('👑 the owner account can’t be deleted (someone else could take the name)', (await api('/api/me', { method: 'DELETE', token })).status === 400 && (await api('/api/me', { token })).status === 200);
   r = await api('/api/mod/overview', { token });
   ok('overview numbers', r.status === 200 && r.data.users >= 4, `users ${r.data.users}, chat today ${r.data.chat}`);
   r = await api('/api/chat', { method: 'POST', token: lonelyToken, body: { room: 'lobby', text: 'this is a rude test message' } });

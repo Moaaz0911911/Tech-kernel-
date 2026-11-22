@@ -1,7 +1,8 @@
-// 🛡️ Moderator tools. Moderators are the usernames listed in the ADMINS setting (wrangler.toml).
+// 🛡️ Moderator tools. The owner (OWNER in wrangler.toml) is always a moderator and is the only one who can
+// make someone else a moderator or stop them being one (Moderator tools → Moderators).
 // They see what people reported, can hide or bring back messages and comments, take down photos,
 // mute or ban accounts, and look up a person. Every action is written to mod_log.
-import { HttpError, isAdmin } from './util.js';
+import { HttpError, isAdmin, isOwner, ownerName } from './util.js';
 import { requireUser } from './auth.js';
 import { look } from './social.js';
 import { removePhoto } from './people.js';
@@ -9,7 +10,7 @@ import { removePhoto } from './people.js';
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
 const DAY = 864e5;
 
-export { isAdmin };
+export { isAdmin, isOwner };
 
 export async function requireAdmin(request, env) {
   const user = await requireUser(request, env);
@@ -124,6 +125,8 @@ export async function moderatePhoto(env, admin, body) {
 export async function moderateUser(env, admin, body) {
   const u = await userByName(env, body.username);
   if (u.id === admin.id) throw new HttpError(400, 'You can’t do that to yourself');
+  if (isOwner(env, u)) throw new HttpError(403, 'Nobody can do that to the owner');
+  if (isAdmin(env, u) && !isOwner(env, admin)) throw new HttpError(403, 'Only the owner can do that to a moderator');
   const now = Date.now();
   const hours = Math.max(1, Math.min(24 * 365, Number(body.hours) || 24));
   if (body.action === 'mute') await env.DB.prepare('INSERT OR REPLACE INTO mutes (user_id, until) VALUES (?, ?)').bind(u.id, now + hours * 3600_000).run();
@@ -137,10 +140,10 @@ export async function moderateUser(env, admin, body) {
   } else if (body.action === 'unban') await env.DB.prepare('UPDATE users SET banned_until = NULL WHERE id = ?').bind(u.id).run();
   else throw new HttpError(400, 'Unknown action');
   await log(env, admin, `user:${body.action}`, u.username, body.action === 'mute' || body.action === 'ban' ? `${hours}h` : '');
-  return lookupUser(env, u.username);
+  return lookupUser(env, u.username, admin);
 }
 
-export async function lookupUser(env, name) {
+export async function lookupUser(env, name, viewer) {
   const u = await userByName(env, name);
   const now = Date.now();
   const c = await env.DB.prepare(`SELECT
@@ -157,11 +160,40 @@ export async function lookupUser(env, name) {
   const { results: recentComments } = await env.DB.prepare('SELECT id, text, hidden, reports, created FROM comments WHERE user_id = ? ORDER BY id DESC LIMIT 10').bind(u.id).all();
   const p = parse(u.profile, {});
   return {
-    user: { ...who(u), bio: p.bio || '', xp: u.xp, created: u.created, bannedUntil: u.banned_until && u.banned_until > now ? u.banned_until : null, mutedUntil: c?.mutedUntil || null, stats: parse(u.stats, {}) },
+    user: { ...who(u), bio: p.bio || '', xp: u.xp, created: u.created, bannedUntil: u.banned_until && u.banned_until > now ? u.banned_until : null, mutedUntil: c?.mutedUntil || null, stats: parse(u.stats, {}), mod: isAdmin(env, u), owner: isOwner(env, u) },
+    canManage: isOwner(env, viewer), // 👑 the owner can make them a moderator (or stop them being one)
     counts: { chat: c.chat, comments: c.comments, dms: c.dms, chatReports: c.chatReports, commentReports: c.commentReports, dmReports: c.dmReports, photoReports: c.photoReports },
     recentChat: recentChat.map((m) => ({ ...m, hidden: !!m.hidden })),
     recentComments: recentComments.map((m) => ({ ...m, hidden: !!m.hidden })),
   };
+}
+
+// ---------------- 👑 the moderator team ----------------
+/** The owner first, then everyone they made a moderator (oldest first). */
+export async function team(env, viewer) {
+  const { results } = await env.DB.prepare('SELECT username, username_lc, profile, mod_since FROM users WHERE mod_since > 0 OR username_lc = ? ORDER BY mod_since').bind(ownerName(env)).all();
+  const owner = results.find((r) => r.username_lc === ownerName(env));
+  return {
+    canManage: isOwner(env, viewer),
+    owner: owner ? who(owner) : null,
+    mods: results.filter((r) => r !== owner).map((r) => ({ ...who(r), since: r.mod_since })),
+  };
+}
+
+/** Only the owner: make someone a moderator ('add') or stop them being one ('remove'). */
+export async function setModerator(env, owner, body) {
+  if (!isOwner(env, owner)) throw new HttpError(403, 'Only the owner can add or remove moderators');
+  const u = await userByName(env, body.username);
+  if (isOwner(env, u)) throw new HttpError(400, 'The owner is always a moderator');
+  if (body.action === 'add') {
+    if (u.mod_since) throw new HttpError(409, 'They’re already a moderator');
+    await env.DB.prepare('UPDATE users SET mod_since = ? WHERE id = ?').bind(Date.now(), u.id).run();
+  } else if (body.action === 'remove') {
+    if (!u.mod_since) throw new HttpError(409, 'They aren’t a moderator');
+    await env.DB.prepare('UPDATE users SET mod_since = NULL WHERE id = ?').bind(u.id).run();
+  } else throw new HttpError(400, 'Unknown action');
+  await log(env, owner, `team:${body.action}`, u.username);
+  return team(env, owner);
 }
 
 export async function modLog(env) {

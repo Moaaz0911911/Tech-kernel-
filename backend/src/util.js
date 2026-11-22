@@ -7,8 +7,12 @@ export class HttpError extends Error {
   }
 }
 
-/** 🛡️ Is this person a moderator? Moderators are the usernames in the ADMINS setting (wrangler.toml). */
-export const isAdmin = (env, user) => !!user && String(env.ADMINS || '').toLowerCase().split(',').map((s) => s.trim()).filter(Boolean).includes(String(user.username_lc || user.username || '').toLowerCase());
+const nameOf = (user) => String(user?.username_lc || user?.username || '').toLowerCase();
+/** 👑 The owner: the username in the OWNER setting (wrangler.toml). Always a moderator, and the only one who can add or remove moderators. */
+export const ownerName = (env) => String(env.OWNER || '').trim().replace(/^@/, '').toLowerCase();
+export const isOwner = (env, user) => !!user && !!ownerName(env) && nameOf(user) === ownerName(env);
+/** 🛡️ Is this person a moderator? The owner, and everyone the owner made one (users.mod_since). */
+export const isAdmin = (env, user) => !!user && (isOwner(env, user) || (user.mod_since || 0) > 0);
 
 export function allowedOrigin(request, env) {
   const origin = request.headers.get('Origin');

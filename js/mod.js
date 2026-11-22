@@ -1,10 +1,11 @@
-// 🛡️ Moderator tools (only for usernames in the server's ADMINS setting): reports, people, and a log.
+// 🛡️ Moderator tools (for the owner and the moderators they chose): reports, people, the team, and a log.
+// 👑 Only the owner (OWNER on the server) can make someone a moderator or stop them being one.
 import { $, esc, timeAgo, toast } from './utils.js';
 import { auth } from './auth.js';
 import { t, tn, tServer, fmtDate } from './i18n.js';
 import { lookHTML, photoUrl } from './look.js';
 
-const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['parties', '🎉', 'Parties'], ['log', '📜', 'Log']];
+const TABS = [['overview', '📊', 'Overview'], ['reports', '🚩', 'Reports'], ['people', '👤', 'People'], ['predict', '🔮', 'Predictions'], ['parties', '🎉', 'Parties'], ['team', '👑', 'Moderators'], ['log', '📜', 'Log']];
 
 export function initMod() {
   const dlg = document.createElement('dialog');
@@ -95,7 +96,8 @@ export function initMod() {
     if (!box) return;
     const u = r.user;
     const c = r.counts;
-    const status = [u.bannedUntil ? `⛔ ${t('banned until {when}', { when: when(u.bannedUntil) })}` : '', u.mutedUntil ? `🔇 ${t('muted until {when}', { when: when(u.mutedUntil) })}` : ''].filter(Boolean).join(' · ');
+    const status = [u.owner ? `👑 ${t('Owner')}` : u.mod ? `🛡️ ${t('Moderator')}` : '', u.bannedUntil ? `⛔ ${t('banned until {when}', { when: when(u.bannedUntil) })}` : '', u.mutedUntil ? `🔇 ${t('muted until {when}', { when: when(u.mutedUntil) })}` : ''].filter(Boolean).join(' · ');
+    const teamBtn = r.canManage && !u.owner ? `<button type="button" class="btn btn-sm btn-ghost${u.mod ? ' danger' : ''}" data-team="${esc(u.username)}:${u.mod ? 'remove' : 'add'}">🛡️ ${t(u.mod ? 'Remove moderator' : 'Make moderator')}</button>` : '';
     const list = (items, kind) => items.map((m) => `<li class="${m.hidden ? 'is-hidden' : ''}"><span dir="auto">${esc(m.text) || '…'}</span><small>${kind === 'chat' ? `#${esc(m.room)} · ` : ''}${timeAgo(m.created)}${m.reports ? ` · 🚩${m.reports}` : ''}</small>
         ${m.hidden ? `<button type="button" class="linkish" data-content="${kind}:${m.id}:restore">${t('Bring back')}</button>` : `<button type="button" class="linkish" data-content="${kind}:${m.id}:hide">${t('Hide')}</button>`}</li>`).join('');
     box.innerHTML = `<div class="mod-user">
@@ -107,8 +109,9 @@ export function initMod() {
           <div class="mod-tile${c.chatReports + c.commentReports ? ' hot' : ''}"><b>${c.chatReports + c.commentReports}</b><small>${t('reports on posts')}</small></div><div class="mod-tile${c.dmReports ? ' hot' : ''}"><b>${c.dmReports}</b><small>${t('reports from chats')}</small></div><div class="mod-tile${c.photoReports ? ' hot' : ''}"><b>${c.photoReports}</b><small>${t('photo reports')}</small></div>
         </div>
         <div class="mod-actions wrap">
-          ${u.mutedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unmute">🔈 ${t('Unmute')}</button>` : `<button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:24">🔇 ${t('Mute 1 day')}</button><button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:168">🔇 ${t('Mute 1 week')}</button>`}
-          ${u.bannedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unban">✅ ${t('Unban')}</button>` : `<button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:168">⛔ ${t('Ban 1 week')}</button><button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:8760">⛔ ${t('Ban 1 year')}</button>`}
+          ${u.owner ? '' : u.mutedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unmute">🔈 ${t('Unmute')}</button>` : `<button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:24">🔇 ${t('Mute 1 day')}</button><button type="button" class="btn btn-sm btn-ghost" data-user-act="mute:168">🔇 ${t('Mute 1 week')}</button>`}
+          ${u.owner ? '' : u.bannedUntil ? `<button type="button" class="btn btn-sm btn-ghost" data-user-act="unban">✅ ${t('Unban')}</button>` : `<button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:168">⛔ ${t('Ban 1 week')}</button><button type="button" class="btn btn-sm btn-ghost danger" data-user-act="ban:8760">⛔ ${t('Ban 1 year')}</button>`}
+          ${teamBtn}
           ${u.photo ? `<button type="button" class="btn btn-sm btn-ghost" data-photo="${esc(u.username)}:remove">📷 ${t('Remove photo')}</button>` : ''}
           <button type="button" class="btn btn-sm btn-ghost" data-user="${esc(u.username)}">👤 ${t('Profile card')}</button>
         </div>
@@ -158,6 +161,35 @@ export function initMod() {
     } catch (e) { fail(e); }
   }
 
+  /** 👑 Who the moderators are. Only the owner can add or remove them. */
+  async function teamPane() {
+    loading();
+    try { paintTeam(await api('/api/mod/team')); } catch (e) { fail(e); }
+  }
+  function paintTeam(r) {
+    const since = (ts) => fmtDate(ts, { day: 'numeric', month: 'short', year: 'numeric' });
+    const row = (u, isOwner) => `<div class="mod-item"><div class="mod-item-head">${person(u)}<span class="muted small">${isOwner ? `👑 ${t('Owner')}` : `🛡️ ${t('moderator since {when}', { when: since(u.since) })}`}</span></div>
+        ${r.canManage && !isOwner ? `<div class="mod-actions"><button type="button" class="btn btn-sm btn-ghost danger" data-team="${esc(u.username)}:remove">${t('Remove moderator')}</button></div>` : ''}</div>`;
+    pane.innerHTML = `${r.canManage
+      ? `<form class="mod-search" data-teamadd><input name="u" placeholder="${esc(t('Username to make a moderator'))}" autocomplete="off" autocapitalize="off" required><button class="btn btn-primary btn-sm">🛡️ ${t('Make moderator')}</button></form>`
+      : `<p class="muted small">👑 ${t('Only the owner can add or remove moderators.')}</p>`}
+      ${r.owner ? row(r.owner, true) : ''}
+      <h3 class="mini-title">🛡️ ${t('Moderators')} <small>${r.mods.length}</small></h3>
+      ${r.mods.length ? r.mods.map((u) => row(u, false)).join('') : `<p class="muted small">${t('No other moderators yet.')}</p>`}`;
+  }
+  /** The owner makes someone a moderator ('add') or stops them being one ('remove'). */
+  async function setTeam(username, action) {
+    const ask = action === 'add'
+      ? t('Make @{name} a moderator? They’ll be able to hide posts, mute and ban people, and they get every look unlocked.', { name: username })
+      : t('Remove @{name} as a moderator?', { name: username });
+    if (!confirm(ask)) return;
+    try {
+      const r = await api('/api/mod/team', { username, action });
+      toast(action === 'add' ? t('@{name} is now a moderator 🛡️', { name: username }) : t('@{name} is no longer a moderator.', { name: username }), { emoji: '🛡️' });
+      if (tab === 'team') paintTeam(r); else showUser(username);
+    } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
+  }
+
   async function log() {
     loading();
     try {
@@ -171,7 +203,7 @@ export function initMod() {
   const show = (name) => {
     tab = name;
     dlg.querySelectorAll('[data-modtab][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.modtab === name)));
-    ({ overview, reports, people, predict, parties, log })[name]();
+    ({ overview, reports, people, predict, parties, team: teamPane, log })[name]();
   };
 
   dlg.addEventListener('submit', async (e) => {
@@ -196,6 +228,13 @@ export function initMod() {
       } catch (err) { toast(tServer(err.message), { emoji: '😵' }); }
       return;
     }
+    const ta = e.target.closest('[data-teamadd]');
+    if (ta) {
+      e.preventDefault();
+      const name = ta.elements.u.value.trim().replace(/^@/, '');
+      if (name) setTeam(name, 'add');
+      return;
+    }
     const f = e.target.closest('[data-modsearch]');
     if (!f) return;
     e.preventDefault();
@@ -211,6 +250,8 @@ export function initMod() {
     const lk = el.closest('[data-lookup]');
     if (lk) { show('people'); lookedUp = lk.dataset.lookup; return people(lookedUp); }
     const refresh = () => (tab === 'people' ? showUser(lookedUp) : show(tab));
+    const tm = el.closest('[data-team]');
+    if (tm) { const [username, action] = tm.dataset.team.split(':'); return setTeam(username, action); }
     const pd = el.closest('[data-partydel]');
     if (pd) {
       if (!confirm(t('Cancel this party?'))) return;
