@@ -942,8 +942,9 @@ a.stat:hover { color: var(--text); }
 .modal.mod-dialog { width: min(780px, calc(100vw - 24px)); }
 .mod-dialog .modal-body { text-align: start; }
 .mod-body h2 { margin: 0 0 12px; }
-.mod-tabs { display: flex; margin-bottom: 14px; }
-.mod-tabs button { flex: 1; }
+.mod-tabs { display: flex; margin-bottom: 14px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.mod-tabs::-webkit-scrollbar { display: none; }
+.mod-tabs button { flex: 1 0 auto; white-space: nowrap; } /* on a phone the tab row scrolls by itself instead of pushing the panel sideways */
 .mod-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 6px 0 12px; }
 .mod-tiles.small { grid-template-columns: repeat(3, 1fr); }
 .mod-tile { padding: 12px; border-radius: 16px; background: var(--card-2); }
