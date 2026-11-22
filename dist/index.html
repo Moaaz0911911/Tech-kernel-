@@ -1046,6 +1046,10 @@ a.stat:hover { color: var(--text); }
 .ava[data-frame="legend"] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #bf5af2, 0 0 16px 5px rgba(191, 90, 242, .45); animation: neon 3s ease-in-out infinite; }
 @keyframes neon { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text), 0 0 22px 7px var(--line-2); } }
 @keyframes galaxy { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text), 0 0 28px 9px rgba(160, 100, 255, .5); } }
+/* 🛡️ moderators only: a blue and gold ring that glows, with a little shield badge */
+.ava[data-frame="mod"] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #0a84ff, 0 0 0 6px #c9a227, 0 0 16px 6px rgba(10, 132, 255, .45); animation: modGlow 2.6s ease-in-out infinite; }
+.ava[data-frame="mod"]::after { content: '🛡️'; position: absolute; bottom: -.2em; inset-inline-start: -.24em; font-size: .5em; line-height: 1; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
+@keyframes modGlow { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #0a84ff, 0 0 0 6px #c9a227, 0 0 24px 9px rgba(201, 162, 39, .5); } }
 .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
 .style-opt { position: relative; display: grid; justify-items: center; gap: 4px; padding: 12px 4px 8px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .68rem; font-weight: 500; transition: transform .35s var(--spring); }
 .style-opt input { position: absolute; opacity: 0; }
@@ -4126,6 +4130,11 @@ const MAIN_STRINGS = [
   // 🛡️ moderators, 🎟️ invites, 🎁 rewards, 🔒 privacy
   ['+{n} XP from your rewards!', '+{n} XP من المكافآت بتاعتك!', '+{n} XP aus deinen Belohnungen!', '+{n} XP mula sa rewards mo!'],
   ['Moderator tools', 'أدوات المشرف', 'Moderatoren-Tools', 'Mga tool ng moderator'],
+  ['Moderator', 'مشرف', 'Moderator', 'Moderator'],
+  ['Moderator shield', 'درع المشرف', 'Moderatoren-Schild', 'Kalasag ng moderator'],
+  ['moderators only', 'للمشرفين بس', 'nur für Moderatoren', 'para lang sa mga moderator'],
+  ['Moderator: everything unlocked', 'مشرف: كل حاجة مفتوحة', 'Moderator: alles freigeschaltet', 'Moderator: bukas na ang lahat'],
+  ['Moderator: every look is already yours.', 'مشرف: كل الستايلات بتاعتك خلاص.', 'Moderator: Alle Looks gehören schon dir.', 'Moderator: sa iyo na ang lahat ng itsura.'],
   ['🛡️ Moderator tools', '🛡️ أدوات المشرف', '🛡️ Moderatoren-Tools', '🛡️ Mga tool ng moderator'],
   ['Overview', 'نظرة عامة', 'Übersicht', 'Buod'],
   ['Reports', 'البلاغات', 'Meldungen', 'Mga report'],
@@ -6055,6 +6064,7 @@ return { GIVEAWAY, seeded, fakeHeadlines, shuffle };
 // ===== cosmetics.js =====
 __m["cosmetics"] = (() => {
 // Avatar cosmetics: hats and frames unlocked with XP (checked again by the kerNEl server).
+// 🛡️ Moderators (stats.admin) have every hat and frame, plus their own shield hat and Moderator frame.
 const HATS = [
   { id: 'none', emoji: '', xp: 0, name: 'No hat' },
   { id: 'cap', emoji: '🧢', xp: 50, name: 'Rookie cap' },
@@ -6081,6 +6091,8 @@ const HATS = [
   { id: 'octopus', emoji: '🐙', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Octopus pal' },
   { id: 'disco', emoji: '🪩', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Disco ball' },
   { id: 'diamond', emoji: '💎', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Diamond' },
+  // 🛡️ moderators only
+  { id: 'shield', emoji: '🛡️', xp: 0, mod: true, need: 'moderators only', name: 'Moderator shield' },
 ];
 
 const FRAMES = [
@@ -6094,10 +6106,14 @@ const FRAMES = [
   { id: 'ambassador', xp: 0, stat: 'invites', min: 5, need: 'invite 5 friends', name: 'Ambassador' },
   { id: 'legend', xp: 0, stat: 'seasonWins', min: 1, need: 'finish a season in the top 3', name: 'Season legend' },
   { id: 'collector', xp: 0, stat: 'cardSets', min: 4, need: 'complete all 4 card sets', name: 'Master collector' },
+  { id: 'mod', xp: 0, mod: true, need: 'moderators only', name: 'Moderator' },
 ];
 
-/** Is a hat or frame unlocked? Most need XP; some need tournament trophies, a special counter (invites, live wins…) or a Butter Shop purchase. */
-const unlocked = (item, stats = {}) => !!item && (item.shop ? (stats.owned || []).includes(`hat-${item.id}`) : item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
+/**
+ * Is a hat or frame unlocked? Most need XP; some need tournament trophies, a special counter (invites, live wins…)
+ * or a Butter Shop purchase. Moderators (stats.admin) have them all, and only they get the 🛡️ moderator ones.
+ */
+const unlocked = (item, stats = {}) => !!item && (stats.admin ? true : item.mod ? false : item.shop ? (stats.owned || []).includes(`hat-${item.id}`) : item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
 const hatById = (id) => HATS.find((h) => h.id === id) || HATS[0];
 const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];
 
@@ -6160,6 +6176,8 @@ const SHOP_KINDS = [
 const LOOK_KINDS = ['bubble', 'bg', 'fx', 'persona'];
 
 const shopItem = (id) => SHOP.find((i) => i.id === id) || null;
+/** 🛡️ Moderators own every look in the shop (everything except the power-ups, which get used up). */
+const ALL_LOOK_IDS = SHOP.filter((i) => i.kind !== 'use').map((i) => i.id);
 const itemFor = (kind, value) => SHOP.find((i) => i.kind === kind && i.value === value) || null;
 /** Can someone with these owned item ids use this look? Free items (price 0) are for everyone. */
 const ownsLook = (kind, value, owned = []) => {
@@ -6167,7 +6185,7 @@ const ownsLook = (kind, value, owned = []) => {
   return !!item && (item.price === 0 || owned.includes(item.id));
 };
 
-return { BUTTER, SHOP, SHOP_KINDS, LOOK_KINDS, shopItem, itemFor, ownsLook };
+return { BUTTER, SHOP, SHOP_KINDS, LOOK_KINDS, shopItem, ALL_LOOK_IDS, itemFor, ownsLook };
 })();
 
 // ===== personas.js =====
@@ -10421,6 +10439,7 @@ function initShop({ openAuth }) {
   const owns = (item) => item.price === 0 || data?.owned.includes(item.id);
   const wearing = (item) => (me()[item.kind] || 'none') === item.value;
   const butterHTML = (n) => `<span class="butter-n">🧈 <b>${n}</b></span>`;
+  const modNote = () => (data?.mod ? `<p class="small">🛡️ ${t('Moderator: every look is already yours.')}</p>` : '');
 
   function paintWidget() {
     box.hidden = false;
@@ -10431,6 +10450,7 @@ function initShop({ openAuth }) {
     if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">🧈</span></div>'; return; }
     const on = SHOP.filter((i) => i.kind !== 'use' && i.price > 0 && owns(i) && wearing(i));
     body.innerHTML = `<div class="shop-top">${butterHTML(data.butter)}<small class="muted">${t('1 🧈 for every XP you earn')}</small></div>
+      ${modNote()}
       ${data.freezes ? `<p class="small">🧊 ${tn(data.freezes, '{n} streak freeze ready', '{n} streak freezes ready')}</p>` : ''}
       ${on.length ? `<p class="small">${t('Wearing:')} ${on.map((i) => `<span title="${esc(t(i.name))}">${i.emoji}</span>`).join(' ')}</p>` : ''}
       <button type="button" class="btn btn-primary btn-block" data-shop-open>🛍️ ${t('Open the shop')}</button>`;
@@ -10459,6 +10479,7 @@ function initShop({ openAuth }) {
   function paintShop() {
     if (!data) return;
     D.body.innerHTML = `<div class="shop-top">${butterHTML(data.butter)}<small class="muted">${t('You get 1 🧈 for every XP you earn. Spending it never lowers your XP or rank.')}</small></div>
+      ${modNote()}
       ${SHOP_KINDS.map(([kind, title]) => `<section class="shop-sec" data-shop-sec="${kind}"><h3 class="tp-label">${t(title)}</h3><div class="shop-grid">
         ${SHOP.filter((i) => i.kind === kind).map((i) => `<div class="shop-item${owns(i) && i.kind !== 'use' ? ' owned' : ''}">
           <div class="shop-prev">${preview(i)}</div>
@@ -13714,7 +13735,7 @@ const { initPet } = __m["pet"];
 const { initNewsMap } = __m["newsmap"];
 const { initComfort } = __m["comfort"];
 const { LEARN_XP } = __m["words"];
-const { ownsLook } = __m["shop-data"];
+const { ownsLook, ALL_LOOK_IDS } = __m["shop-data"];
 const { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } = __m["invite"];
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -13969,12 +13990,14 @@ function rankFor(xp) {
 
 /** 🎁 XP the server gave (invites, duels, live shows…) + counters that unlock hats + the moderator flag. */
 let isModerator = false;
+/** Shop looks you can wear: what you bought, or all of them for a 🛡️ moderator. */
+const ownedLooks = () => (isModerator ? ALL_LOOK_IDS : store.get(`shop:${auth.profileKey()}`, {}).owned || []);
 function collectRewards(u) {
   if (!u || !auth.user) return;
   store.set(`stats:${auth.profileKey()}`, u.stats || {});
   store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
   checkAchievements();
-  if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); }
+  if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); renderProfileWidget(); }
   if (u.pendingXp > 0) {
     auth.api('/api/me/claim', { method: 'POST' }).then((r) => {
       if (!r.claimed) return;
@@ -14312,13 +14335,15 @@ function renderProfileWidget() {
   const box = $('#profileWidget');
   const p = auth.getProfile();
   const d = getData();
-  const r = rankFor(d.xp);
+  const mod = isModerator && !!auth.user; // 🛡️ moderators have unlimited XP: top rank, everything unlocked
+  const r = rankFor(mod ? Infinity : d.xp);
   const pct = r.next ? Math.round(((d.xp - r.min) / (r.next - r.min)) * 100) : 100;
+  const xpNote = mod ? `∞ XP · 🛡️ ${t('Moderator: everything unlocked')}` : `${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}`;
   box.innerHTML = `
     <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div>${nameHTML(p)}<span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
     ${auth.user && p.bio ? `<p class="pw-bio" dir="auto">${esc(p.bio)}</p>` : ''}
     <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${t('Progress to next rank')}"><i style="width:${pct}%"></i></div>
-    <p class="xp-note">${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}</p>
+    <p class="xp-note">${xpNote}</p>
     <div class="pw-stats"><span><b>${d.read.length}</b> ${t('read')}</span><span><b>${d.saved.length}</b> ${t('saved')}</span><span><b>${Object.keys(d.reactions).length}</b> ${t('reactions')}</span>${auth.user ? `<span title="${t('Visit every day to grow your streak')}"><b>🔥${d.streak || 0}</b> ${t('streak')}</span>` : ''}</div>
     <div class="pw-actions"><button type="button" class="btn btn-ghost btn-sm" data-action="wrapped">${t('🎁 My Wrapped')}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit-profile">${t('🎩 Style')}</button></div>
     ${auth.user ? `<p class="muted small synced">${t('☁️ Saved to @{name}', { name: esc(auth.user.username) })}</p>` : `<button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Save your progress — sign up free')}</button>`}`;
@@ -14649,17 +14674,19 @@ function openProfile(isNew = false) {
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
   $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(t(c.label))}</span></label>`).join('');
   // hats and frames: unlocked with XP (and tournament trophies)
-  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0), owned: store.get(`shop:${auth.profileKey()}`, {}).owned || [] };
+  const mod = isModerator && !!auth.user; // 🛡️ moderators have every hat and frame, and their own
+  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0), owned: ownedLooks(), admin: mod };
   const styleOpt = (kind, item, look) => {
     const open = unlocked(item, stats);
     const checked = (p[kind] || 'none') === item.id;
-    const need = item.trophy ? t('win a trophy') : item.stat || item.shop ? t(item.need) : t('{n} XP', { n: item.xp });
+    const need = item.trophy ? t('win a trophy') : item.stat || item.shop || item.mod ? t(item.need) : t('{n} XP', { n: item.xp });
     return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
       <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
   };
   const me = { avatar: p.avatar, photo: p.photo, username: auth.user?.username }; // previews show your photo too
-  $('#hatPick').innerHTML = HATS.map((h) => styleOpt('hat', h, { ...me, hat: h.id, frame: p.frame })).join('');
-  $('#framePick').innerHTML = FRAMES.map((f) => styleOpt('frame', f, { ...me, hat: p.hat, frame: f.id })).join('');
+  const forMe = (item) => mod || !item.mod; // the 🛡️ moderator looks only show up for moderators
+  $('#hatPick').innerHTML = HATS.filter(forMe).map((h) => styleOpt('hat', h, { ...me, hat: h.id, frame: p.frame })).join('');
+  $('#framePick').innerHTML = FRAMES.filter(forMe).map((f) => styleOpt('frame', f, { ...me, hat: p.hat, frame: f.id })).join('');
   if (!dlg.open) dlg.showModal();
 }
 
@@ -14914,7 +14941,7 @@ function boot() {
     aiEnabled: () => !!auth.apiBase,
     ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages, persona: auth.getProfile().persona } }),
     persona: () => auth.getProfile().persona,
-    ownsPersona: (id) => ownsLook('persona', id, store.get(`shop:${auth.profileKey()}`, {}).owned || []),
+    ownsPersona: (id) => ownsLook('persona', id, ownedLooks()),
     setPersona: (id) => auth.saveProfile({ ...auth.getProfile(), persona: id }),
     openShop: (kind) => shop?.open(kind),
     onAsk: () => { const d = getData(); d.codmeAsks = (d.codmeAsks || 0) + 1; setData(d); checkAchievements(); },
@@ -15235,7 +15262,7 @@ function boot() {
     loadLeaderboard();
     if (!e.detail?.quiet) toast(t('Signed out. The kernel misses you already 🥲'), { emoji: '👋' });
   });
-  auth.addEventListener('signout', () => { isModerator = false; $('#modRow').hidden = true; });
+  auth.addEventListener('signout', () => { isModerator = false; $('#modRow').hidden = true; renderProfileWidget(); });
   setInterval(checkRewards, 5 * 60_000);
   auth.addEventListener('expired', () => toast(t('Your session expired — please sign in again.'), { emoji: '⏰', ms: 6000 }));
   // A saved session: check it's still valid, pull progress from other devices, count today's visit.

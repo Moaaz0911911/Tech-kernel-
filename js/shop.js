@@ -20,6 +20,7 @@ export function initShop({ openAuth }) {
   const owns = (item) => item.price === 0 || data?.owned.includes(item.id);
   const wearing = (item) => (me()[item.kind] || 'none') === item.value;
   const butterHTML = (n) => `<span class="butter-n">🧈 <b>${n}</b></span>`;
+  const modNote = () => (data?.mod ? `<p class="small">🛡️ ${t('Moderator: every look is already yours.')}</p>` : '');
 
   function paintWidget() {
     box.hidden = false;
@@ -30,6 +31,7 @@ export function initShop({ openAuth }) {
     if (!data) { body.innerHTML = '<div class="chat-empty"><span class="spin">🧈</span></div>'; return; }
     const on = SHOP.filter((i) => i.kind !== 'use' && i.price > 0 && owns(i) && wearing(i));
     body.innerHTML = `<div class="shop-top">${butterHTML(data.butter)}<small class="muted">${t('1 🧈 for every XP you earn')}</small></div>
+      ${modNote()}
       ${data.freezes ? `<p class="small">🧊 ${tn(data.freezes, '{n} streak freeze ready', '{n} streak freezes ready')}</p>` : ''}
       ${on.length ? `<p class="small">${t('Wearing:')} ${on.map((i) => `<span title="${esc(t(i.name))}">${i.emoji}</span>`).join(' ')}</p>` : ''}
       <button type="button" class="btn btn-primary btn-block" data-shop-open>🛍️ ${t('Open the shop')}</button>`;
@@ -58,6 +60,7 @@ export function initShop({ openAuth }) {
   function paintShop() {
     if (!data) return;
     D.body.innerHTML = `<div class="shop-top">${butterHTML(data.butter)}<small class="muted">${t('You get 1 🧈 for every XP you earn. Spending it never lowers your XP or rank.')}</small></div>
+      ${modNote()}
       ${SHOP_KINDS.map(([kind, title]) => `<section class="shop-sec" data-shop-sec="${kind}"><h3 class="tp-label">${t(title)}</h3><div class="shop-grid">
         ${SHOP.filter((i) => i.kind === kind).map((i) => `<div class="shop-item${owns(i) && i.kind !== 'use' ? ' owned' : ''}">
           <div class="shop-prev">${preview(i)}</div>

@@ -1026,6 +1026,10 @@ a.stat:hover { color: var(--text); }
 .ava[data-frame="legend"] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #bf5af2, 0 0 16px 5px rgba(191, 90, 242, .45); animation: neon 3s ease-in-out infinite; }
 @keyframes neon { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text), 0 0 22px 7px var(--line-2); } }
 @keyframes galaxy { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--text), 0 0 28px 9px rgba(160, 100, 255, .5); } }
+/* 🛡️ moderators only: a blue and gold ring that glows, with a little shield badge */
+.ava[data-frame="mod"] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #0a84ff, 0 0 0 6px #c9a227, 0 0 16px 6px rgba(10, 132, 255, .45); animation: modGlow 2.6s ease-in-out infinite; }
+.ava[data-frame="mod"]::after { content: '🛡️'; position: absolute; bottom: -.2em; inset-inline-start: -.24em; font-size: .5em; line-height: 1; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
+@keyframes modGlow { 50% { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px #0a84ff, 0 0 0 6px #c9a227, 0 0 24px 9px rgba(201, 162, 39, .5); } }
 .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
 .style-opt { position: relative; display: grid; justify-items: center; gap: 4px; padding: 12px 4px 8px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .68rem; font-weight: 500; transition: transform .35s var(--spring); }
 .style-opt input { position: absolute; opacity: 0; }

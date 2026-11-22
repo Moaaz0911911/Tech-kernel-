@@ -1,7 +1,7 @@
 // 🛡️ Moderator tools. Moderators are the usernames listed in the ADMINS setting (wrangler.toml).
 // They see what people reported, can hide or bring back messages and comments, take down photos,
 // mute or ban accounts, and look up a person. Every action is written to mod_log.
-import { HttpError } from './util.js';
+import { HttpError, isAdmin } from './util.js';
 import { requireUser } from './auth.js';
 import { look } from './social.js';
 import { removePhoto } from './people.js';
@@ -9,7 +9,7 @@ import { removePhoto } from './people.js';
 const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb; } };
 const DAY = 864e5;
 
-export const isAdmin = (env, user) => !!user && String(env.ADMINS || '').toLowerCase().split(',').map((s) => s.trim()).filter(Boolean).includes(String(user.username_lc || user.username || '').toLowerCase());
+export { isAdmin };
 
 export async function requireAdmin(request, env) {
   const user = await requireUser(request, env);

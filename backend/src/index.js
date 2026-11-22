@@ -1,5 +1,5 @@
 // kerNEl API — Cloudflare Worker entry point.
-import { HttpError, json, readJson, corsHeaders, allowedOrigin, clientIp, rateLimit } from './util.js';
+import { HttpError, json, readJson, corsHeaders, allowedOrigin, clientIp, rateLimit, isAdmin } from './util.js';
 import { collectNews, findThumbnails, latestStories, sourceStatus, reactionCounts } from './news.js';
 import {
   register, login, recover, changePassword, newCodeFor, usernameAvailable, checkin,
@@ -11,13 +11,12 @@ import { getDB, KernelDB } from './db.js';
 import { featureRoute } from './features.js';
 import { look, cleanLook, trophyCount, commentCounts, activityFromData, recordActivity, STREAK_MILESTONES } from './social.js';
 import { awardTrophies } from './play.js';
-import { isAdmin } from './admin.js';
 import { statsOf, claimXp, myInvites } from './rewards.js';
 import { forgetGroupsOf } from './groups.js';
 import { sendMorningDrops, notifyTopics } from './discover.js';
 import { updatePrices, awardMarket } from './market.js';
 import { weekUpdate, forgetSquadOf } from './squads.js';
-import { shopOf, cleanShopLook, BUTTER_SQL } from './shop.js';
+import { ownedFor, cleanShopLook, BUTTER_SQL } from './shop.js';
 import { ownsLook } from '../../js/shop-data.js';
 import { remindParties } from './parties.js';
 import { makeDailyDebate, settleDebates } from './debates.js';
@@ -31,6 +30,16 @@ const parse = (s, fb) => { try { return JSON.parse(s || ''); } catch { return fb
 const NOTIFY_CRON = '2-59/5 * * * *';
 const RANKS = [[0, 'Unpopped Kernel', '🌽'], [50, 'Warm Kernel', '♨️'], [150, 'Sizzling Kernel', '🔥'], [300, 'Freshly Popped', '🍿'], [600, 'Butter Baron', '🧈'], [1000, 'Popcorn Overlord', '👑'], [2000, 'Galactic Snack Deity', '🌌']];
 const rankOf = (xp) => [...RANKS].reverse().find(([min]) => xp >= min);
+
+/** 🛡️ Someone is no longer a moderator: take off the looks only moderators had and save the profile (as JSON). */
+async function dropModLooks(env, user, trophies) {
+  const { modPerks, ...prev } = parse(user.profile, {});
+  const owned = ownedFor(env, user);
+  const profile = { ...prev, ...cleanLook(null, prev, { ...statsOf(user), xp: user.xp || 0, trophies, owned }), ...cleanShopLook(null, prev, owned) };
+  const saved = JSON.stringify(profile);
+  await env.DB.prepare('UPDATE users SET profile = ? WHERE id = ?').bind(saved, user.id).run();
+  return saved;
+}
 
 async function route(request, env, ctx) {
   const url = new URL(request.url);
@@ -84,8 +93,12 @@ async function route(request, env, ctx) {
   }
 
   if (path === '/api/me' && m === 'GET') {
-    const user = await requireUser(request, env);
-    return json({ user: { ...publicUser(user), trophies: await trophyCount(env, user.id), stats: statsOf(user), pendingXp: user.pending_xp || 0, admin: isAdmin(env, user) } });
+    let user = await requireUser(request, env);
+    const admin = isAdmin(env, user);
+    const trophies = await trophyCount(env, user.id);
+    // 🛡️ someone who stopped being a moderator takes off the looks only moderators have (once)
+    if (!admin && parse(user.profile, {}).modPerks) user = { ...user, profile: await dropModLooks(env, user, trophies) };
+    return json({ user: { ...publicUser(user), trophies, stats: statsOf(user), pendingXp: user.pending_xp || 0, admin } });
   }
   if (path === '/api/me/claim' && m === 'POST') {
     const user = await requireUser(request, env);
@@ -108,8 +121,10 @@ async function route(request, env, ctx) {
     const user = await requireUser(request, env);
     const body = await readJson(request, 10_000);
     const prev = parse(user.profile, {});
-    const owned = shopOf(user).owned;
-    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { ...statsOf(user), xp: user.xp || 0, trophies: await trophyCount(env, user.id), owned }), ...cleanShopLook(body, prev, owned) };
+    const owned = ownedFor(env, user);
+    const admin = isAdmin(env, user);
+    const profile = { ...cleanProfile(body, prev), ...cleanLook(body, prev, { ...statsOf(user), xp: user.xp || 0, trophies: await trophyCount(env, user.id), owned, admin }), ...cleanShopLook(body, prev, owned) };
+    if (admin) profile.modPerks = true; // so the moderator looks come off if they stop being one
     if (typeof body.bio === 'string') profile.bio = cleanText(body.bio.replace(/\s+/g, ' ')).slice(0, 80);
     if (['everyone', 'following', 'nobody'].includes(body.dms)) profile.dms = body.dms;
     await env.DB.prepare('UPDATE users SET profile = ?, on_board = ?, updated = ? WHERE id = ?').bind(JSON.stringify(profile), profile.leaderboard ? 1 : 0, Date.now(), user.id).run();

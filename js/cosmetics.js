@@ -1,4 +1,5 @@
 // Avatar cosmetics: hats and frames unlocked with XP (checked again by the kerNEl server).
+// 🛡️ Moderators (stats.admin) have every hat and frame, plus their own shield hat and Moderator frame.
 export const HATS = [
   { id: 'none', emoji: '', xp: 0, name: 'No hat' },
   { id: 'cap', emoji: '🧢', xp: 50, name: 'Rookie cap' },
@@ -25,6 +26,8 @@ export const HATS = [
   { id: 'octopus', emoji: '🐙', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Octopus pal' },
   { id: 'disco', emoji: '🪩', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Disco ball' },
   { id: 'diamond', emoji: '💎', xp: 0, shop: true, need: 'buy it in the Butter Shop', name: 'Diamond' },
+  // 🛡️ moderators only
+  { id: 'shield', emoji: '🛡️', xp: 0, mod: true, need: 'moderators only', name: 'Moderator shield' },
 ];
 
 export const FRAMES = [
@@ -38,9 +41,13 @@ export const FRAMES = [
   { id: 'ambassador', xp: 0, stat: 'invites', min: 5, need: 'invite 5 friends', name: 'Ambassador' },
   { id: 'legend', xp: 0, stat: 'seasonWins', min: 1, need: 'finish a season in the top 3', name: 'Season legend' },
   { id: 'collector', xp: 0, stat: 'cardSets', min: 4, need: 'complete all 4 card sets', name: 'Master collector' },
+  { id: 'mod', xp: 0, mod: true, need: 'moderators only', name: 'Moderator' },
 ];
 
-/** Is a hat or frame unlocked? Most need XP; some need tournament trophies, a special counter (invites, live wins…) or a Butter Shop purchase. */
-export const unlocked = (item, stats = {}) => !!item && (item.shop ? (stats.owned || []).includes(`hat-${item.id}`) : item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
+/**
+ * Is a hat or frame unlocked? Most need XP; some need tournament trophies, a special counter (invites, live wins…)
+ * or a Butter Shop purchase. Moderators (stats.admin) have them all, and only they get the 🛡️ moderator ones.
+ */
+export const unlocked = (item, stats = {}) => !!item && (stats.admin ? true : item.mod ? false : item.shop ? (stats.owned || []).includes(`hat-${item.id}`) : item.trophy ? (stats.trophies || 0) > 0 : item.stat ? (stats[item.stat] || 0) >= (item.min || 1) : (stats.xp || 0) >= item.xp);
 export const hatById = (id) => HATS.find((h) => h.id === id) || HATS[0];
 export const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];

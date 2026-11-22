@@ -34,7 +34,7 @@ import { initPet } from './pet.js';
 import { initNewsMap } from './newsmap.js';
 import { initComfort } from './comfort.js';
 import { LEARN_XP } from './words.js';
-import { ownsLook } from './shop-data.js';
+import { ownsLook, ALL_LOOK_IDS } from './shop-data.js';
 import { initInvites, catchInvite, pendingInvite, clearInvite, paintInviteNote } from './invite.js';
 
 const REFRESH = Math.max(10, Number(CONFIG.refreshSeconds) || 30);
@@ -289,12 +289,14 @@ function rankFor(xp) {
 
 /** 🎁 XP the server gave (invites, duels, live shows…) + counters that unlock hats + the moderator flag. */
 let isModerator = false;
+/** Shop looks you can wear: what you bought, or all of them for a 🛡️ moderator. */
+const ownedLooks = () => (isModerator ? ALL_LOOK_IDS : store.get(`shop:${auth.profileKey()}`, {}).owned || []);
 function collectRewards(u) {
   if (!u || !auth.user) return;
   store.set(`stats:${auth.profileKey()}`, u.stats || {});
   store.set(`trophies:${auth.profileKey()}`, u.trophies || 0);
   checkAchievements();
-  if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); }
+  if (!!u.admin !== isModerator) { isModerator = !!u.admin; $('#modRow').hidden = !isModerator; renderAuthSlot(); renderProfileWidget(); }
   if (u.pendingXp > 0) {
     auth.api('/api/me/claim', { method: 'POST' }).then((r) => {
       if (!r.claimed) return;
@@ -632,13 +634,15 @@ function renderProfileWidget() {
   const box = $('#profileWidget');
   const p = auth.getProfile();
   const d = getData();
-  const r = rankFor(d.xp);
+  const mod = isModerator && !!auth.user; // 🛡️ moderators have unlimited XP: top rank, everything unlocked
+  const r = rankFor(mod ? Infinity : d.xp);
   const pct = r.next ? Math.round(((d.xp - r.min) / (r.next - r.min)) * 100) : 100;
+  const xpNote = mod ? `∞ XP · 🛡️ ${t('Moderator: everything unlocked')}` : `${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}`;
   box.innerHTML = `
     <div class="pw-head">${avatarHTML(p, 'avatar-lg', auth.user ? d.streak : 0)}<div>${nameHTML(p)}<span class="rank">${r.emoji} ${esc(t(r.title))}</span></div></div>
     ${auth.user && p.bio ? `<p class="pw-bio" dir="auto">${esc(p.bio)}</p>` : ''}
     <div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${t('Progress to next rank')}"><i style="width:${pct}%"></i></div>
-    <p class="xp-note">${d.xp} XP${r.next ? ` · ${t('{n} to next rank', { n: r.next - d.xp })}` : ` · ${t('max rank, legend!')}`}</p>
+    <p class="xp-note">${xpNote}</p>
     <div class="pw-stats"><span><b>${d.read.length}</b> ${t('read')}</span><span><b>${d.saved.length}</b> ${t('saved')}</span><span><b>${Object.keys(d.reactions).length}</b> ${t('reactions')}</span>${auth.user ? `<span title="${t('Visit every day to grow your streak')}"><b>🔥${d.streak || 0}</b> ${t('streak')}</span>` : ''}</div>
     <div class="pw-actions"><button type="button" class="btn btn-ghost btn-sm" data-action="wrapped">${t('🎁 My Wrapped')}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit-profile">${t('🎩 Style')}</button></div>
     ${auth.user ? `<p class="muted small synced">${t('☁️ Saved to @{name}', { name: esc(auth.user.username) })}</p>` : `<button type="button" class="btn btn-primary btn-block" data-action="signup">${t('Save your progress — sign up free')}</button>`}`;
@@ -969,17 +973,19 @@ function openProfile(isNew = false) {
   form.elements.leaderboard.closest('.check').hidden = !auth.user;
   $('#topicPick').innerHTML = CATEGORIES.map((c) => `<label class="pick-topic"><input type="checkbox" name="topics" value="${c.id}" ${(p.topics || []).includes(c.id) ? 'checked' : ''}><span>${c.emoji} ${esc(t(c.label))}</span></label>`).join('');
   // hats and frames: unlocked with XP (and tournament trophies)
-  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0), owned: store.get(`shop:${auth.profileKey()}`, {}).owned || [] };
+  const mod = isModerator && !!auth.user; // 🛡️ moderators have every hat and frame, and their own
+  const stats = { ...store.get(`stats:${auth.profileKey()}`, {}), xp: getData().xp, trophies: store.get(`trophies:${auth.profileKey()}`, 0), owned: ownedLooks(), admin: mod };
   const styleOpt = (kind, item, look) => {
     const open = unlocked(item, stats);
     const checked = (p[kind] || 'none') === item.id;
-    const need = item.trophy ? t('win a trophy') : item.stat || item.shop ? t(item.need) : t('{n} XP', { n: item.xp });
+    const need = item.trophy ? t('win a trophy') : item.stat || item.shop || item.mod ? t(item.need) : t('{n} XP', { n: item.xp });
     return `<label class="style-opt${open ? '' : ' locked'}" title="${esc(t(item.name))}${open ? '' : ` — 🔒 ${esc(need)}`}">
       <input type="radio" name="${kind}" value="${item.id}" ${checked ? 'checked' : ''} ${open ? '' : 'disabled'}>${lookHTML(look)}<span>${esc(t(item.name))}</span>${open ? '' : `<small>🔒 ${esc(need)}</small>`}</label>`;
   };
   const me = { avatar: p.avatar, photo: p.photo, username: auth.user?.username }; // previews show your photo too
-  $('#hatPick').innerHTML = HATS.map((h) => styleOpt('hat', h, { ...me, hat: h.id, frame: p.frame })).join('');
-  $('#framePick').innerHTML = FRAMES.map((f) => styleOpt('frame', f, { ...me, hat: p.hat, frame: f.id })).join('');
+  const forMe = (item) => mod || !item.mod; // the 🛡️ moderator looks only show up for moderators
+  $('#hatPick').innerHTML = HATS.filter(forMe).map((h) => styleOpt('hat', h, { ...me, hat: h.id, frame: p.frame })).join('');
+  $('#framePick').innerHTML = FRAMES.filter(forMe).map((f) => styleOpt('frame', f, { ...me, hat: p.hat, frame: f.id })).join('');
   if (!dlg.open) dlg.showModal();
 }
 
@@ -1234,7 +1240,7 @@ function boot() {
     aiEnabled: () => !!auth.apiBase,
     ai: (messages) => auth.api('/api/codme', { method: 'POST', body: { messages, persona: auth.getProfile().persona } }),
     persona: () => auth.getProfile().persona,
-    ownsPersona: (id) => ownsLook('persona', id, store.get(`shop:${auth.profileKey()}`, {}).owned || []),
+    ownsPersona: (id) => ownsLook('persona', id, ownedLooks()),
     setPersona: (id) => auth.saveProfile({ ...auth.getProfile(), persona: id }),
     openShop: (kind) => shop?.open(kind),
     onAsk: () => { const d = getData(); d.codmeAsks = (d.codmeAsks || 0) + 1; setData(d); checkAchievements(); },
@@ -1555,7 +1561,7 @@ function boot() {
     loadLeaderboard();
     if (!e.detail?.quiet) toast(t('Signed out. The kernel misses you already 🥲'), { emoji: '👋' });
   });
-  auth.addEventListener('signout', () => { isModerator = false; $('#modRow').hidden = true; });
+  auth.addEventListener('signout', () => { isModerator = false; $('#modRow').hidden = true; renderProfileWidget(); });
   setInterval(checkRewards, 5 * 60_000);
   auth.addEventListener('expired', () => toast(t('Your session expired — please sign in again.'), { emoji: '⏰', ms: 6000 }));
   // A saved session: check it's still valid, pull progress from other devices, count today's visit.

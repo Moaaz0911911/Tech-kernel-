@@ -52,6 +52,8 @@ export const SHOP_KINDS = [
 export const LOOK_KINDS = ['bubble', 'bg', 'fx', 'persona'];
 
 export const shopItem = (id) => SHOP.find((i) => i.id === id) || null;
+/** 🛡️ Moderators own every look in the shop (everything except the power-ups, which get used up). */
+export const ALL_LOOK_IDS = SHOP.filter((i) => i.kind !== 'use').map((i) => i.id);
 export const itemFor = (kind, value) => SHOP.find((i) => i.kind === kind && i.value === value) || null;
 /** Can someone with these owned item ids use this look? Free items (price 0) are for everyone. */
 export const ownsLook = (kind, value, owned = []) => {

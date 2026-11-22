@@ -1124,6 +1124,11 @@ export const MAIN_STRINGS = [
   // 🛡️ moderators, 🎟️ invites, 🎁 rewards, 🔒 privacy
   ['+{n} XP from your rewards!', '+{n} XP من المكافآت بتاعتك!', '+{n} XP aus deinen Belohnungen!', '+{n} XP mula sa rewards mo!'],
   ['Moderator tools', 'أدوات المشرف', 'Moderatoren-Tools', 'Mga tool ng moderator'],
+  ['Moderator', 'مشرف', 'Moderator', 'Moderator'],
+  ['Moderator shield', 'درع المشرف', 'Moderatoren-Schild', 'Kalasag ng moderator'],
+  ['moderators only', 'للمشرفين بس', 'nur für Moderatoren', 'para lang sa mga moderator'],
+  ['Moderator: everything unlocked', 'مشرف: كل حاجة مفتوحة', 'Moderator: alles freigeschaltet', 'Moderator: bukas na ang lahat'],
+  ['Moderator: every look is already yours.', 'مشرف: كل الستايلات بتاعتك خلاص.', 'Moderator: Alle Looks gehören schon dir.', 'Moderator: sa iyo na ang lahat ng itsura.'],
   ['🛡️ Moderator tools', '🛡️ أدوات المشرف', '🛡️ Moderatoren-Tools', '🛡️ Mga tool ng moderator'],
   ['Overview', 'نظرة عامة', 'Übersicht', 'Buod'],
   ['Reports', 'البلاغات', 'Meldungen', 'Mga report'],

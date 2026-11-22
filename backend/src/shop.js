@@ -1,7 +1,7 @@
 // 🧈 The Butter Shop. Every XP someone earns from now on also gives them 1 🧈 butter (see /api/me/data),
 // so buying things never lowers their XP or rank. Purchases are checked and paid for in one database step.
-import { HttpError } from './util.js';
-import { SHOP, BUTTER, LOOK_KINDS, shopItem, ownsLook } from '../../js/shop-data.js';
+import { HttpError, isAdmin } from './util.js';
+import { SHOP, BUTTER, LOOK_KINDS, ALL_LOOK_IDS, shopItem, ownsLook } from '../../js/shop-data.js';
 import { givePacks } from './cards.js';
 import { petOf } from './pet.js';
 
@@ -11,6 +11,9 @@ export const shopOf = (row) => {
   return { owned: Array.isArray(s.owned) ? s.owned.filter((id) => shopItem(id)) : [], freezes: Math.max(0, s.freezes | 0), welcome: !!s.welcome };
 };
 
+/** What someone can wear: what they bought, or every look for a 🛡️ moderator (never saved, so it goes away if they stop being one). */
+export const ownedFor = (env, user) => (isAdmin(env, user) ? ALL_LOOK_IDS : shopOf(user).owned);
+
 /**
  * SQL for the XP save: adds the butter earned since the highest XP ever paid out.
  * (So taking XP away and adding it back can't print butter.) Goes inside UPDATE users SET …, before xp is set,
@@ -18,7 +21,7 @@ export const shopOf = (row) => {
  */
 export const BUTTER_SQL = 'butter = butter + MAX(0, ? - COALESCE(butter_mark, xp)), butter_mark = MAX(COALESCE(butter_mark, xp), ?)';
 
-const view = (user, s, butter) => ({ butter, owned: s.owned, freezes: s.freezes, maxFreezes: BUTTER.maxFreezes });
+const view = (env, user, s, butter) => ({ butter, owned: isAdmin(env, user) ? ALL_LOOK_IDS : s.owned, freezes: s.freezes, maxFreezes: BUTTER.maxFreezes, ...(isAdmin(env, user) ? { mod: true } : {}) });
 
 export async function getShop(env, user) {
   const s = shopOf(user);
@@ -27,17 +30,17 @@ export async function getShop(env, user) {
     s.welcome = true;
     const r = await env.DB.prepare('UPDATE users SET shop = ?, butter = butter + ? WHERE id = ? AND COALESCE(shop, \'\') = ? RETURNING butter')
       .bind(JSON.stringify(s), BUTTER.welcome, user.id, user.shop || '').first();
-    if (r) return { ...view(user, s, r.butter), welcomeGift: BUTTER.welcome };
+    if (r) return { ...view(env, user, s, r.butter), welcomeGift: BUTTER.welcome };
     return getShop(env, await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.id).first());
   }
-  return view(user, s, butter);
+  return view(env, user, s, butter);
 }
 
 export async function buy(env, user, body) {
   const item = shopItem(String(body.id || ''));
   if (!item) throw new HttpError(404, 'That isn’t in the shop');
   const s = shopOf(user);
-  if (item.kind !== 'use' && (item.price === 0 || s.owned.includes(item.id))) throw new HttpError(409, 'You already have that');
+  if (item.kind !== 'use' && (item.price === 0 || s.owned.includes(item.id) || isAdmin(env, user))) throw new HttpError(409, 'You already have that');
   if (item.id === 'freeze' && s.freezes >= BUTTER.maxFreezes) throw new HttpError(400, 'You can hold 2 streak freezes at a time');
   const pet = petOf(user);
   if (item.id === 'treat' && !pet) throw new HttpError(400, 'Adopt a pet first 🥚');
@@ -51,7 +54,7 @@ export async function buy(env, user, body) {
     .bind(item.price, JSON.stringify({ ...s, welcome: true }), ...(item.id === 'treat' ? [JSON.stringify(pet)] : []), user.id, item.price, user.shop || '').first();
   if (!r) throw new HttpError(409, 'Something changed — try again');
   if (item.id === 'pack') await givePacks(env, user.id, BUTTER.packs);
-  return { ...view(user, s, r.butter), bought: item.id };
+  return { ...view(env, user, s, r.butter), bought: item.id };
 }
 
 /** Check the bubble, background, name effect and codme personality someone wants against what they own. */

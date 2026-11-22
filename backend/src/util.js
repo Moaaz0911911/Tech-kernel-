@@ -7,6 +7,9 @@ export class HttpError extends Error {
   }
 }
 
+/** 🛡️ Is this person a moderator? Moderators are the usernames in the ADMINS setting (wrangler.toml). */
+export const isAdmin = (env, user) => !!user && String(env.ADMINS || '').toLowerCase().split(',').map((s) => s.trim()).filter(Boolean).includes(String(user.username_lc || user.username || '').toLowerCase());
+
 export function allowedOrigin(request, env) {
   const origin = request.headers.get('Origin');
   if (!origin) return null;

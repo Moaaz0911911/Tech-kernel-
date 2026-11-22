@@ -414,11 +414,30 @@ try {
   ok('profile card shows follow state + counts', r.data.isFollowing === true && r.data.followers === 1 && r.data.following === 1 && Array.isArray(r.data.trophies));
 
   console.log('avatar cosmetics');
+  r = await api('/api/me/profile', { method: 'PUT', token: keiToken, body: { hat: 'crown', frame: 'galaxy' } });
+  ok('locked hats/frames are refused (not enough XP)', r.data.profile.hat === 'none' && r.data.profile.frame === 'none');
+  ok('champion frame needs a trophy', (await api('/api/me/profile', { method: 'PUT', token: keiToken, body: { frame: 'champion' } })).data.profile.frame === 'none');
+  r = await api('/api/me/profile', { method: 'PUT', token: keiToken, body: { hat: 'shield', frame: 'mod' } });
+  ok('🛡️ the moderator shield and frame are refused for everyone else', r.data.profile.hat === 'none' && r.data.profile.frame === 'none' && !r.data.profile.modPerks);
   r = await api('/api/me/profile', { method: 'PUT', token, body: { hat: 'crown', frame: 'galaxy' } });
-  ok('locked hats/frames are refused (620 XP < 1000)', r.data.profile.hat === 'none' && r.data.profile.frame === 'none');
-  r = await api('/api/me/profile', { method: 'PUT', token, body: { hat: 'tophat', frame: 'butter' } });
+  ok('🛡️ moderators have every hat and frame (620 XP < 1000)', r.data.profile.hat === 'crown' && r.data.profile.frame === 'galaxy');
+  r = await api('/api/me/profile', { method: 'PUT', token, body: { hat: 'shield', frame: 'mod', bubble: 'gold', fx: 'glitch', bg: 'galaxy', persona: 'wizard' } });
+  ok('🛡️ …their own shield + frame, and every shop look without buying it', r.data.profile.hat === 'shield' && r.data.profile.frame === 'mod' && r.data.profile.bubble === 'gold' && r.data.profile.fx === 'glitch' && r.data.profile.bg === 'galaxy' && r.data.profile.persona === 'wizard' && r.data.profile.modPerks === true);
+  r = await api('/api/shop', { token });
+  ok('🛡️ the shop says moderators own every look', r.data.mod === true && r.data.owned.includes('hat-diamond') && r.data.owned.includes('p-teta') && !r.data.owned.includes('freeze'));
+  ok('🛡️ …so there is nothing to pay for', (await api('/api/shop/buy', { method: 'POST', token, body: { id: 'fx-rainbow' } })).status === 409);
+  r = await api('/api/chat', { method: 'POST', token, body: { room: 'lobby', text: 'mod look check 🛡️' }, ip: '9.4.4.1' });
+  ok('🛡️ everyone sees the moderator look', (await api('/api/chat?room=lobby')).data.messages.at(-1).user.frame === 'mod' && (await api('/api/chat?room=lobby')).data.messages.at(-1).user.hat === '🛡️');
+  r = await api('/api/me', { token: keiToken });
+  ok('🛡️ nobody else is cleaned up for no reason', r.data.user.profile.modPerks === undefined);
+  // someone who was a moderator and isn't any more (as if their name left ADMINS)
+  const keiProfile = (await db.prepare('SELECT profile FROM users WHERE username_lc = ?').bind('keiiii').first()).profile;
+  await db.prepare('UPDATE users SET profile = ? WHERE username_lc = ?').bind(JSON.stringify({ ...JSON.parse(keiProfile), hat: 'shield', frame: 'mod', fx: 'glitch', modPerks: true }), 'keiiii').run();
+  r = await api('/api/me', { token: keiToken });
+  ok('🛡️ an ex-moderator’s moderator looks come off on their next visit', r.data.user.profile.hat === 'none' && r.data.user.profile.frame === 'none' && r.data.user.profile.fx === 'none' && !r.data.user.profile.modPerks && r.data.user.profile.nickname === JSON.parse(keiProfile).nickname);
+  ok('🛡️ …and stay off', !JSON.parse((await db.prepare('SELECT profile FROM users WHERE username_lc = ?').bind('keiiii').first()).profile).modPerks);
+  r = await api('/api/me/profile', { method: 'PUT', token, body: { hat: 'tophat', frame: 'butter', bubble: 'none', fx: 'none', bg: 'none', persona: 'none' } });
   ok('unlocked ones are saved', r.data.profile.hat === 'tophat' && r.data.profile.frame === 'butter');
-  ok('champion frame needs a trophy', (await api('/api/me/profile', { method: 'PUT', token, body: { frame: 'champion' } })).data.profile.frame === 'butter');
   await api('/api/chat', { method: 'POST', token, body: { room: 'lobby', text: 'new hat who dis 🎩' }, ip: '9.4.4.1' });
   r = await api('/api/chat?room=lobby');
   const hatMsg = r.data.messages.at(-1);
