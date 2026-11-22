@@ -1,0 +1,40 @@
+name = "kernel-api"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# Every 5 minutes: refresh the news. Two minutes later: send news/streak notifications.
+[triggers]
+crons = ["*/5 * * * *", "2-59/5 * * * *"]
+
+# Storage: a SQLite-backed Durable Object (no separate database to create).
+[[durable_objects.bindings]]
+name = "KERNEL_DB"
+class_name = "KernelDB"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["KernelDB"]
+
+# Lets the code import schema.sql as text.
+[[rules]]
+type = "Text"
+globs = ["**/*.sql"]
+fallthrough = true
+
+[vars]
+# Websites allowed to call this API (comma-separated). localhost is always allowed for testing.
+ALLOWED_ORIGINS = "https://moaaz0911911.github.io"
+# Accounts: password hashing rounds. 20000 fits the free plan's CPU limit;
+# on the Workers Paid plan use "100000" (the maximum) — existing passwords upgrade at next sign-in.
+PBKDF2_ITERATIONS = "20000"
+SIGNUPS_PER_IP_HOUR = "5"
+# Moderators: kerNEl usernames (comma-separated) who get the 🛡️ moderator tools.
+ADMINS = "azzy"
+# codme AI limits (protects your Anthropic bill)
+CODME_PER_IP_HOUR = "20"
+CODME_PER_USER_DAY = "100"
+CODME_GLOBAL_DAY = "2000"
+EXPLAIN_PER_IP_HOUR = "40"
+EXPLAIN_GLOBAL_DAY = "1500"
+
+# Secret (never put it here): npx wrangler secret put ANTHROPIC_API_KEY

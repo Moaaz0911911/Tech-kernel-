@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>kerNEl — Privacy</title>
+  <meta name="description" content="What kerNEl stores about you, who can see it, and how to delete it.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --bg: #f5f5f7; --card: #fff; --text: #0b0b0c; --muted: #6e6e73; --line: rgba(0,0,0,.08); color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #111113; --text: #f5f5f7; --muted: #98989d; --line: rgba(255,255,255,.1); } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing: antialiased; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -.045em; text-decoration: none; color: var(--text); }
+    .logo span { display: inline-block; padding: 2px 6px 3px; margin: 0 1px; border-radius: 8px; background: var(--text); color: var(--bg); }
+    nav { display: flex; gap: 6px; flex-wrap: wrap; }
+    nav button { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .85rem; cursor: pointer; }
+    nav button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+    section[lang] { display: none; background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 22px 24px; }
+    section[lang].on { display: block; }
+    h1 { font-size: 1.7rem; letter-spacing: -.03em; margin: 0 0 4px; }
+    h2 { font-size: 1.05rem; margin: 22px 0 6px; }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); font-size: .9rem; }
+    ul { padding-inline-start: 22px; }
+    li { margin: 4px 0; }
+    a { color: inherit; }
+    .back { display: inline-block; margin-top: 18px; color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="logo" href="./">ker<span>NE</span>l</a>
+    <nav aria-label="Language">
+      <button type="button" data-l="en">English</button>
+      <button type="button" data-l="ar">العربي</button>
+      <button type="button" data-l="de">Deutsch</button>
+      <button type="button" data-l="tl">Tagalog</button>
+    </nav>
+  </header>
+
+  <section lang="en" dir="ltr">
+    <h1>Privacy & your data</h1>
+    <p class="muted">Short version: no email, no phone number, no ads, no tracking. You can delete everything at any time.</p>
+    <h2>What kerNEl stores</h2>
+    <ul>
+      <li><b>Your account:</b> username and password. The password is stored only as a scrambled hash, never as the password itself. Also a hash of your recovery code.</li>
+      <li><b>Your profile:</b> nickname, avatar or photo, bio, favourite topics, hat and frame, language.</li>
+      <li><b>Your progress:</b> XP, streak, achievements, saved stories, reactions and game scores, your 🧈 butter, what you bought in the shop, and your pet.</li>
+      <li><b>What you post:</b> chat messages, comments, private and group messages (including voice notes and polls), pops, watch party chat, debate arguments, votes and reports.</li>
+      <li><b>People and topics:</b> who you follow, who you blocked, who invited you, and the companies or topics you follow.</li>
+      <li><b>Notifications:</b> if you turn them on, your browser's push address, your time zone, which notifications you want and your Morning Drop time.</li>
+      <li><b>Safety:</b> your IP address is used for a short time (up to an hour) to stop spam and too many sign-ups.</li>
+    </ul>
+    <h2>Who can see it</h2>
+    <ul>
+      <li><b>Everyone:</b> your username, nickname, avatar or photo, bio, XP, rank, streak, followers, squad, pet, the shop looks you switch on, chat messages, watch party chat, debate arguments and comments. You can hide yourself from the leaderboard.</li>
+      <li><b>Only you and the other person:</b> private messages. Moderators only see messages that someone reported (the reported person's last few messages in that chat).</li>
+      <li><b>The people in a group:</b> that group's messages. New members only see messages sent after they joined.</li>
+      <li><b>The people who follow you:</b> your pops, for 24 hours. You can see who viewed them.</li>
+      <li><b>Only you:</b> your password, saved stories and settings.</li>
+    </ul>
+    <h2>How long it's kept</h2>
+    <ul>
+      <li>Chat messages: 30 days. Private and group messages, and their voice notes: 1 year. Pops: 24 hours. Watch party chat: 30 days after the party. Debates: 60 days after they close. Notifications: 30 days.</li>
+      <li>Everything else stays until you delete it or your account.</li>
+      <li>Some things never leave your device: your reading comfort settings and the list of words you learned. Clearing your browser data removes them.</li>
+    </ul>
+    <h2>Your choices</h2>
+    <ul>
+      <li>Change or remove your photo, bio and nickname any time.</li>
+      <li>Choose who can message you, block people, and turn notifications off.</li>
+      <li><b>Delete your account</b> in Me → Account &amp; security. It removes your profile, progress, messages, comments, follows and photo straight away.</li>
+    </ul>
+    <h2>Other services</h2>
+    <ul>
+      <li>kerNEl runs on Cloudflare. News comes from public sources, and story pictures load from the news websites.</li>
+      <li>If AI explanations are switched on, only the story headline and your question are sent to Anthropic (Claude) to write the answer.</li>
+    </ul>
+    <h2>Kids</h2>
+    <p>kerNEl Kids works without an account and keeps progress on the device. Kids who use accounts or messages should do it with a grown-up.</p>
+    <h2>Questions</h2>
+    <p>Open an issue on <a href="https://github.com/Moaaz0911911/Tech-kernel-" rel="noopener">kerNEl's GitHub page</a>.</p>
+  </section>
+
+  <section lang="ar" dir="rtl">
+    <h1>الخصوصية وبياناتك</h1>
+    <p class="muted">باختصار: من غير إيميل، من غير رقم تليفون، من غير إعلانات ومن غير تتبع. وتقدر تمسح كل حاجة في أي وقت.</p>
+    <h2>kerNEl بيحفظ إيه</h2>
+    <ul>
+      <li><b>حسابك:</b> اسم المستخدم والباسورد. الباسورد بيتحفظ متشفّر بس، عمر ما بيتحفظ زي ما هو. وكمان نسخة متشفّرة من كود الاسترجاع.</li>
+      <li><b>البروفايل بتاعك:</b> النيك نيم، الأفاتار أو الصورة، النبذة، المواضيع اللي بتحبها، القبعة والإطار، واللغة.</li>
+      <li><b>تقدّمك:</b> الـ XP، الستريك، الإنجازات، الأخبار المحفوظة، الريأكشنز ونتايج الألعاب، الزبدة 🧈 بتاعتك، اللي اشتريته من المحل، وحيوانك.</li>
+      <li><b>اللي بتكتبه:</b> رسايل الشات، الكومنتات، الرسايل الخاصة ورسايل الجروبات (ومعاها الفويسات والتصويتات)، البوبس، شات حفلات المشاهدة، حجج المناقشات، التصويتات والبلاغات.</li>
+      <li><b>الناس والمواضيع:</b> إنت بتتابع مين، عامل بلوك لمين، مين اللي عزمك، والشركات أو المواضيع اللي بتتابعها.</li>
+      <li><b>الإشعارات:</b> لو شغلتها: عنوان الإشعارات بتاع المتصفح، التوقيت بتاعك، الإشعارات اللي عايزها، ومعاد الـ Morning Drop.</li>
+      <li><b>الأمان:</b> عنوان الـ IP بتاعك بيُستخدم لوقت قصير (لحد ساعة) عشان نوقف السبام وكتر التسجيل.</li>
+    </ul>
+    <h2>مين يقدر يشوفها</h2>
+    <ul>
+      <li><b>الكل:</b> اسم المستخدم، النيك نيم، الأفاتار أو الصورة، النبذة، الـ XP، الرتبة، الستريك، المتابعين، السكواد، حيوانك، حاجات المحل اللي مشغّلها، رسايل الشات، شات حفلات المشاهدة، حجج المناقشات والكومنتات. وتقدر تخفي نفسك من الترتيب.</li>
+      <li><b>إنت والشخص التاني بس:</b> الرسايل الخاصة. المشرفين بيشوفوا بس الرسايل اللي حد بلّغ عنها (آخر كام رسالة من الشخص اللي اتبلّغ عنه في الشات ده).</li>
+      <li><b>اللي في الجروب:</b> رسايل الجروب ده. الأعضاء الجداد بيشوفوا بس الرسايل اللي اتبعتت بعد ما دخلوا.</li>
+      <li><b>اللي متابعينك:</b> البوبس بتاعتك، لمدة 24 ساعة. وتقدر تشوف مين شافها.</li>
+      <li><b>إنت بس:</b> الباسورد، الأخبار المحفوظة والإعدادات.</li>
+    </ul>
+    <h2>بتتحفظ قد إيه</h2>
+    <ul>
+      <li>رسايل الشات: 30 يوم. الرسايل الخاصة ورسايل الجروبات والفويسات بتاعتها: سنة. البوبس: 24 ساعة. شات حفلات المشاهدة: 30 يوم بعد الحفلة. المناقشات: 60 يوم بعد ما تتقفل. الإشعارات: 30 يوم.</li>
+      <li>أي حاجة تانية بتفضل لحد ما تمسحها أو تمسح الحساب.</li>
+      <li>حاجات بتفضل على جهازك بس: إعدادات راحة القراية وقايمة الكلمات اللي اتعلمتها. لو مسحت بيانات المتصفح بتتمسح.</li>
+    </ul>
+    <h2>اختياراتك</h2>
+    <ul>
+      <li>غيّر أو امسح صورتك والنبذة والنيك نيم في أي وقت.</li>
+      <li>اختار مين يقدر يبعتلك، اعمل بلوك لأي حد، وقفّل الإشعارات.</li>
+      <li><b>امسح حسابك</b> من أنا ← الحساب والأمان. ده بيمسح البروفايل والتقدّم والرسايل والكومنتات والمتابعات والصورة على طول.</li>
+    </ul>
+    <h2>خدمات تانية</h2>
+    <ul>
+      <li>kerNEl شغال على Cloudflare. الأخبار من مصادر عامة، وصور الأخبار بتتحمّل من مواقع الأخبار نفسها.</li>
+      <li>لو الشرح بالذكاء الاصطناعي شغال، عنوان الخبر وسؤالك بس هما اللي بيتبعتوا لـ Anthropic (Claude) عشان يكتب الإجابة.</li>
+    </ul>
+    <h2>الأطفال</h2>
+    <p>kerNEl Kids شغال من غير حساب وبيحفظ التقدّم على الجهاز. الأطفال اللي بيستخدموا حسابات أو رسايل يعملوا كده مع حد كبير.</p>
+    <h2>أسئلة</h2>
+    <p>افتح Issue على <a href="https://github.com/Moaaz0911911/Tech-kernel-" rel="noopener">صفحة kerNEl على GitHub</a>.</p>
+  </section>
+
+  <section lang="de" dir="ltr">
+    <h1>Datenschutz & deine Daten</h1>
+    <p class="muted">Kurz gesagt: keine E-Mail, keine Telefonnummer, keine Werbung, kein Tracking. Du kannst jederzeit alles löschen.</p>
+    <h2>Was kerNEl speichert</h2>
+    <ul>
+      <li><b>Dein Konto:</b> Benutzername und Passwort. Das Passwort wird nur als verschlüsselter Hash gespeichert, nie im Klartext. Außerdem ein Hash deines Wiederherstellungscodes.</li>
+      <li><b>Dein Profil:</b> Spitzname, Avatar oder Foto, Bio, Lieblingsthemen, Hut und Rahmen, Sprache.</li>
+      <li><b>Dein Fortschritt:</b> XP, Streak, Erfolge, gespeicherte Storys, Reaktionen und Spielergebnisse, deine 🧈 Butter, deine Shop-Käufe und dein Haustier.</li>
+      <li><b>Was du postest:</b> Chatnachrichten, Kommentare, private und Gruppennachrichten (auch Sprachnachrichten und Umfragen), Pops, Watch-Party-Chat, Debatten-Argumente, Abstimmungen und Meldungen.</li>
+      <li><b>Leute und Themen:</b> wem du folgst, wen du blockiert hast, wer dich eingeladen hat und welchen Firmen oder Themen du folgst.</li>
+      <li><b>Benachrichtigungen:</b> wenn du sie einschaltest, die Push-Adresse deines Browsers, deine Zeitzone, welche Benachrichtigungen du willst und die Uhrzeit deines Morning Drop.</li>
+      <li><b>Sicherheit:</b> deine IP-Adresse wird kurz (bis zu einer Stunde) genutzt, um Spam und zu viele Anmeldungen zu stoppen.</li>
+    </ul>
+    <h2>Wer es sehen kann</h2>
+    <ul>
+      <li><b>Alle:</b> Benutzername, Spitzname, Avatar oder Foto, Bio, XP, Rang, Streak, Follower, Crew, Haustier, aktive Shop-Looks, Chatnachrichten, Watch-Party-Chat, Debatten-Argumente und Kommentare. Du kannst dich in der Bestenliste ausblenden.</li>
+      <li><b>Nur du und die andere Person:</b> private Nachrichten. Moderatoren sehen nur Nachrichten, die jemand gemeldet hat (die letzten paar Nachrichten der gemeldeten Person in diesem Chat).</li>
+      <li><b>Die Leute in einer Gruppe:</b> die Nachrichten dieser Gruppe. Neue Mitglieder sehen nur Nachrichten, die nach ihrem Beitritt geschickt wurden.</li>
+      <li><b>Die Leute, die dir folgen:</b> deine Pops, 24 Stunden lang. Du siehst, wer sie angeschaut hat.</li>
+      <li><b>Nur du:</b> dein Passwort, gespeicherte Storys und Einstellungen.</li>
+    </ul>
+    <h2>Wie lange es bleibt</h2>
+    <ul>
+      <li>Chatnachrichten: 30 Tage. Private und Gruppennachrichten samt Sprachnachrichten: 1 Jahr. Pops: 24 Stunden. Watch-Party-Chat: 30 Tage nach der Party. Debatten: 60 Tage nach dem Ende. Benachrichtigungen: 30 Tage.</li>
+      <li>Alles andere bleibt, bis du es oder dein Konto löschst.</li>
+      <li>Manches verlässt dein Gerät nie: deine Lesekomfort-Einstellungen und die Liste gelernter Wörter. Wenn du die Browserdaten löschst, sind sie weg.</li>
+    </ul>
+    <h2>Deine Möglichkeiten</h2>
+    <ul>
+      <li>Foto, Bio und Spitzname jederzeit ändern oder entfernen.</li>
+      <li>Festlegen, wer dir schreiben darf, Leute blockieren und Benachrichtigungen ausschalten.</li>
+      <li><b>Konto löschen</b> unter Ich → Konto &amp; Sicherheit. Das entfernt Profil, Fortschritt, Nachrichten, Kommentare, Follows und Foto sofort.</li>
+    </ul>
+    <h2>Andere Dienste</h2>
+    <ul>
+      <li>kerNEl läuft auf Cloudflare. Die News kommen aus öffentlichen Quellen, Story-Bilder laden von den News-Seiten.</li>
+      <li>Wenn KI-Erklärungen eingeschaltet sind, werden nur die Schlagzeile und deine Frage an Anthropic (Claude) geschickt, um die Antwort zu schreiben.</li>
+    </ul>
+    <h2>Kinder</h2>
+    <p>kerNEl Kids funktioniert ohne Konto und speichert den Fortschritt auf dem Gerät. Kinder, die Konten oder Nachrichten nutzen, sollten das mit einem Erwachsenen tun.</p>
+    <h2>Fragen</h2>
+    <p>Eröffne ein Issue auf <a href="https://github.com/Moaaz0911911/Tech-kernel-" rel="noopener">kerNEls GitHub-Seite</a>.</p>
+  </section>
+
+  <section lang="tl" dir="ltr">
+    <h1>Privacy at ang data mo</h1>
+    <p class="muted">Sa madaling salita: walang email, walang phone number, walang ads, walang tracking. Puwede mong burahin ang lahat anumang oras.</p>
+    <h2>Ano ang ini-store ng kerNEl</h2>
+    <ul>
+      <li><b>Ang account mo:</b> username at password. Naka-store lang ang password bilang scrambled hash, hindi kailanman ang mismong password. Pati hash ng recovery code mo.</li>
+      <li><b>Ang profile mo:</b> nickname, avatar o litrato, bio, mga paboritong topic, sombrero at frame, wika.</li>
+      <li><b>Ang progress mo:</b> XP, streak, achievements, mga naka-save na story, reactions at score sa mga laro, ang 🧈 butter mo, mga binili mo sa shop, at ang pet mo.</li>
+      <li><b>Mga pino-post mo:</b> chat messages, comments, private at group messages (kasama ang voice notes at polls), pops, chat sa watch party, mga argumento sa debate, mga boto at report.</li>
+      <li><b>Mga tao at topic:</b> sino ang fina-follow mo, sino ang na-block mo, sino ang nag-invite sa’yo, at ang mga kumpanya o topic na sinusundan mo.</li>
+      <li><b>Notifications:</b> kung bubuksan mo, ang push address ng browser mo, ang time zone mo, kung aling notifications ang gusto mo at ang oras ng Morning Drop mo.</li>
+      <li><b>Kaligtasan:</b> ginagamit sandali (hanggang isang oras) ang IP address mo para pigilan ang spam at sobrang daming sign-up.</li>
+    </ul>
+    <h2>Sino ang nakakakita</h2>
+    <ul>
+      <li><b>Lahat:</b> username, nickname, avatar o litrato, bio, XP, rank, streak, followers, squad, pet, mga shop look na naka-on, chat messages, chat sa watch party, mga argumento sa debate at comments. Puwede mong itago ang sarili mo sa leaderboard.</li>
+      <li><b>Ikaw at ang kausap mo lang:</b> private messages. Nakikita lang ng moderators ang mga message na ni-report ng isang tao (ang huling ilang message ng ni-report sa chat na iyon).</li>
+      <li><b>Ang mga nasa isang grupo:</b> ang mga mensahe ng grupong iyon. Ang mga bagong miyembro ay nakakakita lang ng mga mensaheng ipinadala pagkatapos nilang sumali.</li>
+      <li><b>Ang mga sumusunod sa iyo:</b> ang pops mo, sa loob ng 24 oras. Makikita mo kung sino ang tumingin.</li>
+      <li><b>Ikaw lang:</b> ang password mo, naka-save na story at settings.</li>
+    </ul>
+    <h2>Gaano katagal ito itinatago</h2>
+    <ul>
+      <li>Chat messages: 30 araw. Private at group messages, kasama ang voice notes: 1 taon. Pops: 24 oras. Chat sa watch party: 30 araw pagkatapos ng party. Mga debate: 60 araw pagkatapos magsara. Notifications: 30 araw.</li>
+      <li>Nananatili ang lahat ng iba hanggang burahin mo ito o ang account mo.</li>
+      <li>May mga bagay na hindi umaalis sa device mo: ang mga setting ng ginhawa sa pagbasa at ang listahan ng mga salitang natutunan mo. Mabubura ang mga ito kapag binura mo ang data ng browser.</li>
+    </ul>
+    <h2>Ang mga pagpipilian mo</h2>
+    <ul>
+      <li>Palitan o tanggalin ang litrato, bio at nickname mo anumang oras.</li>
+      <li>Piliin kung sino ang puwedeng mag-message sa’yo, mag-block ng tao, at patayin ang notifications.</li>
+      <li><b>Burahin ang account mo</b> sa Ako → Account at seguridad. Agad nitong tatanggalin ang profile, progress, messages, comments, follows at litrato mo.</li>
+    </ul>
+    <h2>Ibang serbisyo</h2>
+    <ul>
+      <li>Tumatakbo ang kerNEl sa Cloudflare. Galing ang balita sa mga pampublikong source, at naglo-load ang mga litrato ng story mula sa mga news website.</li>
+      <li>Kapag naka-on ang AI explanations, ang headline lang ng story at ang tanong mo ang ipinapadala sa Anthropic (Claude) para isulat ang sagot.</li>
+    </ul>
+    <h2>Mga bata</h2>
+    <p>Gumagana ang kerNEl Kids nang walang account at sa device naka-save ang progress. Ang mga batang gumagamit ng account o messages ay dapat may kasamang matanda.</p>
+    <h2>Mga tanong</h2>
+    <p>Magbukas ng issue sa <a href="https://github.com/Moaaz0911911/Tech-kernel-" rel="noopener">GitHub page ng kerNEl</a>.</p>
+  </section>
+
+  <a class="back" href="./">← kerNEl</a>
+</main>
+<script>
+  (() => {
+    const langs = ['en', 'ar', 'de', 'tl'];
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('kerNEl:lang') || 'null'); } catch { /* private mode */ }
+    const nav = (navigator.language || 'en').toLowerCase();
+    const guess = nav.startsWith('fil') ? 'tl' : nav.slice(0, 2);
+    const show = (l) => {
+      document.querySelectorAll('section[lang]').forEach((s) => s.classList.toggle('on', s.lang === l));
+      document.querySelectorAll('nav button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === l)));
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    };
+    show(langs.includes(saved) ? saved : langs.includes(guess) ? guess : 'en');
+    document.querySelector('nav').addEventListener('click', (e) => { const b = e.target.closest('[data-l]'); if (b) show(b.dataset.l); });
+  })();
+</script>
+</body>
+</html>
